@@ -14,7 +14,6 @@
     <delete file="cache.properties"/>
   </target>
 
-
   <fileset dir="${codegen_script.dir}" id="python-codegen" includes="**/*.py">
     <modified />
   </fileset>
@@ -26,7 +25,8 @@
   <property name="jni_classes_other"
             value="fi.helsinki.cs.tituomin.nativebenchmark.BenchmarkParameter,fi.helsinki.cs.tituomin.nativebenchmark.BenchmarkRegistry"/>
 
-  <fileset dir="bin/classes" id="other-natives"
+  <target name="check-modified-other">
+  <fileset dir="bin/classes" id="other-natives" erroronmissingdir="false"
            includes="fi/helsinki/cs/tituomin/nativebenchmark/BenchmarkParameter.class,fi/helsinki/cs/tituomin/nativebenchmark/BenchmarkRegistry.class">
     <modified />
   </fileset>
@@ -34,8 +34,10 @@
       refid="other-natives"
       property="natives.modified"
       setonempty="false"/>
+  </target>
 
   <target name="generate_benchmark_sources" if="codegen.modified" >
+    <mkdir dir="${gen_src.dir}/fi/helsinki/cs/tituomin/nativebenchmark/benchmark"/>
     <exec executable="python" outputproperty="jni_classes_benchmarks" logError="true" failonerror="true">
           <arg value="${codegen_script.dir}/make_benchmarks.py" />
           <arg value="${jni_src.dir}/nativebenchmark.c" />
@@ -45,7 +47,7 @@
     <property name="code.generated" value="true" />
   </target>
 
-  <target name="jni_headers_benchmark" if="code.generated">
+  <target name="jni_headers_benchmark" depends="check-modified-other" if="code.generated">
     <javah outputFile="${jni_src.dir}/${jni_header_benchmarks}" classpath="bin/classes" class="${jni_classes_benchmarks}" />
   </target>
 
