@@ -20,15 +20,14 @@ public class ResponseTimeRecorder extends MeasuringTool {
         return options;
     }
 
-    public Measurement start(Benchmark benchmark)
+    public void start(Benchmark benchmark)
     throws InterruptedException, IOException {
         long endTime = 0, startTime = SystemClock.uptimeMillis();
         benchmark.run();
         // todo mainitse tekstissä toteutus (ks. todo.org)
         endTime = SystemClock.uptimeMillis();
-        // todo: epätarkkuus, init ym. ? 
-        measurement.addData("response_time_millis", "" + (endTime - startTime));
-        return measurement;
+        // todo: epätarkkuus, init ym. ?
+        String delta = "" + (endTime - startTime);
+        measurement.put("response_time_millis", delta);
     }
-
 }

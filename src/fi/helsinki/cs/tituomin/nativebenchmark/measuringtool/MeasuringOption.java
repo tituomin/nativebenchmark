@@ -5,7 +5,7 @@ import fi.helsinki.cs.tituomin.nativebenchmark.MetadataContainer;
 import java.util.Iterator;
 import android.util.Pair;
 
-public interface MeasuringOption extends MetadataContainer {
+public interface MeasuringOption {
 
     public void set(String value);
     public OptionSpec id();

@@ -13,6 +13,7 @@ import java.util.Observer;
 import java.util.Observable;
 import fi.helsinki.cs.tituomin.nativebenchmark.ApplicationState;
 import fi.helsinki.cs.tituomin.nativebenchmark.measuringtool.Measurement;
+import fi.helsinki.cs.tituomin.nativebenchmark.MetadataContainer;
 import fi.helsinki.cs.tituomin.nativebenchmark.measuringtool.MeasuringOption;
 import fi.helsinki.cs.tituomin.nativebenchmark.measuringtool.OptionSpec;
 import fi.helsinki.cs.tituomin.nativebenchmark.Benchmark;
@@ -30,7 +31,7 @@ public abstract class MeasuringTool implements Runnable {
         this.measurement = new Measurement();
     }
 
-    public abstract Measurement start(Benchmark benchmark)
+    public abstract void start(Benchmark benchmark)
         throws InterruptedException, IOException;
 
     public void run() {
@@ -43,6 +44,10 @@ public abstract class MeasuringTool implements Runnable {
         catch (IOException e) {
             Log.e("BenchmarkRunner", "IOException", e);
         }
+    }
+
+    public boolean explicitGC() {
+        return true;
     }
 
     protected abstract List<MeasuringOption>
@@ -129,13 +134,13 @@ public abstract class MeasuringTool implements Runnable {
 
     private List<ApplicationState> observers;
 
-    protected Measurement measurement;
+    protected MetadataContainer measurement;
 
-    public Measurement getMeasurement() {
+    public MetadataContainer getMeasurement() {
         if (this.options != null) {
             if (!hasOptions) {
                 for (MeasuringOption op : options.values()) {
-                    this.measurement.addData(
+                    this.measurement.put(
                         op.toStringPair().first,
                         op.toStringPair().second);
                 }
@@ -143,7 +148,7 @@ public abstract class MeasuringTool implements Runnable {
             }
         }
         if (this.benchmark instanceof MeasuringTool) {
-            this.measurement.addAll(((MeasuringTool)this.benchmark).getMeasurement());
+            this.measurement.putAll(((MeasuringTool)this.benchmark).getMeasurement());
         }
         return this.measurement;
     }

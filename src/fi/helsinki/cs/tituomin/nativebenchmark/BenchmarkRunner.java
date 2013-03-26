@@ -54,10 +54,10 @@ public class BenchmarkRunner {
 
         measuringTools = new ArrayList<MeasuringTool> ();
         measuringTools.add(new PlainRunner(1));
+        measuringTools.add(new ResponseTimeRecorder(rounds));
         measuringTools.add(new LinuxPerfRecordTool(1)
                         .set(BasicOption.OUTPUT_FILEPATH, perfDir.getPath())
                         .set(BasicOption.MEASURE_LENGTH, "1"));
-        measuringTools.add(new ResponseTimeRecorder(rounds));
     }
 
 
@@ -84,7 +84,7 @@ public class BenchmarkRunner {
         BenchmarkInitialiser.init(benchmarkParameter);
 
         List<Benchmark> benchmarks = BenchmarkRegistry.getBenchmarks();
-        Map<Class, BenchmarkMetadata> benchmarkBaseData = new HashMap<Class, BenchmarkMetadata>();
+        Map<Class, MetadataContainer> benchmarkBaseData = new HashMap<Class, MetadataContainer>();
         for (Benchmark b : benchmarks) {
             benchmarkBaseData.put(b.getClass(), inspectBenchmark(b));
         }
@@ -98,19 +98,24 @@ public class BenchmarkRunner {
             for (int series = 0; series < round_count; series++) {
                 List<MetadataContainer> compiledMetadata = new ArrayList<MetadataContainer> ();
 
-                long endTime = 0, startTime = SystemClock.uptimeMillis();
                 Date start = new Date();
-        
+                long endTime = 0;
+
+                long startTime = SystemClock.uptimeMillis();
                 runSeries(benchmarks, benchmarkBaseData, mainUI, compiledMetadata, tool);
-                measurementID = Utils.getUUID();
-
-
                 endTime = SystemClock.uptimeMillis();
 
-                // 1. gather all labels
+                measurementID = Utils.getUUID();
+
+                if (compiledMetadata.isEmpty()) {
+                    Log.v("runner", "compiledmetadata is empty " + tool.getClass());
+                    continue;
+                }
+
+                // 1. gather all labels (!ordered!)
                 SortedSet<String> labels = new TreeSet<String> ();
                 for (MetadataContainer md : compiledMetadata) {
-                    labels.addAll(md.labels());
+                    labels.addAll(md.keySet());
                 }
 
                 PrintWriter writer = null;
@@ -147,10 +152,6 @@ public class BenchmarkRunner {
                 }
 
                 Date end = new Date();
-                String toolNames = "";
-                for (MeasuringTool t : measuringTools) {
-                    toolNames += t.getClass().getName() + " ";
-                }
 
                 try {
                     writer = getWriter(new File(dataDir, "measurements.txt"), true);
@@ -161,7 +162,7 @@ public class BenchmarkRunner {
                     writer.println("start: "            + start);
                     writer.println("end: "              + end);
                     writer.println("duration: "         + humanTime(endTime - startTime));
-                    writer.println("tools: "            + toolNames);
+                    writer.println("tool: "             + tool.getClass().getName());
                     writer.println("benchmarks: "       + benchmarks.size());
                     writer.println("code-revision: "    + resources.getText(R.string.app_revision));
                     writer.println("code-checksum: "    + resources.getText(R.string.app_checksum));
@@ -181,24 +182,28 @@ public class BenchmarkRunner {
         }
 
     private static void runSeries(
-        List<Benchmark> benchmarks, Map<Class, BenchmarkMetadata> basedata,
+        List<Benchmark> benchmarks, Map<Class, MetadataContainer> basedata,
         ApplicationState mainUI, List<MetadataContainer> compiledMetadata,
         MeasuringTool tool) {
 
         final ApplicationState.State state = ApplicationState.State.MILESTONE;
+        final boolean runGC = tool.explicitGC();
         int j = 0;
 
         for (Benchmark benchmark : benchmarks) {
-            BenchmarkMetadata md = new BenchmarkMetadata();
+            MetadataContainer md = new BenchmarkMetadata();
             tool.setBenchmark(benchmark);
             tool.run();
-            md.addAll(tool.getMeasurement());
-            md.addAll(basedata.get(benchmark.getClass()));
-            compiledMetadata.add(md);
+            MetadataContainer measurement = tool.getMeasurement();
+            if (!measurement.isEmpty()) {
+                md.putAll(basedata.get(benchmark.getClass()));
+                md.putAll(measurement);
+                compiledMetadata.add(md);
+            }
             // todo: remove UI overhead?
             mainUI.updateState(state, "Benchmark " + ++j);
 
-            if (j % 50 == 0) {
+            if (runGC && j % 50 == 0) {
                 System.gc();
                 try {
                     Thread.sleep(200);
@@ -232,12 +237,12 @@ public class BenchmarkRunner {
             hours   + "h " +
             minutes + "m " +
             seconds + "s" +
-            "(" + seconds_total + " s tot.)");
+            " (" + seconds_total + " s tot.)");
     }
 
-    private static BenchmarkMetadata lastMetadata = null;
-    private static BenchmarkMetadata inspectBenchmark(Benchmark benchmark) {
-        BenchmarkMetadata bdata = new BenchmarkMetadata();
+    private static MetadataContainer lastMetadata = null;
+    private static MetadataContainer inspectBenchmark(Benchmark benchmark) {
+        MetadataContainer bdata = new BenchmarkMetadata();
         Class c = benchmark.getClass();
         String from = benchmark.from();
         String to   = benchmark.to();
@@ -245,17 +250,17 @@ public class BenchmarkRunner {
         // reflection only works for J2C version,
         // results are cached for other versions
         if (from.equals("J") && to.equals("C")) {
-            bdata.add("no", "" + benchmark.sequenceNo());
-            bdata.add("description", benchmark.description());
+            bdata.put("no", "" + benchmark.sequenceNo());
+            bdata.put("description", benchmark.description());
             Method[] methods = c.getDeclaredMethods();
             for (int i = 0; i < methods.length; i++) {
                 Method m = methods[i];
                 int modifiers = m.getModifiers();
                 if (Modifier.isNative(modifiers)) {
-                    bdata.add("native_static", Modifier.isStatic(modifiers) ? "1" : "0");
-                    bdata.add("native_private", Modifier.isPrivate(modifiers) ? "1" : "0");
-                    bdata.add("native_protected", Modifier.isProtected(modifiers) ? "1" : "0");
-                    bdata.add("native_public", Modifier.isPublic(modifiers) ? "1" : "0");
+                    bdata.put("native_static", Modifier.isStatic(modifiers) ? "1" : "0");
+                    bdata.put("native_private", Modifier.isPrivate(modifiers) ? "1" : "0");
+                    bdata.put("native_protected", Modifier.isProtected(modifiers) ? "1" : "0");
+                    bdata.put("native_public", Modifier.isPublic(modifiers) ? "1" : "0");
 
                     Class [] parameter_arr = m.getParameterTypes();
                     List<Class> parameters = Arrays.asList(parameter_arr);
@@ -270,15 +275,15 @@ public class BenchmarkRunner {
                             (previousValue == null ? 1 : ((int)previousValue) + 1));
                     }
 
-                    bdata.add("parameter_type_count", parameterTypes.keySet().size() + "");
+                    bdata.put("parameter_type_count", parameterTypes.keySet().size() + "");
 
                     for (String typename : parameterTypes.keySet()) {
-                        bdata.add("parameter_type_" + typename + "_count", parameterTypes.get(typename) + "");
+                        bdata.put("parameter_type_" + typename + "_count", parameterTypes.get(typename) + "");
                     }
 
-                    bdata.add("parameter_count", parameters.size() + "");
+                    bdata.put("parameter_count", parameters.size() + "");
                     Class returnType = m.getReturnType();
-                    bdata.add("return_type", returnType.getCanonicalName());
+                    bdata.put("return_type", returnType.getCanonicalName());
                 }
             }
             lastMetadata = bdata;
@@ -289,14 +294,14 @@ public class BenchmarkRunner {
                 Log.e("BenchmarkRunner", "Could not retrieve inspected metadata.");
                 return null;
             }
-            bdata.addAll(lastMetadata);
+            bdata.putAll(lastMetadata);
             if (!("" + benchmark.sequenceNo()).equals(bdata.get("no"))) {
                 Log.e("BenchmarkRunner", "Retrieved metadata has wrong number.");
                 return null;
             }
         }
 
-        bdata.add("direction", from + " > " + to);
+        bdata.put("direction", from + " > " + to);
 
         return bdata;
     }

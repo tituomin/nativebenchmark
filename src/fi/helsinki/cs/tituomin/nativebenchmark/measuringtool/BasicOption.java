@@ -34,46 +34,6 @@ public class BasicOption implements MeasuringOption {
         return value;
     }
 
-    public String get(String label) {
-        return value;
-    }
-
-    public Set<String> labels() {
-        Set<String> s = new HashSet<String> ();
-        s.add(this.type.id);
-        return s;
-    }
-
-    // ---- metadata retrieval
-
-    public Iterator<Pair<String,String>> iterator() {
-        return new OptionIterator();
-    }
-
-    private class OptionIterator implements Iterator {
-
-        public boolean hasNext() {
-            return !atEnd;
-        }
-
-        public Pair<String,String> next() {
-            if (!this.atEnd) {
-                this.atEnd = true;
-                return new Pair<String,String>(BasicOption.this.type.name,
-                                               BasicOption.this.value);
-            }
-            else {
-                throw new NoSuchElementException();
-            }
-        }
-
-        public void remove() {
-            throw new UnsupportedOperationException();
-        }
-
-        private boolean atEnd;
-    }
-
     public Pair<String,String> toStringPair() {
         return new Pair<String,String> (this.type.name, this.value);
     }
@@ -81,7 +41,6 @@ public class BasicOption implements MeasuringOption {
     public String toString() {
         return this.type() + " " + this.value();
     }
-
     
     // ----
 
@@ -89,7 +48,6 @@ public class BasicOption implements MeasuringOption {
     private String value;
     
     // ----
-
 
     public static final OptionSpec COMMAND_STRING  = new OptionSpec();
     public static final OptionSpec OUTPUT_FILEPATH = new OptionSpec();

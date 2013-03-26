@@ -49,7 +49,7 @@ public abstract class CommandlineTool extends MeasuringTool {
         return options;
     }
 
-    public Measurement start(Benchmark benchmark)
+    public void start(Benchmark benchmark)
         throws InterruptedException, IOException {
         initCommand();
 
@@ -70,7 +70,7 @@ public abstract class CommandlineTool extends MeasuringTool {
         
         int exitValue = this.process.exitValue();
         if (exitValue == 0) {
-            measurement.addData("Started", dateFormat.format(this.startDate));
+            measurement.put("Started", dateFormat.format(this.startDate));
         }
         else {
             String line;
@@ -80,7 +80,6 @@ public abstract class CommandlineTool extends MeasuringTool {
             }
         }
         benchmark.restoreRepetitions();
-        return measurement;
     }
 
     public Measurement stop() {
@@ -88,7 +87,7 @@ public abstract class CommandlineTool extends MeasuringTool {
     }
 
     public void setFilename(String name) {
-        this.measurement.addData("Filename", name);
+        this.measurement.put("Filename", name);
     }
 
     // -----

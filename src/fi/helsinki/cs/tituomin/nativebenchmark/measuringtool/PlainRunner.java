@@ -20,11 +20,14 @@ public class PlainRunner extends MeasuringTool {
         return options;
     }
 
-    public Measurement start(Benchmark benchmark)
+    public boolean explicitGC() {
+        return false;
+    }
+
+    public void start(Benchmark benchmark)
     throws InterruptedException, IOException {
         benchmark.setRepetitions(2000);
         benchmark.run();
         benchmark.restoreRepetitions();
-        return measurement;
     }
 }
