@@ -23,7 +23,7 @@ public class LinuxPerfRecordTool extends CommandlineTool {
     }
 
     protected String command() { 
-        return "perf record -a";
+        return "perf record -a -g";
     }
 
     private String generateFilename (String path) {
