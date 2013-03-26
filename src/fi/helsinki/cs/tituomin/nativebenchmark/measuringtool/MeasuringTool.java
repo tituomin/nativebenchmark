@@ -15,17 +15,35 @@ import fi.helsinki.cs.tituomin.nativebenchmark.ApplicationState;
 import fi.helsinki.cs.tituomin.nativebenchmark.measuringtool.Measurement;
 import fi.helsinki.cs.tituomin.nativebenchmark.measuringtool.MeasuringOption;
 import fi.helsinki.cs.tituomin.nativebenchmark.measuringtool.OptionSpec;
+import fi.helsinki.cs.tituomin.nativebenchmark.Benchmark;
 
-public abstract class MeasuringTool {
+public abstract class MeasuringTool implements Runnable {
 
     public MeasuringTool() {
+        this(1);
+    }
+
+    public MeasuringTool(int rounds) {
         specifyOptions();
         hasOptions = false;
+        this.rounds = rounds;
         this.measurement = new Measurement();
     }
 
-    public abstract Measurement start(Runnable benchmark)
+    public abstract Measurement start(Benchmark benchmark)
         throws InterruptedException, IOException;
+
+    public void run() {
+        try {
+            start(benchmark);
+        }
+        catch (InterruptedException e) {
+            Log.e("BenchmarkRunner", "Measuring was interrupted ", e);
+        }
+        catch (IOException e) {
+            Log.e("BenchmarkRunner", "IOException", e);
+        }
+    }
 
     protected abstract List<MeasuringOption>
         defaultOptions(List<MeasuringOption> container);
@@ -80,6 +98,10 @@ public abstract class MeasuringTool {
         }
     }
 
+    public void setBenchmark(Benchmark b) {
+        benchmark = b;
+    }
+
 
     public void addObserver(ApplicationState o) {
         if (this.observers == null) {
@@ -120,10 +142,19 @@ public abstract class MeasuringTool {
                 hasOptions = true;
             }
         }
+        if (this.benchmark instanceof MeasuringTool) {
+            this.measurement.addAll(((MeasuringTool)this.benchmark).getMeasurement());
+        }
         return this.measurement;
     }
 
+    public int getRounds() {
+        return rounds;
+    }
+
     private boolean hasOptions;
+    private Benchmark benchmark;
+    private int rounds;
 
     public static class UnsupportedOptionException extends RuntimeException {}
 }

@@ -27,7 +27,17 @@ public class {classname} {class_relations} implements Benchmark {{
     }}
 
     private long repetitions;
+    private long storedRepetitions;
     private BenchmarkParameter benchmarkParameter;
+
+    public void setRepetitions(long reps) {{
+        storedRepetitions = repetitions;
+        repetitions = reps;
+    }}
+
+    public void restoreRepetitions() {{
+        repetitions = storedRepetitions;
+    }}
 
     {native_method}
 

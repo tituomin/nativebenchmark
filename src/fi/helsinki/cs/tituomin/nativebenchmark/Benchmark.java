@@ -7,4 +7,6 @@ public interface Benchmark extends Runnable {
     public String to();
     public String description();
     public int sequenceNo();
+    public void setRepetitions(long reps);
+    public void restoreRepetitions();
 }

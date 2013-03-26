@@ -9,9 +9,9 @@ import fi.helsinki.cs.tituomin.nativebenchmark.measuringtool.MeasuringOption;
 import fi.helsinki.cs.tituomin.nativebenchmark.Benchmark;
 import android.util.Log;
 
-public class ResponseTimeRecorder extends MeasuringTool {
+public class PlainRunner extends MeasuringTool {
 
-    public ResponseTimeRecorder(int i) {
+    public PlainRunner(int i) {
         super(i);
     }
 
@@ -22,13 +22,9 @@ public class ResponseTimeRecorder extends MeasuringTool {
 
     public Measurement start(Benchmark benchmark)
     throws InterruptedException, IOException {
-        long endTime = 0, startTime = SystemClock.uptimeMillis();
+        benchmark.setRepetitions(2000);
         benchmark.run();
-        // todo mainitse tekstissä toteutus (ks. todo.org)
-        endTime = SystemClock.uptimeMillis();
-        // todo: epätarkkuus, init ym. ? 
-        measurement.addData("response_time_millis", "" + (endTime - startTime));
+        benchmark.restoreRepetitions();
         return measurement;
     }
-
 }

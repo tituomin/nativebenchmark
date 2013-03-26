@@ -3,6 +3,7 @@ package fi.helsinki.cs.tituomin.nativebenchmark;
 
 import fi.helsinki.cs.tituomin.nativebenchmark.measuringtool.BasicOption;
 import fi.helsinki.cs.tituomin.nativebenchmark.measuringtool.MeasuringTool;
+import fi.helsinki.cs.tituomin.nativebenchmark.measuringtool.PlainRunner;
 import fi.helsinki.cs.tituomin.nativebenchmark.measuringtool.ResponseTimeRecorder;
 import fi.helsinki.cs.tituomin.nativebenchmark.measuringtool.LinuxPerfRecordTool;
 import fi.helsinki.cs.tituomin.nativebenchmark.BenchmarkRegistry;
@@ -10,6 +11,7 @@ import fi.helsinki.cs.tituomin.nativebenchmark.Utils;
 import java.util.Date;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.Map;
 import java.util.HashMap;
 import java.lang.reflect.Method;
@@ -28,7 +30,6 @@ import java.util.SortedSet;
 import java.util.Collections;
 import java.util.TreeSet;
 import android.content.res.Resources;
-import android.content.Context;
 import android.content.pm.PackageManager;
 import android.content.pm.Signature;
 import android.content.pm.PackageManager.NameNotFoundException;
@@ -36,9 +37,9 @@ import android.content.pm.PackageManager.NameNotFoundException;
 public class BenchmarkRunner {
     private static final String SEPARATOR     = ",";
     private static final String MISSING_VALUE = "-";
+    private static final long WARMUP_REPS = 2000;
     private static BenchmarkParameter benchmarkParameter;
-    private static MeasuringTool[] measuringTools;
-    private static final int ROUNDS = 5;
+    private static List<MeasuringTool> measuringTools;
 
     public static BenchmarkParameter getBenchmarkParameter() {
         if (benchmarkParameter == null) {
@@ -47,30 +48,28 @@ public class BenchmarkRunner {
         return benchmarkParameter;
     }
 
-    public static void initTools(File dataDir) {
+    public static void initTools(File dataDir, int rounds) {
         File perfDir = new File(dataDir, "perf");
         perfDir.mkdir();
 
-        measuringTools = new MeasuringTool[1];
-        // measuringTools[0] =
-        //     new LinuxPerfRecordTool()
-        //     .set(BasicOption.OUTPUT_FILEPATH, perfDir.getPath())
-        //     .set(BasicOption.MEASURE_LENGTH, "10");
-        measuringTools[0] = 
-            new ResponseTimeRecorder();
+        measuringTools = new ArrayList<MeasuringTool> ();
+        measuringTools.add(new PlainRunner(1));
+        measuringTools.add(new LinuxPerfRecordTool(1)
+                        .set(BasicOption.OUTPUT_FILEPATH, perfDir.getPath())
+                        .set(BasicOption.MEASURE_LENGTH, "1"));
+        measuringTools.add(new ResponseTimeRecorder(rounds));
     }
 
 
-    public static void runBenchmarks(ApplicationState mainUI, long repetitions, Resources resources, Context context) {
+    public static void runBenchmarks(
+        ApplicationState mainUI, int rounds, long repetitions,
+        Resources resources) {
+
         File sd = Environment.getExternalStorageDirectory();
         File dataDir = new File(sd, "results");
         dataDir.mkdir();
 
-        initTools(dataDir);
-
-        for (MeasuringTool tool : measuringTools) {
-            tool.addObserver(mainUI);
-        }
+        initTools(dataDir, rounds);
 
         try {
             BenchmarkRegistry.init(repetitions);
@@ -92,111 +91,108 @@ public class BenchmarkRunner {
 
         Collections.shuffle(benchmarks);
 
-        String measurementID;
-        for (int series = 0; series < ROUNDS; series++) {
-            List<MetadataContainer> compiledMetadata = new ArrayList<MetadataContainer> ();
+        for (MeasuringTool tool : measuringTools) {
+            String measurementID;
 
-            long endTime = 0, startTime = SystemClock.uptimeMillis();
-            Date start = new Date();
+            int round_count = tool.getRounds();
+            for (int series = 0; series < round_count; series++) {
+                List<MetadataContainer> compiledMetadata = new ArrayList<MetadataContainer> ();
+
+                long endTime = 0, startTime = SystemClock.uptimeMillis();
+                Date start = new Date();
         
-            runSeries(benchmarks, benchmarkBaseData, mainUI, compiledMetadata);        
-            measurementID = Utils.getUUID();
+                runSeries(benchmarks, benchmarkBaseData, mainUI, compiledMetadata, tool);
+                measurementID = Utils.getUUID();
 
 
-            endTime = SystemClock.uptimeMillis();
+                endTime = SystemClock.uptimeMillis();
 
-            // 1. gather all labels
-            SortedSet<String> labels = new TreeSet<String> ();
-            for (MetadataContainer md : compiledMetadata) {
-                labels.addAll(md.labels());
-            }
-
-            PrintWriter writer = null;
-
-            try {
-                writer = getWriter(new File(dataDir, "benchmarks-" + measurementID + ".csv"), false);
-                for (String label : labels) {
-                    writer.print(label + SEPARATOR);
-                }
-                writer.println("");
-                String[] values = new String[labels.size()];
-
-                // print all possible values for all benchmarks
+                // 1. gather all labels
+                SortedSet<String> labels = new TreeSet<String> ();
                 for (MetadataContainer md : compiledMetadata) {
-                    int i = 0;
+                    labels.addAll(md.labels());
+                }
+
+                PrintWriter writer = null;
+
+                try {
+                    writer = getWriter(new File(dataDir, "benchmarks-" + measurementID + ".csv"), false);
                     for (String label : labels) {
-                        String val = md.get(label);
-                        values[i++] = (val == null ? MISSING_VALUE : val);
-                    }
-                    for (i = 0; i < values.length; i++) {
-                        writer.print(values[i] + SEPARATOR);
+                        writer.print(label + SEPARATOR);
                     }
                     writer.println("");
+                    String[] values = new String[labels.size()];
+
+                    // print all possible values for all benchmarks
+                    for (MetadataContainer md : compiledMetadata) {
+                        int i = 0;
+                        for (String label : labels) {
+                            String val = md.get(label);
+                            values[i++] = (val == null ? MISSING_VALUE : val);
+                        }
+                        for (i = 0; i < values.length; i++) {
+                            writer.print(values[i] + SEPARATOR);
+                        }
+                        writer.println("");
+                    }
+                    writer.flush();
+                    writer.close();
+
                 }
-                writer.flush();
-                writer.close();
+                catch (IOException e) {
+                    Log.e("Nativebenchmark", "ioexception " + e);
+                }
+                if (writer != null) {
+                    writer.close();
+                }
 
-            }
-            catch (IOException e) {
-                Log.e("Nativebenchmark", "ioexception " + e);
-            }
-            if (writer != null) {
-                writer.close();
-            }
+                Date end = new Date();
+                String toolNames = "";
+                for (MeasuringTool t : measuringTools) {
+                    toolNames += t.getClass().getName() + " ";
+                }
 
-            Date end = new Date();
-            String toolNames = "";
-            for (int i = 0; i < measuringTools.length; i++) {
-                toolNames += measuringTools[i].getClass().getName() + " ";
-            }
-
-            try {
-                writer = getWriter(new File(dataDir, "measurements.txt"), true);
-                writer.println("");
-                writer.println("id: "               + measurementID);
-                writer.println("repetitions: "      + repetitions);
-                writer.println("rounds: "           + ROUNDS);
-                writer.println("start: "            + start);
-                writer.println("end: "              + end);
-                writer.println("duration: "         + humanTime(endTime - startTime));
-                writer.println("tools: "            + toolNames);
-                writer.println("benchmarks: "       + benchmarks.size());
-                writer.println("code-revision: "    + resources.getText(R.string.app_revision));
-                writer.println("code-checksum: "    + resources.getText(R.string.app_checksum));
-                writer.println("");
-            }
-            catch (IOException e ) {
-                Log.e("Nativebenchmark", "ioexception", e);
-            }
-            finally {
-                writer.close();
+                try {
+                    writer = getWriter(new File(dataDir, "measurements.txt"), true);
+                    writer.println("");
+                    writer.println("id: "               + measurementID);
+                    writer.println("repetitions: "      + repetitions);
+                    writer.println("rounds: "           + rounds);
+                    writer.println("start: "            + start);
+                    writer.println("end: "              + end);
+                    writer.println("duration: "         + humanTime(endTime - startTime));
+                    writer.println("tools: "            + toolNames);
+                    writer.println("benchmarks: "       + benchmarks.size());
+                    writer.println("code-revision: "    + resources.getText(R.string.app_revision));
+                    writer.println("code-checksum: "    + resources.getText(R.string.app_checksum));
+                    writer.println("");
+                }
+                catch (IOException e ) {
+                    Log.e("Nativebenchmark", "ioexception", e);
+                }
+                finally {
+                    writer.close();
+                }
             }
         }
-        
-            
+
         mainUI.updateState(
             ApplicationState.State.MEASURING_FINISHED);
         }
 
-    private static void runSeries(List<Benchmark> benchmarks, Map<Class, BenchmarkMetadata> basedata,
-                                      ApplicationState mainUI, List<MetadataContainer> compiledMetadata) {
+    private static void runSeries(
+        List<Benchmark> benchmarks, Map<Class, BenchmarkMetadata> basedata,
+        ApplicationState mainUI, List<MetadataContainer> compiledMetadata,
+        MeasuringTool tool) {
+
         final ApplicationState.State state = ApplicationState.State.MILESTONE;
         int j = 0;
 
         for (Benchmark benchmark : benchmarks) {
             BenchmarkMetadata md = new BenchmarkMetadata();
-            for (int i = 0; i < measuringTools.length; i++) {
-                try {
-                    measuringTools[i].start(benchmark);
-                }
-                catch (InterruptedException e) {
-                    Log.e("BenchmarkRunner", "Measuring was interrupted " + i + " " + j);
-                }
-                catch (IOException e) {
-                    Log.e("BenchmarkRunner", "IOException");
-                }
-                md.addAll(measuringTools[i].getMeasurement());
-            }
+            tool.setBenchmark(benchmark);
+            tool.run();
+            md.addAll(tool.getMeasurement());
             md.addAll(basedata.get(benchmark.getClass()));
             compiledMetadata.add(md);
             // todo: remove UI overhead?

@@ -39,14 +39,17 @@ public class BenchmarkSelector extends Activity implements ApplicationState {
 
         this.numPick    = (NumberPicker) findViewById(R.id.picker_num);
         this.expPick    = (NumberPicker) findViewById(R.id.picker_exp);
+        this.roundPick    = (NumberPicker) findViewById(R.id.picker_rounds);
 
         NumberPicker.OnValueChangeListener listener = new RepsListener();
 
         numPick.setMinValue(1); numPick.setMaxValue(9); numPick.setValue(1);
         expPick.setMinValue(0); expPick.setMaxValue(9); expPick.setValue(6);
+        roundPick.setMinValue(1); roundPick.setMaxValue(20); roundPick.setValue(5);
 
         numPick.setOnValueChangedListener(listener);
         expPick.setOnValueChangedListener(listener);
+        roundPick.setOnValueChangedListener(listener);
         listener.onValueChange(numPick, 0, 0);
 
         this.resources  = getResources();
@@ -124,7 +127,7 @@ public class BenchmarkSelector extends Activity implements ApplicationState {
         Thread measuringThread = new Thread(
             new Runnable () {
                 public void run() {
-                    BenchmarkRunner.runBenchmarks(BenchmarkSelector.this, repetitions, resources, getApplicationContext());
+                    BenchmarkRunner.runBenchmarks(BenchmarkSelector.this, rounds, repetitions, resources);
                 }
             });
         this.updateState(ApplicationState.State.MEASURING);
@@ -136,6 +139,7 @@ public class BenchmarkSelector extends Activity implements ApplicationState {
         public void onValueChange(NumberPicker picker, int oldVal, int newVal) {
             long exp = BenchmarkSelector.this.expPick.getValue();
             long value = BenchmarkSelector.this.numPick.getValue();
+            rounds = BenchmarkSelector.this.roundPick.getValue();
             while (exp-- > 0) { value *= 10; }
             repetitions = value;
             repView.setText("" + repetitions);
@@ -144,10 +148,11 @@ public class BenchmarkSelector extends Activity implements ApplicationState {
 
     private MeasuringTool tool;
     private TextView textView, resultView, repView;
-    private NumberPicker numPick, expPick;
+    private NumberPicker numPick, expPick, roundPick;
     private Button button;
     private Resources resources;
     private long repetitions;
+    private int rounds;
     private static final String TAG = "BenchmarkSelector";
     private PowerManager.WakeLock wakeLock;
 

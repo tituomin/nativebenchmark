@@ -2,6 +2,7 @@ package fi.helsinki.cs.tituomin.nativebenchmark.measuringtool;
 
 import fi.helsinki.cs.tituomin.nativebenchmark.measuringtool.Measurement;
 import fi.helsinki.cs.tituomin.nativebenchmark.ApplicationState;
+import fi.helsinki.cs.tituomin.nativebenchmark.Benchmark;
 
 import java.util.List;
 import java.util.LinkedList;
@@ -16,9 +17,14 @@ import java.io.File;
 import android.os.Environment;
 import java.io.InputStreamReader;
 import java.io.BufferedReader;
+import java.util.Random;
 
 
 public abstract class CommandlineTool extends MeasuringTool {
+
+    public CommandlineTool(int i) {
+        super(i);
+    }
 
     protected abstract String command();
     protected abstract String formatParameter(MeasuringOption option);
@@ -43,13 +49,16 @@ public abstract class CommandlineTool extends MeasuringTool {
         return options;
     }
 
-    public Measurement start(Runnable benchmark)
+    public Measurement start(Benchmark benchmark)
         throws InterruptedException, IOException {
         initCommand();
 
+        benchmark.setRepetitions(Long.MAX_VALUE);
         Thread benchmarkThread = new Thread(benchmark);
+        Random r = new Random();
+        int delay = r.nextInt(200);
         benchmarkThread.start();
-        Thread.sleep(2000); // todo hardcoded // randomize
+        Thread.sleep(delay);
 
         this.startDate = new Date();
 
@@ -70,8 +79,7 @@ public abstract class CommandlineTool extends MeasuringTool {
                 Log.e("tm", line);
             }
         }
-
-        notifyObservers(ApplicationState.State.MEASURING_FINISHED);
+        benchmark.restoreRepetitions();
         return measurement;
     }
 

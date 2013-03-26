@@ -11,6 +11,10 @@ import fi.helsinki.cs.tituomin.nativebenchmark.Utils;
 
 public class LinuxPerfRecordTool extends CommandlineTool {
 
+    public LinuxPerfRecordTool(int i) {
+        super(i);
+    }
+
     protected List<OptionSpec> specifyAllowedOptions(List<OptionSpec> options) {
         options = super.specifyAllowedOptions(options);
         options.add(BasicOption.OUTPUT_FILEPATH);

@@ -17,7 +17,12 @@ public class Measurement implements MetadataContainer, Iterable<Pair<String,Stri
 
     private class MeasurementIterator implements Iterator {
         public MeasurementIterator() {
-            this.currentKey = Measurement.this.values.firstKey();
+            try {
+                this.currentKey = Measurement.this.values.firstKey();
+            }
+            catch (java.util.NoSuchElementException e) {
+                this.currentKey = null;
+            }
         }
         public boolean hasNext() {
             return (currentKey != null);
@@ -47,6 +52,12 @@ public class Measurement implements MetadataContainer, Iterable<Pair<String,Stri
 
     public Set<String> labels() {
         return this.values.keySet();
+    }
+
+    public void addAll(Measurement m) {
+        for (Pair<String,String> dp : m) {
+            this.values.put(dp.first, dp.second);
+        }
     }
 
     public void addData(String key, String value) {
