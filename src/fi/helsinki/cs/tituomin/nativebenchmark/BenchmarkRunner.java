@@ -8,6 +8,7 @@ import fi.helsinki.cs.tituomin.nativebenchmark.measuringtool.ResponseTimeRecorde
 import fi.helsinki.cs.tituomin.nativebenchmark.measuringtool.LinuxPerfRecordTool;
 import fi.helsinki.cs.tituomin.nativebenchmark.BenchmarkRegistry;
 import fi.helsinki.cs.tituomin.nativebenchmark.Utils;
+
 import java.util.Date;
 import java.util.List;
 import java.util.ArrayList;
@@ -23,16 +24,14 @@ import java.io.BufferedOutputStream;
 import java.io.PrintWriter;
 import java.io.IOException;
 import java.io.FileNotFoundException;
-import android.os.Environment;
-import android.util.Log;
-import android.os.SystemClock;
 import java.util.SortedSet;
 import java.util.Collections;
 import java.util.TreeSet;
+
+import android.os.Environment;
+import android.util.Log;
+import android.os.SystemClock;
 import android.content.res.Resources;
-import android.content.pm.PackageManager;
-import android.content.pm.Signature;
-import android.content.pm.PackageManager.NameNotFoundException;
 
 public class BenchmarkRunner {
     private static final String SEPARATOR     = ",";
@@ -80,11 +79,11 @@ public class BenchmarkRunner {
             return;
         }
 
-        benchmarkParameter = new BenchmarkParameter();
+        benchmarkParameter = getBenchmarkParameter();
         BenchmarkInitialiser.init(benchmarkParameter);
 
         List<Benchmark> benchmarks = BenchmarkRegistry.getBenchmarks();
-        Map<Class, MetadataContainer> benchmarkBaseData = new HashMap<Class, MetadataContainer>();
+        Map<Class, Map<String,String>> benchmarkBaseData = new HashMap<Class, Map<String,String>>();
         for (Benchmark b : benchmarks) {
             benchmarkBaseData.put(b.getClass(), inspectBenchmark(b));
         }
@@ -96,43 +95,41 @@ public class BenchmarkRunner {
 
             int round_count = tool.getRounds();
             for (int series = 0; series < round_count; series++) {
-                List<MetadataContainer> compiledMetadata = new ArrayList<MetadataContainer> ();
-
                 Date start = new Date();
                 long endTime = 0;
 
                 long startTime = SystemClock.uptimeMillis();
-                runSeries(benchmarks, benchmarkBaseData, mainUI, compiledMetadata, tool);
+                List<Map<String,String>> collectedData = runSeries(benchmarks, benchmarkBaseData, mainUI, tool);
                 endTime = SystemClock.uptimeMillis();
 
                 measurementID = Utils.getUUID();
 
-                if (compiledMetadata.isEmpty()) {
+                if (collectedData.isEmpty()) {
                     Log.v("runner", "compiledmetadata is empty " + tool.getClass());
                     continue;
                 }
 
                 // 1. gather all labels (!ordered!)
                 SortedSet<String> labels = new TreeSet<String> ();
-                for (MetadataContainer md : compiledMetadata) {
-                    labels.addAll(md.keySet());
+                for (Map<String,String> measurementData : collectedData) {
+                    labels.addAll(measurementData.keySet());
                 }
 
                 PrintWriter writer = null;
 
                 try {
-                    writer = getWriter(new File(dataDir, "benchmarks-" + measurementID + ".csv"), false);
+                    writer = makeWriter(dataDir, "benchmarks-" + measurementID + ".csv", false);
                     for (String label : labels) {
                         writer.print(label + SEPARATOR);
                     }
                     writer.println("");
                     String[] values = new String[labels.size()];
 
-                    // print all possible values for all benchmarks
-                    for (MetadataContainer md : compiledMetadata) {
+                    // 2. print all possible values for all benchmarks
+                    for (Map<String,String> measuredData : collectedData) {
                         int i = 0;
                         for (String label : labels) {
-                            String val = md.get(label);
+                            String val = measuredData.get(label);
                             values[i++] = (val == null ? MISSING_VALUE : val);
                         }
                         for (i = 0; i < values.length; i++) {
@@ -154,7 +151,7 @@ public class BenchmarkRunner {
                 Date end = new Date();
 
                 try {
-                    writer = getWriter(new File(dataDir, "measurements.txt"), true);
+                    writer = makeWriter(dataDir, "measurements.txt", true);
                     writer.println("");
                     writer.println("id: "               + measurementID);
                     writer.println("repetitions: "      + repetitions);
@@ -181,20 +178,24 @@ public class BenchmarkRunner {
             ApplicationState.State.MEASURING_FINISHED);
         }
 
-    private static void runSeries(
-        List<Benchmark> benchmarks, Map<Class, MetadataContainer> basedata,
-        ApplicationState mainUI, List<MetadataContainer> compiledMetadata,
-        MeasuringTool tool) {
+    private static Map<String,String> makeMap() {
+        return new HashMap<String,String> ();
+    }
+
+    private static List<Map<String,String>> runSeries(
+        List<Benchmark> benchmarks, Map<Class, Map<String,String>> basedata,
+        ApplicationState mainUI, MeasuringTool tool) {
 
         final ApplicationState.State state = ApplicationState.State.MILESTONE;
-        final boolean runGC = tool.explicitGC();
+        boolean runGC = tool.explicitGC();
         int j = 0;
+        List<Map<String,String>> compiledMetadata = new ArrayList<Map<String,String>> ();
 
         for (Benchmark benchmark : benchmarks) {
-            MetadataContainer md = new BenchmarkMetadata();
+            Map<String,String> md = makeMap();
             tool.setBenchmark(benchmark);
             tool.run();
-            MetadataContainer measurement = tool.getMeasurement();
+            Map<String,String> measurement = tool.getMeasurement();
             if (!measurement.isEmpty()) {
                 md.putAll(basedata.get(benchmark.getClass()));
                 md.putAll(measurement);
@@ -216,13 +217,15 @@ public class BenchmarkRunner {
                 }
             }
         }
+        return compiledMetadata;
     }
 
-    private static PrintWriter getWriter(File file, boolean append)
+    private static PrintWriter makeWriter(File dir, String filename, boolean append)
     throws FileNotFoundException {
         return new PrintWriter(
             new BufferedOutputStream(
-                new FileOutputStream(file, append)));
+                new FileOutputStream(
+                    new File(dir, filename), append)));
     }
 
     private static String humanTime(long millis) {
@@ -236,13 +239,13 @@ public class BenchmarkRunner {
         return (
             hours   + "h " +
             minutes + "m " +
-            seconds + "s" +
-            " (" + seconds_total + " s tot.)");
+            seconds + "s " +
+            "(" + seconds_total + " s tot.)");
     }
 
-    private static MetadataContainer lastMetadata = null;
-    private static MetadataContainer inspectBenchmark(Benchmark benchmark) {
-        MetadataContainer bdata = new BenchmarkMetadata();
+    private static Map<String,String> lastMetadata = null;
+    private static Map<String,String> inspectBenchmark(Benchmark benchmark) {
+        Map<String,String> bdata = new HashMap<String,String>();
         Class c = benchmark.getClass();
         String from = benchmark.from();
         String to   = benchmark.to();
@@ -250,42 +253,41 @@ public class BenchmarkRunner {
         // reflection only works for J2C version,
         // results are cached for other versions
         if (from.equals("J") && to.equals("C")) {
-            bdata.put("no", "" + benchmark.sequenceNo());
-            bdata.put("description", benchmark.description());
             Method[] methods = c.getDeclaredMethods();
             for (int i = 0; i < methods.length; i++) {
+
                 Method m = methods[i];
                 int modifiers = m.getModifiers();
+
                 if (Modifier.isNative(modifiers)) {
-                    bdata.put("native_static", Modifier.isStatic(modifiers) ? "1" : "0");
-                    bdata.put("native_private", Modifier.isPrivate(modifiers) ? "1" : "0");
-                    bdata.put("native_protected", Modifier.isProtected(modifiers) ? "1" : "0");
-                    bdata.put("native_public", Modifier.isPublic(modifiers) ? "1" : "0");
 
-                    Class [] parameter_arr = m.getParameterTypes();
-                    List<Class> parameters = Arrays.asList(parameter_arr);
                     Map<String,Integer> parameterTypes = new HashMap<String,Integer> ();
-
+                    Class [] parameters = m.getParameterTypes();
                     Integer previousValue = null;
-                    for (Class param : parameters) {
+                    for (Class param : Arrays.asList(parameters)) {
                         String param_typename = param.getCanonicalName();
                         previousValue = parameterTypes.get(param_typename);
                         parameterTypes.put(
                             param_typename,
                             (previousValue == null ? 1 : ((int)previousValue) + 1));
                     }
-
-                    bdata.put("parameter_type_count", parameterTypes.keySet().size() + "");
-
                     for (String typename : parameterTypes.keySet()) {
                         bdata.put("parameter_type_" + typename + "_count", parameterTypes.get(typename) + "");
                     }
-
-                    bdata.put("parameter_count", parameters.size() + "");
                     Class returnType = m.getReturnType();
-                    bdata.put("return_type", returnType.getCanonicalName());
+
+                    bdata.put("parameter_type_count", parameterTypes.keySet().size() + "");
+                    bdata.put("parameter_count",      parameters.length + "");
+                    bdata.put("return_type",          returnType.getCanonicalName());
+                    bdata.put("native_static",        Modifier.isStatic(modifiers) ? "1" : "0");
+                    bdata.put("native_private",       Modifier.isPrivate(modifiers) ? "1" : "0");
+                    bdata.put("native_protected",     Modifier.isProtected(modifiers) ? "1" : "0");
+                    bdata.put("native_public",        Modifier.isPublic(modifiers) ? "1" : "0");
                 }
             }
+            bdata.put("no", "" + benchmark.sequenceNo());
+            bdata.put("description", benchmark.description());
+
             lastMetadata = bdata;
         }
         else {

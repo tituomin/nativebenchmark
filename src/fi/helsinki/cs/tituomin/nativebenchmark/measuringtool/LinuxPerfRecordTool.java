@@ -26,16 +26,18 @@ public class LinuxPerfRecordTool extends CommandlineTool {
         return "perf record -a -g";
     }
 
-    private String generateFilename (String path) {
-        return path + "/perf-" + Utils.getUUID() + ".data";
+    private String generateFilename (String uuid) {
+        return "perf-" + uuid + ".data";
     }
 
     public String formatParameter(MeasuringOption option) {
         if (option.type() == BasicOption.OUTPUT_FILEPATH) {
             String prefix = "--output=";
-            String filename = generateFilename(option.value());
+            String uuid = Utils.getUUID();
+            String filename = generateFilename(uuid);
             setFilename(filename);
-            return prefix + filename;
+            setUUID(uuid);
+            return prefix + option.value() + "/" + filename;
         }
         else if (option.type() == BasicOption.MEASURE_LENGTH) {
             return "sleep " + option.value();

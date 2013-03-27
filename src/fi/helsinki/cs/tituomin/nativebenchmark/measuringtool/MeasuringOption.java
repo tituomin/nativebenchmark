@@ -1,6 +1,5 @@
 package fi.helsinki.cs.tituomin.nativebenchmark.measuringtool;
 import fi.helsinki.cs.tituomin.nativebenchmark.measuringtool.OptionSpec;
-import fi.helsinki.cs.tituomin.nativebenchmark.MetadataContainer;
 
 import java.util.Iterator;
 import android.util.Pair;

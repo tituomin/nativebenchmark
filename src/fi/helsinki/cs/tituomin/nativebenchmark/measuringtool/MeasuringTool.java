@@ -12,8 +12,6 @@ import android.util.Log;
 import java.util.Observer;
 import java.util.Observable;
 import fi.helsinki.cs.tituomin.nativebenchmark.ApplicationState;
-import fi.helsinki.cs.tituomin.nativebenchmark.measuringtool.Measurement;
-import fi.helsinki.cs.tituomin.nativebenchmark.MetadataContainer;
 import fi.helsinki.cs.tituomin.nativebenchmark.measuringtool.MeasuringOption;
 import fi.helsinki.cs.tituomin.nativebenchmark.measuringtool.OptionSpec;
 import fi.helsinki.cs.tituomin.nativebenchmark.Benchmark;
@@ -28,7 +26,7 @@ public abstract class MeasuringTool implements Runnable {
         specifyOptions();
         hasOptions = false;
         this.rounds = rounds;
-        this.measurement = new Measurement();
+        this.measurement = new HashMap<String,String>();
     }
 
     public abstract void start(Benchmark benchmark)
@@ -134,9 +132,9 @@ public abstract class MeasuringTool implements Runnable {
 
     private List<ApplicationState> observers;
 
-    protected MetadataContainer measurement;
+    protected Map<String,String> measurement;
 
-    public MetadataContainer getMeasurement() {
+    public Map<String,String> getMeasurement() {
         if (this.options != null) {
             if (!hasOptions) {
                 for (MeasuringOption op : options.values()) {

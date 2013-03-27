@@ -3,7 +3,6 @@ package fi.helsinki.cs.tituomin.nativebenchmark;
 import fi.helsinki.cs.tituomin.nativebenchmark.measuringtool.MeasuringTool;
 import fi.helsinki.cs.tituomin.nativebenchmark.measuringtool.LinuxPerfRecordTool;
 import fi.helsinki.cs.tituomin.nativebenchmark.measuringtool.BasicOption;
-import fi.helsinki.cs.tituomin.nativebenchmark.measuringtool.Measurement;
 import fi.helsinki.cs.tituomin.nativebenchmark.BenchmarkRegistry;
 import fi.helsinki.cs.tituomin.nativebenchmark.BenchmarkInitialiser;
 import fi.helsinki.cs.tituomin.nativebenchmark.BenchmarkRunner;

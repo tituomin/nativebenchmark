@@ -1,6 +1,5 @@
 package fi.helsinki.cs.tituomin.nativebenchmark.measuringtool;
 
-import fi.helsinki.cs.tituomin.nativebenchmark.measuringtool.Measurement;
 import fi.helsinki.cs.tituomin.nativebenchmark.ApplicationState;
 import fi.helsinki.cs.tituomin.nativebenchmark.Benchmark;
 
@@ -82,12 +81,12 @@ public abstract class CommandlineTool extends MeasuringTool {
         benchmark.restoreRepetitions();
     }
 
-    public Measurement stop() {
-        throw new UnsupportedOperationException();
-    }
-
     public void setFilename(String name) {
         this.measurement.put("Filename", name);
+    }
+
+    public void setUUID(String uuid) {
+        this.measurement.put("UUID", uuid);
     }
 
     // -----
