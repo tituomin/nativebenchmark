@@ -21,9 +21,15 @@ import java.util.Arrays;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.BufferedOutputStream;
+import java.io.OutputStream;
+import java.io.InputStream;
+import java.io.BufferedInputStream;
+import java.io.FileInputStream;
 import java.io.PrintWriter;
 import java.io.IOException;
 import java.io.FileNotFoundException;
+import java.util.zip.ZipOutputStream;
+import java.util.zip.ZipEntry;
 import java.util.SortedSet;
 import java.util.Collections;
 import java.util.TreeSet;
@@ -52,11 +58,11 @@ public class BenchmarkRunner {
         perfDir.mkdir();
 
         measuringTools = new ArrayList<MeasuringTool> ();
-        measuringTools.add(new PlainRunner(1));
-        measuringTools.add(new ResponseTimeRecorder(rounds));
-        measuringTools.add(new LinuxPerfRecordTool(1)
+        measuringTools.add(new PlainRunner(1)); // warmup round
+        measuringTools.add(new ResponseTimeRecorder(rounds)); // total response time
+        measuringTools.add(new LinuxPerfRecordTool(1) // call profile
                         .set(BasicOption.OUTPUT_FILEPATH, perfDir.getPath())
-                        .set(BasicOption.MEASURE_LENGTH, "1"));
+                        .set(BasicOption.MEASURE_LENGTH, "0.1"));
     }
 
 
@@ -105,7 +111,6 @@ public class BenchmarkRunner {
                 measurementID = Utils.getUUID();
 
                 if (collectedData.isEmpty()) {
-                    Log.v("runner", "compiledmetadata is empty " + tool.getClass());
                     continue;
                 }
 
@@ -142,7 +147,7 @@ public class BenchmarkRunner {
 
                 }
                 catch (IOException e) {
-                    Log.e("Nativebenchmark", "ioexception " + e);
+                    logE(e);
                 }
                 if (writer != null) {
                     writer.close();
@@ -166,17 +171,89 @@ public class BenchmarkRunner {
                     writer.println("");
                 }
                 catch (IOException e ) {
-                    Log.e("Nativebenchmark", "ioexception", e);
+                    logE(e);
                 }
                 finally {
                     writer.close();
                 }
+                OutputStream os = null;
+                try {
+                    File zip = new File(dataDir, "perfdata-" + measurementID + ".zip");
+                    os = makeOutputStream(zip, false);
+                    List<String> filenames = tool.getFilenames();
+                    Log.v("BenchmarkRunner", "filenames " + filenames.size());
+                    filenames.add(new File(dataDir, "benchmarks-" + measurementID + ".csv").getAbsolutePath());
+                    writeToZipFile(os, filenames, measurementID);
+                    // deleteFiles(filenames);
+                }
+                catch (FileNotFoundException e) {
+                    logE(e);
+                }
+                catch (IOException e) {
+                    logE("Error writing zip file.",  e);
+                }
+                try {
+                    if (os != null) {
+                        os.close();
+                    }
+                }
+                catch (IOException e) {
+                    logE("Error closing file.", e);
+                }
             }
         }
-
         mainUI.updateState(
             ApplicationState.State.MEASURING_FINISHED);
+    }
+
+    private final static String TAG = "BenchmarkRunner";
+    private static void logE(String message, Exception e) {
+        Log.e(TAG, message, e);
+    }
+    private static void logE(Exception e) {
+        Log.e(TAG, "exception", e);
+    }
+    private static void logE(String msg) {
+        Log.e(TAG, "msg");
+    }
+
+    private static void deleteFiles(List<String> filenames) {
+        for (String filename: filenames) {
+            boolean success = new File(filename).delete();
+            if (!success) {
+                logE("Error deleting file " + filename);
+            }
         }
+    }
+
+    private static void
+    writeToZipFile(OutputStream os, List<String> filenames, String mID)
+    throws IOException
+    {
+        ZipOutputStream zos = new ZipOutputStream(os);
+        final int byteCount = 512 * 1024;
+        byte[] bytes = new byte[byteCount];
+        for (String filename : filenames) {
+            try {
+                InputStream is = makeInputStream(filename);
+                ZipEntry entry = new ZipEntry(mID + "/" + new File(filename).getName());
+                int bytesRead = -1;
+                zos.putNextEntry(entry);
+                while ((bytesRead = is.read(bytes, 0, byteCount)) != -1) {
+                    zos.write(bytes, 0, bytesRead);
+                }
+                zos.closeEntry();
+            } finally {
+                zos.flush();
+            }                
+        }
+        try {
+            zos.close();
+        }
+        catch (IOException e) {
+            logE(e);
+        }
+    }
 
     private static Map<String,String> makeMap() {
         return new HashMap<String,String> ();
@@ -202,7 +279,7 @@ public class BenchmarkRunner {
                 compiledMetadata.add(md);
             }
             // todo: remove UI overhead?
-            mainUI.updateState(state, "Benchmark " + ++j);
+            mainUI.updateState(state, "tool " + tool.getClass().getName() + " benchmark " + ++j);
 
             if (runGC && j % 50 == 0) {
                 System.gc();
@@ -220,12 +297,34 @@ public class BenchmarkRunner {
         return compiledMetadata;
     }
 
-    private static PrintWriter makeWriter(File dir, String filename, boolean append)
-    throws FileNotFoundException {
-        return new PrintWriter(
-            new BufferedOutputStream(
-                new FileOutputStream(
-                    new File(dir, filename), append)));
+    private static PrintWriter
+    makeWriter(File dir, String filename, boolean append)
+    throws FileNotFoundException
+    {
+        return new PrintWriter(makeOutputStream(dir, filename, append));
+    }
+
+    private static OutputStream
+    makeOutputStream(File dir, String filename, boolean append)
+    throws FileNotFoundException
+    {
+        return makeOutputStream(new File(dir, filename), append);
+    }
+
+    private static OutputStream
+    makeOutputStream(File file, boolean append)
+    throws FileNotFoundException
+    {
+        return new BufferedOutputStream(
+            new FileOutputStream(
+                file, append));
+    }
+
+    private static InputStream
+    makeInputStream(String filename)
+    throws FileNotFoundException
+    {
+        return new BufferedInputStream(new FileInputStream(new File(filename)));
     }
 
     private static String humanTime(long millis) {

@@ -35,7 +35,7 @@ public class LinuxPerfRecordTool extends CommandlineTool {
             String prefix = "--output=";
             String uuid = Utils.getUUID();
             String filename = generateFilename(uuid);
-            setFilename(filename);
+            setFilename(filename, option.value());
             setUUID(uuid);
             return prefix + option.value() + "/" + filename;
         }

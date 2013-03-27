@@ -17,6 +17,7 @@ import android.os.Environment;
 import java.io.InputStreamReader;
 import java.io.BufferedReader;
 import java.util.Random;
+import java.util.ArrayList;
 
 
 public abstract class CommandlineTool extends MeasuringTool {
@@ -81,9 +82,15 @@ public abstract class CommandlineTool extends MeasuringTool {
         benchmark.restoreRepetitions();
     }
 
-    public void setFilename(String name) {
+    public void setFilename(String name, String path) {
+        filenames.add(path + "/" + name);
         this.measurement.put("Filename", name);
     }
+
+    public List<String> getFilenames() {
+        return filenames;
+    }
+        
 
     public void setUUID(String uuid) {
         this.measurement.put("UUID", uuid);
@@ -114,6 +121,7 @@ public abstract class CommandlineTool extends MeasuringTool {
     private long startTime;
     private String command;
 
+    private static List<String> filenames = new ArrayList<String> ();
     private static final DateFormat dateFormat = DateFormat.getDateTimeInstance();
 
 }
