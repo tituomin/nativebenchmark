@@ -19,7 +19,9 @@ gen/
 
 # native generated files and object files
 jni/nativebenchmark.c
+jni/nativerunners.c
 jni/natives.h
+jni/native_benchmarks.h
 libs/armeabi*
 obj/local/armeabi
 
