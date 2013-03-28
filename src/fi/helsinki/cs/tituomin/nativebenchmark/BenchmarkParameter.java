@@ -1,6 +1,11 @@
 package fi.helsinki.cs.tituomin.nativebenchmark;
 
+import java.util.Arrays;
+
 public class BenchmarkParameter {
+
+    public native int initReturnvalues();
+    public native void freeReturnvalues();
 
     private static int DEFAULTSIZE = 20;
     private static int MAXSIZE = 1024;
@@ -21,6 +26,8 @@ public class BenchmarkParameter {
         }
     }
 
+
+    // must call initreturnvalues and freereturnvalues after...
     public void setSize(int size) {
         if (size <= MAXSIZE) {
             this.size = size;
@@ -136,21 +143,21 @@ public class BenchmarkParameter {
     }
 
     private int size;
-
     private static boolean generated = false;
-    private static final StringBuilder STRING = new StringBuilder(MAXSIZE);
-    private static final Object OBJECT = new Object();
-    private static final Class CLASS = OBJECT.getClass();
-    private static final Throwable THROWABLE = new Exception();
+
+    private static final StringBuilder STRING    = new StringBuilder(MAXSIZE);
+    private static final Object OBJECT           = new Object();
+    private static final Class CLASS             = OBJECT.getClass();
+    private static final Throwable THROWABLE     = new Exception();
     private static final boolean[] BOOLEAN_ARRAY = new boolean[MAXSIZE];
-    private static final byte[] BYTE_ARRAY = new byte[MAXSIZE];
-    private static final char[] CHAR_ARRAY = new char[MAXSIZE];
-    private static final double[] DOUBLE_ARRAY = new double[MAXSIZE];
-    private static final float[] FLOAT_ARRAY = new float[MAXSIZE];
-    private static final int[] INT_ARRAY = new int[MAXSIZE];
-    private static final long[] LONG_ARRAY = new long[MAXSIZE];
-    private static final short[] SHORT_ARRAY = new short[MAXSIZE];
-    private static final Object[] OBJECT_ARRAY = new Object[MAXSIZE];
+    private static final byte[] BYTE_ARRAY       = new byte[MAXSIZE];
+    private static final char[] CHAR_ARRAY       = new char[MAXSIZE];
+    private static final double[] DOUBLE_ARRAY   = new double[MAXSIZE];
+    private static final float[] FLOAT_ARRAY     = new float[MAXSIZE];
+    private static final int[] INT_ARRAY         = new int[MAXSIZE];
+    private static final long[] LONG_ARRAY       = new long[MAXSIZE];
+    private static final short[] SHORT_ARRAY     = new short[MAXSIZE];
+    private static final Object[] OBJECT_ARRAY   = new Object[MAXSIZE];
 
 }
 
