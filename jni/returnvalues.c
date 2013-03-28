@@ -23,7 +23,7 @@ Java_fi_helsinki_cs_tituomin_nativebenchmark_BenchmarkParameter_initReturnvalues
     CHECK_AND_CALL(jobject,       Object,       "()Ljava/lang/Object;")
     CHECK_AND_CALL(jclass,        Class,        "()Ljava/lang/Class;")
     CHECK_AND_CALL(jstring,       String,       "()Ljava/lang/String;")
-    CHECK_AND_CALL(jthrowable,    Throwable,    "()Ljava/lang/Throwable")
+    CHECK_AND_CALL(jthrowable,    Throwable,    "()Ljava/lang/Throwable;")
 
     return 1;
 
