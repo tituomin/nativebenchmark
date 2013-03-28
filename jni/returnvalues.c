@@ -1,5 +1,6 @@
 #include <jni.h>
 #include <android/log.h>
+#include <stdio.h>
 #include "returnvalues.h"
 #include "natives.h"
 

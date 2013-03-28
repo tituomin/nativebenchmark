@@ -12,6 +12,7 @@ public class BenchmarkRegistry {
     private static List<Benchmark> benchmarks;
 
     public static long repetitions;
+    public static final long CHECK_INTERRUPTED_INTERVAL = 1000000;
 
     public static List<Benchmark> getBenchmarks() {
         return benchmarks;
@@ -21,9 +22,11 @@ public class BenchmarkRegistry {
         repetitions = reps;
         benchmarks = new LinkedList<Benchmark> ();
         Class jCounterparts = Class.forName("fi.helsinki.cs.tituomin.nativebenchmark.benchmark.JavaCounterparts");
-        initNative(reps, jCounterparts);
+        Class threadClass = Class.forName("java.lang.Thread");
+        initNative(reps, CHECK_INTERRUPTED_INTERVAL, jCounterparts, threadClass);
     }
 
-    public static native void initNative(long repetitions, Class javaCounterparts);
+    public static native void initNative(long repetitions, long interval, Class javaCounterparts, Class threadClass);
+    public static native void setRepetitions(long repetitions);
 
 }

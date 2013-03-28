@@ -3,6 +3,7 @@ t = """
 package {packagename};
 
 import fi.helsinki.cs.tituomin.nativebenchmark.Benchmark;
+import fi.helsinki.cs.tituomin.nativebenchmark.BenchmarkRegistry;
 import fi.helsinki.cs.tituomin.nativebenchmark.BenchmarkParameter;
 import fi.helsinki.cs.tituomin.nativebenchmark.measuringtool.BasicOption;
 {imports}
@@ -33,10 +34,12 @@ public class {classname} {class_relations} implements Benchmark {{
     public void setRepetitions(long reps) {{
         storedRepetitions = repetitions;
         repetitions = reps;
+        BenchmarkRegistry.setRepetitions(reps);
     }}
 
     public void restoreRepetitions() {{
         repetitions = storedRepetitions;
+        BenchmarkRegistry.setRepetitions(storedRepetitions);
     }}
 
     {native_method}
@@ -62,8 +65,21 @@ java_run_method_t   = """
         {parameter_declarations};
         {parameter_initialisations};
 
-        long i;
-        for (i = 0; i < repetitions; i++) {{
+        final long INTERVAL = BenchmarkRegistry.CHECK_INTERRUPTED_INTERVAL;
+        long division = repetitions / INTERVAL;
+        long remainder = repetitions % INTERVAL;
+        if (division > 0) {{
+            for (long i = 0; i < INTERVAL; i++) {{
+               for (long j = 0; j < division; j++) {{
+                   {counterpart_method_name} ({counterpart_method_arguments});
+               }}
+               if (Thread.currentThread().isInterrupted()) {{
+                   return;
+               }}
+            }}
+        }}
+
+        for (long j = 0; j < remainder; j++) {{
             {counterpart_method_name} ({counterpart_method_arguments});
         }}
     }}

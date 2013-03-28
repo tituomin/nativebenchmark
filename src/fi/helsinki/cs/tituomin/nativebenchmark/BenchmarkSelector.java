@@ -38,17 +38,17 @@ public class BenchmarkSelector extends Activity implements ApplicationState {
 
         this.numPick    = (NumberPicker) findViewById(R.id.picker_num);
         this.expPick    = (NumberPicker) findViewById(R.id.picker_exp);
-        this.roundPick    = (NumberPicker) findViewById(R.id.picker_rounds);
+        //        this.roundPick    = (NumberPicker) findViewById(R.id.picker_rounds);
 
         NumberPicker.OnValueChangeListener listener = new RepsListener();
 
         numPick.setMinValue(1); numPick.setMaxValue(9); numPick.setValue(1);
         expPick.setMinValue(0); expPick.setMaxValue(9); expPick.setValue(6);
-        roundPick.setMinValue(1); roundPick.setMaxValue(20); roundPick.setValue(5);
+        //        roundPick.setMinValue(1); roundPick.setMaxValue(20); roundPick.setValue(5);
 
         numPick.setOnValueChangedListener(listener);
         expPick.setOnValueChangedListener(listener);
-        roundPick.setOnValueChangedListener(listener);
+        //        roundPick.setOnValueChangedListener(listener);
         listener.onValueChange(numPick, 0, 0);
 
         this.resources  = getResources();
@@ -105,16 +105,18 @@ public class BenchmarkSelector extends Activity implements ApplicationState {
                 getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
                 expPick.setEnabled(false);
                 numPick.setEnabled(false);
-                button.setEnabled(false);
+                switchButton(button);
                 break;
             case MILESTONE:
                 break;
+            case INTERRUPTED:
+                // intended fallthrough
             case MEASURING_FINISHED:
                 wakeLock.release();
                 getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
                 // intended fallthrough
             case INITIALISED:
-                button.setEnabled(true);
+                resetButton(button);
                 numPick.setEnabled(true);
                 expPick.setEnabled(true);
                 break;
@@ -122,15 +124,42 @@ public class BenchmarkSelector extends Activity implements ApplicationState {
         }
     }
 
+    private void resetButton(Button button) {
+        button.setText(R.string.start_task);
+        button.setOnClickListener(new View.OnClickListener() {
+                public void onClick(View v) {
+                    startMeasuring(v);
+                }
+            });
+    }
+
+    private void switchButton(Button bt) {
+        bt.setText(R.string.end_task);
+        bt.setOnClickListener(
+            new View.OnClickListener() {
+                public void onClick(View v) {
+                    button.setText(R.string.end_task_confirmation);
+                    button.setOnClickListener(
+                        new View.OnClickListener() {
+                            public void onClick(View v) {
+                                setMessage(ApplicationState.State.INTERRUPTING.stringId);
+                                measuringThread.interrupt();
+                            }
+                        });
+                }
+            });
+    }
+
+
+
     public void startMeasuring(View view) {
-        Thread measuringThread = new Thread(
+        measuringThread = new Thread(
             new Runnable () {
                 public void run() {
-                    BenchmarkRunner.runBenchmarks(BenchmarkSelector.this, rounds, repetitions, resources);
+                    BenchmarkRunner.runBenchmarks(BenchmarkSelector.this, repetitions, resources);
                 }
             });
         this.updateState(ApplicationState.State.MEASURING);
-
         measuringThread.start();
     }
 
@@ -138,7 +167,7 @@ public class BenchmarkSelector extends Activity implements ApplicationState {
         public void onValueChange(NumberPicker picker, int oldVal, int newVal) {
             long exp = BenchmarkSelector.this.expPick.getValue();
             long value = BenchmarkSelector.this.numPick.getValue();
-            rounds = BenchmarkSelector.this.roundPick.getValue();
+            //            rounds = BenchmarkSelector.this.roundPick.getValue();
             while (exp-- > 0) { value *= 10; }
             repetitions = value;
             repView.setText("" + repetitions);
@@ -147,13 +176,14 @@ public class BenchmarkSelector extends Activity implements ApplicationState {
 
     private MeasuringTool tool;
     private TextView textView, resultView, repView;
-    private NumberPicker numPick, expPick, roundPick;
+    private NumberPicker numPick, expPick;//, roundPick;
     private Button button;
     private Resources resources;
     private long repetitions;
-    private int rounds;
+    //    private int rounds;
     private static final String TAG = "BenchmarkSelector";
     private PowerManager.WakeLock wakeLock;
+    private Thread measuringThread;
 
     static {
         System.loadLibrary("nativebenchmark");

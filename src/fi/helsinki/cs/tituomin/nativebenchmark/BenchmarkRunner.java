@@ -53,28 +53,28 @@ public class BenchmarkRunner {
         return benchmarkParameter;
     }
 
-    public static void initTools(File dataDir, int rounds) {
+    public static void initTools(File dataDir) {
         File perfDir = new File(dataDir, "perf");
         perfDir.mkdir();
 
         measuringTools = new ArrayList<MeasuringTool> ();
         measuringTools.add(new PlainRunner(1)); // warmup round
-        measuringTools.add(new ResponseTimeRecorder(rounds)); // total response time
         measuringTools.add(new LinuxPerfRecordTool(1) // call profile
-                        .set(BasicOption.OUTPUT_FILEPATH, perfDir.getPath())
-                        .set(BasicOption.MEASURE_LENGTH, "0.1"));
+                           .set(BasicOption.OUTPUT_FILEPATH, perfDir.getPath())
+                           .set(BasicOption.MEASURE_LENGTH, "0.1")); // todo: proper val
+        measuringTools.add(new ResponseTimeRecorder(1000)); // total response time
     }
 
 
-    public static void runBenchmarks(
-        ApplicationState mainUI, int rounds, long repetitions,
-        Resources resources) {
+    public static void
+    runBenchmarks(ApplicationState mainUI, long repetitions,
+                  Resources resources) {
 
         File sd = Environment.getExternalStorageDirectory();
         File dataDir = new File(sd, "results");
         dataDir.mkdir();
 
-        initTools(dataDir, rounds);
+        initTools(dataDir);
 
         try {
             BenchmarkRegistry.init(repetitions);
@@ -99,13 +99,30 @@ public class BenchmarkRunner {
         for (MeasuringTool tool : measuringTools) {
             String measurementID;
 
-            int round_count = tool.getRounds();
-            for (int series = 0; series < round_count; series++) {
+            int max_rounds = tool.getRounds();
+            for (int series = 0; series < max_rounds; series++) {
                 Date start = new Date();
                 long endTime = 0;
 
                 long startTime = SystemClock.uptimeMillis();
-                List<Map<String,String>> collectedData = runSeries(benchmarks, benchmarkBaseData, mainUI, tool);
+                List<Map<String,String>> collectedData;
+                try {
+                     collectedData = runSeries(benchmarks, benchmarkBaseData, mainUI, tool);                    
+                }
+                catch (InterruptedException e) {
+                    logE("Measuring thread was interrupted", e);
+                    mainUI.updateState(
+                        ApplicationState.State.INTERRUPTED);
+                    return;
+                }
+                catch (IOException e) {
+                    logE("Measuring caused IO exception", e);
+                    mainUI.updateState(
+                        ApplicationState.State.ERROR);
+                    return;
+
+                }
+
                 endTime = SystemClock.uptimeMillis();
 
                 measurementID = Utils.getUUID();
@@ -160,7 +177,6 @@ public class BenchmarkRunner {
                     writer.println("");
                     writer.println("id: "               + measurementID);
                     writer.println("repetitions: "      + repetitions);
-                    writer.println("rounds: "           + rounds);
                     writer.println("start: "            + start);
                     writer.println("end: "              + end);
                     writer.println("duration: "         + humanTime(endTime - startTime));
@@ -261,7 +277,8 @@ public class BenchmarkRunner {
 
     private static List<Map<String,String>> runSeries(
         List<Benchmark> benchmarks, Map<Class, Map<String,String>> basedata,
-        ApplicationState mainUI, MeasuringTool tool) {
+        ApplicationState mainUI, MeasuringTool tool)
+        throws InterruptedException, IOException {
 
         final ApplicationState.State state = ApplicationState.State.MILESTONE;
         boolean runGC = tool.explicitGC();
@@ -270,8 +287,10 @@ public class BenchmarkRunner {
 
         for (Benchmark benchmark : benchmarks) {
             Map<String,String> md = makeMap();
-            tool.setBenchmark(benchmark);
-            tool.run();
+            if (Thread.interrupted()) {
+                throw new InterruptedException();
+            }
+            tool.start(benchmark);
             Map<String,String> measurement = tool.getMeasurement();
             if (!measurement.isEmpty()) {
                 md.putAll(basedata.get(benchmark.getClass()));
@@ -283,15 +302,7 @@ public class BenchmarkRunner {
 
             if (runGC && j % 50 == 0) {
                 System.gc();
-                try {
-                    Thread.sleep(200);
-                }
-                catch (InterruptedException e) {
-                    Log.e("BenchmarkRunner", "Measuring thread was interrupted", e);
-                    mainUI.updateState(
-                        ApplicationState.State.ERROR,
-                        "Measuring was interrupted");
-                }
+                Thread.sleep(200);
             }
         }
         return compiledMetadata;

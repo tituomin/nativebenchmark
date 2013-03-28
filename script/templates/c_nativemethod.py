@@ -18,8 +18,21 @@ Java_{packagename}_{classname}_run
     {parameter_declarations};
     {parameter_initialisations};
 
-    jlong i;
-    for (i = 0; i < repetitions; i++) {{
+    jlong division  = repetitions / CHECK_INTERRUPTED_INTERVAL;
+    jlong remainder = repetitions % CHECK_INTERRUPTED_INTERVAL;
+    jlong i, j;
+
+    if (division > 0) {{
+        for (i = 0; i < CHECK_INTERRUPTED_INTERVAL; i++) {{
+            for (j = 0; j < division; j++) {{
+                {counterpart_method_name} ({counterpart_method_arguments});
+            }}
+            if (check_interrupted(env)) {{
+                return;
+            }}
+        }}
+    }}
+    for (j = 0; j < remainder; j++) {{
         {counterpart_method_name} ({counterpart_method_arguments});
     }}
 }}
@@ -36,24 +49,52 @@ Java_{packagename}_{classname}_run
     {parameter_declarations};
     {parameter_initialisations};
 
-    jlong i, refs = 0;
+    jlong refs = 0;
 
-    for (i = 0; i < repetitions; i++) {{
+    jlong division  = repetitions / CHECK_INTERRUPTED_INTERVAL;
+    jlong remainder = repetitions % CHECK_INTERRUPTED_INTERVAL;
+    jlong i, j;
+
+    if (division > 0) {{
+        for (i = 0; i < CHECK_INTERRUPTED_INTERVAL; i++) {{
+            for (j = 0; j < division; j++) {{
+                if (refs == 0) {{
+                    refs = LOCAL_FRAME_SIZE;
+                    if ((*env)->PushLocalFrame(env, LOCAL_FRAME_SIZE) < 0) {{
+                        __android_log_write(ANDROID_LOG_ERROR,                      
+                            "nativebenchmark", "can't ensure capacity");
+                        return;
+                    }}
+                }}
+    
+                (*env)->CallStatic{java_method_type}Method{call_variant}(env, java_counterparts_class, mid{arguments});
+    
+                if (--refs == 0) {{
+                    (*env)->PopLocalFrame(env, NULL);
+                }}
+            }}
+            if (check_interrupted(env)) {{
+                return;
+            }}
+        }}
+    }}
+
+    refs = 0;
+    for (j = 0; j < remainder; j++) {{
         if (refs == 0) {{
             refs = LOCAL_FRAME_SIZE;
             if ((*env)->PushLocalFrame(env, LOCAL_FRAME_SIZE) < 0) {{
-                __android_log_write(ANDROID_LOG_ERROR,                      
+                __android_log_write(ANDROID_LOG_ERROR,
                     "nativebenchmark", "can't ensure capacity");
                 return;
             }}
         }}
-
-        (*env)->Call{java_method_type}Method{call_variant}(env, instance, mid{arguments});
-
-        if (--refs == 0) {{
+         (*env)->CallStatic{java_method_type}Method{call_variant}(env, java_counterparts_class, mid{arguments});
+         if (--refs == 0) {{
             (*env)->PopLocalFrame(env, NULL);
         }}
     }}
+
 }}
 
 """

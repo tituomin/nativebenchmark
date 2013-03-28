@@ -10,7 +10,9 @@ Java_{package}_{classname}_{function}
 (JNIEnv *env, {parameters}) {{
     // gettimeofday
     jlong i;
+    jlong 
     for (i = 0; i < repetitions; i++) {{
+
         {jni_function_name} ({arguments});
     }}
     // gettimeofday

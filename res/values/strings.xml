@@ -2,9 +2,13 @@
 <resources>
     <string name="app_name">Native Benchmark</string>
     <string name="start_task">Start measuring</string>
+    <string name="end_task">Interrupt measuring</string>
+    <string name="end_task_confirmation">Really interrupt?</string>
     <string name="measuring_started">Measuring started</string>
     <string name="measuring_milestone">Measuring...</string>
     <string name="measuring_finished">Measuring finished</string>
+    <string name="interrupting">Interrupting...</string>
+    <string name="interrupted">Measuring interrupted.</string>
     <string name="error">An error occurred</string>
     <string name="base_val">repetitions</string>
     <string name="exponent">exponent</string>

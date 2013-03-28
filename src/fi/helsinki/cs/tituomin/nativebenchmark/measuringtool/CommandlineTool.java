@@ -53,10 +53,15 @@ public abstract class CommandlineTool extends MeasuringTool {
         throws InterruptedException, IOException {
         initCommand();
 
-        benchmark.setRepetitions(Long.MAX_VALUE);
         Thread benchmarkThread = new Thread(benchmark);
         Random r = new Random();
         int delay = r.nextInt(200);
+
+        if (Thread.interrupted()) {
+            throw new InterruptedException();
+        }
+        benchmark.setRepetitions(Long.MAX_VALUE);
+
         benchmarkThread.start();
         Thread.sleep(delay);
 
@@ -64,9 +69,17 @@ public abstract class CommandlineTool extends MeasuringTool {
 
         this.process = Runtime.getRuntime().exec(this.command);
         InputStream err = process.getErrorStream();
+        if (Thread.interrupted()) {
+            throw new InterruptedException();
+        }
         this.process.waitFor();
 
+        if (Thread.interrupted()) {
+            throw new InterruptedException();
+        }
+
         benchmarkThread.interrupt();
+        benchmarkThread.join();
         
         int exitValue = this.process.exitValue();
         if (exitValue == 0) {

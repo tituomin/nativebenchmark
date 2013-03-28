@@ -3,7 +3,7 @@
 #define RETURNVALUES_H_
 
 #define RETURN_VALUE(type) type type ## Value;
-#define NULL 0
+//#define NULL 0
 
 #define LOCAL_FRAME_SIZE 100
 

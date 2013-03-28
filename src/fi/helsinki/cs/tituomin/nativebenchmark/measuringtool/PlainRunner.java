@@ -26,7 +26,7 @@ public class PlainRunner extends MeasuringTool {
 
     public void start(Benchmark benchmark)
     throws InterruptedException, IOException {
-        benchmark.setRepetitions(2000);
+        benchmark.setRepetitions(3000);
         benchmark.run();
         benchmark.restoreRepetitions();
     }
