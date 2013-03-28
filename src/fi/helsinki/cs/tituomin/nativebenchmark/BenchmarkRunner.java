@@ -107,7 +107,9 @@ public class BenchmarkRunner {
                 long startTime = SystemClock.uptimeMillis();
                 List<Map<String,String>> collectedData;
                 try {
-                     collectedData = runSeries(benchmarks, benchmarkBaseData, mainUI, tool);                    
+                    System.gc();
+                    Thread.sleep(500);
+                    collectedData = runSeries(benchmarks, benchmarkBaseData, mainUI, tool);                    
                 }
                 catch (InterruptedException e) {
                     logE("Measuring thread was interrupted", e);

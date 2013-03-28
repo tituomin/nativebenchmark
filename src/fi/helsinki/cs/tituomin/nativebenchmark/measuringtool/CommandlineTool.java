@@ -51,15 +51,15 @@ public abstract class CommandlineTool extends MeasuringTool {
 
     public void start(Benchmark benchmark)
         throws InterruptedException, IOException {
-        initCommand();
+        if (Thread.interrupted()) {
+            throw new InterruptedException();
+        }
 
+        initCommand();
         Thread benchmarkThread = new Thread(benchmark);
         Random r = new Random();
         int delay = r.nextInt(200);
 
-        if (Thread.interrupted()) {
-            throw new InterruptedException();
-        }
         benchmark.setRepetitions(Long.MAX_VALUE);
 
         benchmarkThread.start();
@@ -69,17 +69,20 @@ public abstract class CommandlineTool extends MeasuringTool {
 
         this.process = Runtime.getRuntime().exec(this.command);
         InputStream err = process.getErrorStream();
+        try {
+            this.process.waitFor();
+        }
+        catch (InterruptedException e) {
+            throw e;
+        }
+        finally {
+            benchmarkThread.interrupt();
+            benchmarkThread.join();
+            benchmark.restoreRepetitions();
+        }
         if (Thread.interrupted()) {
             throw new InterruptedException();
         }
-        this.process.waitFor();
-
-        if (Thread.interrupted()) {
-            throw new InterruptedException();
-        }
-
-        benchmarkThread.interrupt();
-        benchmarkThread.join();
         
         int exitValue = this.process.exitValue();
         if (exitValue == 0) {
@@ -91,8 +94,8 @@ public abstract class CommandlineTool extends MeasuringTool {
             while ((line = br.readLine()) != null) {
                 Log.e("tm", line);
             }
+            throw new IOException("External command failed. See log.");
         }
-        benchmark.restoreRepetitions();
     }
 
     public void setFilename(String name, String path) {

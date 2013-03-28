@@ -30,13 +30,13 @@ int check_interrupted(JNIEnv *env) {{
     jobject current_thread = NULL;
     current_thread = (*env)->CallStaticObjectMethod(env, thread_class, current_thread_mid);
     if (current_thread == NULL) {{
-        __android_log_write(ANDROID_LOG_ERROR, "check_interrupted", "Can't get curren thread");
+        __android_log_write(ANDROID_LOG_ERROR, "check_interrupted", "Can't get current thread");
         return 1;
     }}
     jboolean interrupted = (*env)->CallBooleanMethod(env, current_thread, is_interrupted_mid);
     (*env)->DeleteLocalRef(env, current_thread);
     if (interrupted == JNI_TRUE) {{
-        __android_log_write(ANDROID_LOG_VERBOSE, "check_interrupted", "Was interrupted");
+//        __android_log_write(ANDROID_LOG_VERBOSE, "check_interrupted", "Was interrupted");
         return 1;
     }}
     return 0;

@@ -68,15 +68,13 @@ java_run_method_t   = """
         final long INTERVAL = BenchmarkRegistry.CHECK_INTERRUPTED_INTERVAL;
         long division = repetitions / INTERVAL;
         long remainder = repetitions % INTERVAL;
-        if (division > 0) {{
-            for (long i = 0; i < INTERVAL; i++) {{
-               for (long j = 0; j < division; j++) {{
-                   {counterpart_method_name} ({counterpart_method_arguments});
-               }}
-               if (Thread.currentThread().isInterrupted()) {{
-                   return;
-               }}
-            }}
+        for (long i = 0; i < division; i++) {{
+           for (long j = 0; j < INTERVAL; j++) {{
+               {counterpart_method_name} ({counterpart_method_arguments});
+           }}
+           if (Thread.currentThread().isInterrupted()) {{
+               return;
+           }}
         }}
 
         for (long j = 0; j < remainder; j++) {{
