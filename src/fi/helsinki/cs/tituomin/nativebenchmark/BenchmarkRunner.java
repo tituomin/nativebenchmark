@@ -91,6 +91,7 @@ public class BenchmarkRunner {
         List<Benchmark> benchmarks = BenchmarkRegistry.getBenchmarks();
         Map<Class, Map<String,String>> benchmarkBaseData = new HashMap<Class, Map<String,String>>();
         for (Benchmark b : benchmarks) {
+            // notice, order must be preserved for inspectbenchmark
             benchmarkBaseData.put(b.getClass(), inspectBenchmark(b));
         }
 
@@ -120,18 +121,18 @@ public class BenchmarkRunner {
                 catch (IOException e) {
                     logE("Measuring caused IO exception", e);
                     mainUI.updateState(
-                        ApplicationState.State.ERROR);
+                        ApplicationState.State.ERROR, e.getMessage());
                     return;
 
                 }
-
-                endTime = SystemClock.uptimeMillis();
-
-                measurementID = Utils.getUUID();
-
                 if (collectedData.isEmpty()) {
+                    // a warmup round or an interrupted round
+                    // contains no data
                     continue;
                 }
+
+                endTime = SystemClock.uptimeMillis();
+                measurementID = Utils.getUUID();
 
                 // 1. gather all labels (!ordered!)
                 SortedSet<String> labels = new TreeSet<String> ();
@@ -288,23 +289,44 @@ public class BenchmarkRunner {
         List<Map<String,String>> compiledMetadata = new ArrayList<Map<String,String>> ();
 
         for (Benchmark benchmark : benchmarks) {
-            Map<String,String> md = makeMap();
+            Map<String,String> results = makeMap();
             if (Thread.interrupted()) {
                 throw new InterruptedException();
             }
-            tool.start(benchmark);
-            Map<String,String> measurement = tool.getMeasurement();
-            if (!measurement.isEmpty()) {
-                md.putAll(basedata.get(benchmark.getClass()));
-                md.putAll(measurement);
-                compiledMetadata.add(md);
-            }
-            // todo: remove UI overhead?
-            mainUI.updateState(state, "tool " + tool.getClass().getName() + " benchmark " + ++j);
+            Map<String,String> benchmarkProperties = basedata.get(benchmark.getClass());
+            BenchmarkParameter bPar = getBenchmarkParameter();
+            int[] sizeRange = { bPar.DEFAULTSIZE };
 
-            if (runGC && j % 50 == 0) {
-                System.gc();
-                Thread.sleep(200);
+            // if parameter size can be varied, vary it
+            if (benchmarkProperties.get("has_reference_types").equals("1") &&
+                Integer.parseInt(benchmarkProperties.get("parameter_count")) < 2) {
+
+                    sizeRange = new int[bPar.RANGE + 1];
+                    for (int i = 0; i < sizeRange.length; i++) {
+                        sizeRange[i] = (bPar.MAXSIZE / sizeRange.length) * i;
+                    }
+            }
+            for (int i = 0; i < sizeRange.length; i++) {
+                bPar.setSize(sizeRange[i]);
+                bPar.initReturnvalues();
+
+                tool.start(benchmark);
+                Map<String,String> measurement = tool.getMeasurement();
+                if (!measurement.isEmpty()) {
+                    // todo: actual vs. requested size
+                    results.put("dynamic_size", "" + sizeRange[i]);
+                    results.putAll(benchmarkProperties);
+                    results.putAll(measurement);
+                    compiledMetadata.add(results);
+                }
+                // todo: remove UI overhead?
+                mainUI.updateState(state, "tool " + tool.getClass().getName() + " benchmark " + ++j);
+
+                bPar.freeReturnvalues();
+                if (runGC && j % 50 == 0) {
+                    System.gc();
+                    Thread.sleep(200);
+                }
             }
         }
         return compiledMetadata;
@@ -356,6 +378,8 @@ public class BenchmarkRunner {
     }
 
     private static Map<String,String> lastMetadata = null;
+    // this method has to be called with the benchmarks
+    // in the original order (j2c, the others)
     private static Map<String,String> inspectBenchmark(Benchmark benchmark) {
         Map<String,String> bdata = new HashMap<String,String>();
         Class c = benchmark.getClass();
@@ -373,10 +397,12 @@ public class BenchmarkRunner {
 
                 if (Modifier.isNative(modifiers)) {
 
-                    Map<String,Integer> parameterTypes = new HashMap<String,Integer> ();
                     Class [] parameters = m.getParameterTypes();
-                    Integer previousValue = null;
-                    for (Class param : Arrays.asList(parameters)) {
+                    List<Class> parameterList = new ArrayList<Class>(Arrays.asList(parameters));
+
+                    Map<String,Integer> parameterTypes = new HashMap<String,Integer> ();
+                    for (Class param : parameterList) {
+                        Integer previousValue = null;
                         String param_typename = param.getCanonicalName();
                         previousValue = parameterTypes.get(param_typename);
                         parameterTypes.put(
@@ -386,8 +412,19 @@ public class BenchmarkRunner {
                     for (String typename : parameterTypes.keySet()) {
                         bdata.put("parameter_type_" + typename + "_count", parameterTypes.get(typename) + "");
                     }
+
                     Class returnType = m.getReturnType();
 
+                    boolean hasRefTypes = false;
+                    parameterList.add(returnType);
+                    for (Class cl : parameterList) {
+                        if (c instanceof Object) {
+                            hasRefTypes = true;
+                            break;
+                        }
+                    }
+
+                    bdata.put("has_reference_types",  hasRefTypes ? "1" : "0");
                     bdata.put("parameter_type_count", parameterTypes.keySet().size() + "");
                     bdata.put("parameter_count",      parameters.length + "");
                     bdata.put("return_type",          returnType.getCanonicalName());

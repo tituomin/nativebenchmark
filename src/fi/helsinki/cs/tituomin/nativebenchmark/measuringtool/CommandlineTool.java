@@ -91,10 +91,13 @@ public abstract class CommandlineTool extends MeasuringTool {
         else {
             String line;
             BufferedReader br = new BufferedReader(new InputStreamReader(err));
+            StringBuilder sb = new StringBuilder("Command failed.\n");
             while ((line = br.readLine()) != null) {
                 Log.e("tm", line);
+                sb.append(line);
+                sb.append("\n");
             }
-            throw new IOException("External command failed. See log.");
+            throw new IOException(sb.toString());
         }
     }
 

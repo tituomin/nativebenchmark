@@ -7,8 +7,9 @@ public class BenchmarkParameter {
     public native int initReturnvalues();
     public native void freeReturnvalues();
 
-    private static int DEFAULTSIZE = 20;
-    private static int MAXSIZE = 1024;
+    public static int DEFAULTSIZE = 128;
+    public static int RANGE = 8;
+    public static int MAXSIZE = DEFAULTSIZE * RANGE;
 
     public BenchmarkParameter() {
         size = DEFAULTSIZE;
