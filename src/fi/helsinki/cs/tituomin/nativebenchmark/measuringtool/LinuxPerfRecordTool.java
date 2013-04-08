@@ -2,6 +2,7 @@ package fi.helsinki.cs.tituomin.nativebenchmark.measuringtool;
 
 import java.util.List;
 import java.util.LinkedList;
+import java.io.IOException;
 
 import fi.helsinki.cs.tituomin.nativebenchmark.measuringtool.MeasuringTool;
 import fi.helsinki.cs.tituomin.nativebenchmark.measuringtool.MeasuringTool.UnsupportedOptionException;
@@ -11,7 +12,7 @@ import fi.helsinki.cs.tituomin.nativebenchmark.Utils;
 
 public class LinuxPerfRecordTool extends CommandlineTool {
 
-    public LinuxPerfRecordTool(int i) {
+    public LinuxPerfRecordTool(int i) throws IOException, InterruptedException {
         super(i);
     }
 
@@ -24,6 +25,13 @@ public class LinuxPerfRecordTool extends CommandlineTool {
 
     protected String command() { 
         return "perf record -a -g";
+    }
+
+    protected List<String> initScript() {
+        List<String> commands = new LinkedList<String>();
+        commands.add("echo \"0\" > /proc/sys/kernel/kptr_restrict");
+        commands.add("echo \"-1\" > /proc/sys/kernel/perf_event_paranoid");
+        return commands;
     }
 
     private String generateFilename (String uuid) {

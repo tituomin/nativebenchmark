@@ -16,22 +16,32 @@ import fi.helsinki.cs.tituomin.nativebenchmark.ApplicationState;
 import fi.helsinki.cs.tituomin.nativebenchmark.measuringtool.MeasuringOption;
 import fi.helsinki.cs.tituomin.nativebenchmark.measuringtool.OptionSpec;
 import fi.helsinki.cs.tituomin.nativebenchmark.Benchmark;
+import fi.helsinki.cs.tituomin.nativebenchmark.BenchmarkResult;
 
 public abstract class MeasuringTool implements Runnable {
 
-    public MeasuringTool() {
+    public MeasuringTool()  throws IOException, InterruptedException {
         this(1);
     }
 
-    public MeasuringTool(int rounds) {
+    public MeasuringTool(int rounds) throws IOException, InterruptedException {
         specifyOptions();
         hasOptions = false;
         this.rounds = rounds;
-        this.measurement = new HashMap<String,String>();
+        this.measurement = new BenchmarkResult();
+        init();
     }
 
-    public abstract void start(Benchmark benchmark)
+    protected void init() throws IOException, InterruptedException { }
+
+    protected abstract void start(Benchmark benchmark)
         throws InterruptedException, IOException;
+
+    public void startMeasuring(Benchmark benchmark) throws InterruptedException, IOException {
+        clearMeasurement();
+        this.hasOptions = false;
+        start(benchmark);
+    }
 
     public void run() {
         try {
@@ -130,9 +140,13 @@ public abstract class MeasuringTool implements Runnable {
 
     private List<ApplicationState> observers;
 
-    protected Map<String,String> measurement;
+    private BenchmarkResult measurement;
 
-    public Map<String,String> getMeasurement() {
+    protected void putMeasurement(String key, String value) {
+        measurement.put(key, value);
+    }
+
+    public BenchmarkResult getMeasurement() {
         if (this.options != null) {
             if (!hasOptions) {
                 for (MeasuringOption op : options.values()) {
@@ -143,10 +157,14 @@ public abstract class MeasuringTool implements Runnable {
                 hasOptions = true;
             }
         }
-        if (this.benchmark instanceof MeasuringTool) {
-            this.measurement.putAll(((MeasuringTool)this.benchmark).getMeasurement());
-        }
+        // if (this.benchmark instanceof MeasuringTool) {
+        //     this.measurement.putAll(((MeasuringTool)this.benchmark).getMeasurement());
+        // }
         return this.measurement;
+    }
+
+    public void clearMeasurement() {
+        this.measurement = new BenchmarkResult();
     }
 
     private static final List<String> emptyList = new ArrayList<String> ();

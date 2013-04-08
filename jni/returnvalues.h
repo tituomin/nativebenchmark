@@ -34,10 +34,15 @@ RETURN_VALUE(jdoubleArray)
     local_reference = (*env)->CallObjectMethod(                     \
         env, benchmarkParameter, retrieve ## Type);                 \
                                                                     \
+    if (local_reference == NULL) {                                  \
+        __android_log_write(ANDROID_LOG_ERROR,                      \
+                            "nativebenchmark", "type is null: " # Type ); \
+    } \
+                                                                \
     variable ## Value = (*env)->NewGlobalRef(env, local_reference); \
     if (variable ## Value == NULL) {                                \
         __android_log_write(ANDROID_LOG_ERROR,                      \
-            "nativebenchmark", "can't create global reference"); }  
+            "nativebenchmark", "can't create global reference " # Type); }  
 
 
 

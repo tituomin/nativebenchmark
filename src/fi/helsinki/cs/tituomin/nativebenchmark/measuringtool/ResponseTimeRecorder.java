@@ -11,7 +11,7 @@ import android.util.Log;
 
 public class ResponseTimeRecorder extends MeasuringTool {
 
-    public ResponseTimeRecorder(int i) {
+    public ResponseTimeRecorder(int i) throws IOException, InterruptedException {
         super(i);
     }
 
@@ -28,6 +28,6 @@ public class ResponseTimeRecorder extends MeasuringTool {
         endTime = SystemClock.uptimeMillis();
         // todo: epätarkkuus, init ym. ?
         String delta = "" + (endTime - startTime);
-        measurement.put("response_time_millis", delta);
+        putMeasurement("response_time_millis", delta);
     }
 }

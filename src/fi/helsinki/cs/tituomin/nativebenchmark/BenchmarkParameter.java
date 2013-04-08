@@ -1,164 +1,240 @@
 package fi.helsinki.cs.tituomin.nativebenchmark;
 
 import java.util.Arrays;
+import java.util.Iterator;
+import java.util.NoSuchElementException;
+import android.util.Log;
 
-public class BenchmarkParameter {
+public class BenchmarkParameter implements Iterable<Integer> {
 
     public native int initReturnvalues();
     public native void freeReturnvalues();
 
-    public static int DEFAULTSIZE = 128;
-    public static int RANGE = 8;
-    public static int MAXSIZE = DEFAULTSIZE * RANGE;
+    public static int DEFAULTSIZE = 16;
+    private static int RANGE = 8;
+    private static int MAXSIZE = DEFAULTSIZE * RANGE;
 
     public BenchmarkParameter() {
-        size = DEFAULTSIZE;
+        index = 1;
         if (!generated) {
-            generateString(); // chararray generated too
-            generateBooleanArray();
-            generateByteArray();
-            generateIntArray();
-            generateLongArray();
-            generateShortArray();
-            generateDoubleArray();
-            generateFloatArray();
-            generateObjectArray();
+            generateAll();
             generated = true;
+        }
+
+        for (int i = 0; i < RANGE + 1; i++) {
+            if (STRINGS[i] == null) {
+                Log.v("Parameter", "STRINGS is null at " + i);
+            }
+            if (OBJECTS[i] == null) {
+                Log.v("Parameter", "OBJECTS is null at " + i);
+            }
+            if (THROWABLES[i] == null) {
+                Log.v("Parameter", "THROWABLES is null at " + i);
+            }
+            if (BOOLEAN_ARRAYS[i] == null) {
+                Log.v("Parameter", "BOOLEAN_ARRAYS is null at " + i);
+            }
+            if (BYTE_ARRAYS[i] == null) {
+                Log.v("Parameter", "BYTE_ARRAYS is null at " + i);
+            }
+            if (CHAR_ARRAYS[i] == null) {
+                Log.v("Parameter", "CHAR_ARRAYS is null at " + i);
+            }
+            if (DOUBLE_ARRAYS[i] == null) {
+                Log.v("Parameter", "DOUBLE_ARRAYS is null at " + i);
+            }
+            if (FLOAT_ARRAYS[i] == null) {
+                Log.v("Parameter", "FLOAT_ARRAYS is null at " + i);
+            }
+            if (INT_ARRAYS[i] == null) {
+                Log.v("Parameter", "INT_ARRAYS is null at " + i);
+            }
+            if (LONG_ARRAYS[i] == null) {
+                Log.v("Parameter", "LONG_ARRAYS is null at " + i);
+            }
+            if (SHORT_ARRAYS[i] == null) {
+                Log.v("Parameter", "SHORT_ARRAYS is null at " + i);
+            }
+            if (OBJECT_ARRAYS[i] == null) {
+                Log.v("Parameter", "OBJECT_ARRAYS is null at " + i);
+            }
         }
     }
 
 
     // must call initreturnvalues and freereturnvalues after...
-    public void setSize(int size) {
-        if (size <= MAXSIZE) {
-            this.size = size;
+    public void setIndex(int index) {
+        if (index < (RANGE + 1)) {
+            this.index = index;
         }
         else {
-            throw new IllegalArgumentException("Requested size too large.");
+            throw new IllegalArgumentException("Requested size too large. " + index);
+        }
+    }
+
+    public int getIndex() {
+        return this.index;
+    }
+
+    public Iterator<Integer> iterator() {
+        return new RangeIterator();
+    }
+
+    private class RangeIterator implements Iterator<Integer> {
+        private int index;
+        public RangeIterator() {
+            index = -1;
+        }
+        public boolean hasNext() {
+            return index < RANGE;
+        }
+        public Integer next() {
+            if (!hasNext()) {
+                throw new NoSuchElementException();
+            }
+            index++;
+            setIndex(index);
+            return DEFAULTSIZE * index;
+            
+        }
+        public void remove() {
+            throw new UnsupportedOperationException();
         }
     }
 
     public boolean[] retrieveBooleanArray() {
-        return Arrays.copyOfRange(BOOLEAN_ARRAY, 0, size);
+        return BOOLEAN_ARRAYS[index];
     }
     public byte[] retrieveByteArray() {
-        return Arrays.copyOfRange(BYTE_ARRAY, 0, size);
+        return BYTE_ARRAYS[index];
     }
     public char[] retrieveCharArray() {
-        return Arrays.copyOfRange(CHAR_ARRAY, 0, size);
+        return CHAR_ARRAYS[index];
     }
     public double[] retrieveDoubleArray() {
-        return Arrays.copyOfRange(DOUBLE_ARRAY, 0, size);
+        return DOUBLE_ARRAYS[index];
     }
     public float[] retrieveFloatArray() {
-        return Arrays.copyOfRange(FLOAT_ARRAY, 0, size);
+        return FLOAT_ARRAYS[index];
     }
     public int[] retrieveIntArray() {
-        return Arrays.copyOfRange(INT_ARRAY, 0, size);
+        return INT_ARRAYS[index];
     }
     public long[] retrieveLongArray() {
-        return Arrays.copyOfRange(LONG_ARRAY, 0, size);
+        return LONG_ARRAYS[index];
     }
     public short[] retrieveShortArray() {
-        return Arrays.copyOfRange(SHORT_ARRAY, 0, size);
+        return SHORT_ARRAYS[index];
     }
     public Object[] retrieveObjectArray() {
-        return Arrays.copyOfRange(OBJECT_ARRAY, 0, size);
+        return OBJECT_ARRAYS[index];
     }
     public Object retrieveObject() {
-        return OBJECT;
+        return OBJECTS[index];
     }
     public Class retrieveClass() {
-        return CLASS;
+        return OBJECTS[index].getClass();
     }
     public String retrieveString() {
-        return STRING.substring(0, size);
+        return STRINGS[index];
     }
     public Throwable retrieveThrowable() {
-        return THROWABLE;
+        return THROWABLES[index];
     }
 
     // -------------------------------------------------
 
-    private static void generateString() {
+    private static void generateAll() {
+        int index = RANGE - 1; int size = MAXSIZE - DEFAULTSIZE;
+        generateMax();
+        while (index > -1) {
+            BOOLEAN_ARRAYS[index] = Arrays.copyOf(BOOLEAN_ARRAYS[RANGE], size);
+            CHAR_ARRAYS[index] = Arrays.copyOf(CHAR_ARRAYS[RANGE], size);
+            BYTE_ARRAYS[index] = Arrays.copyOf(BYTE_ARRAYS[RANGE], size);
+            INT_ARRAYS[index] = Arrays.copyOf(INT_ARRAYS[RANGE], size);
+            LONG_ARRAYS[index] = Arrays.copyOf(LONG_ARRAYS[RANGE], size);
+            SHORT_ARRAYS[index] = Arrays.copyOf(SHORT_ARRAYS[RANGE], size);
+            DOUBLE_ARRAYS[index] = Arrays.copyOf(DOUBLE_ARRAYS[RANGE], size);
+            FLOAT_ARRAYS[index] = Arrays.copyOf(FLOAT_ARRAYS[RANGE], size);
+
+            OBJECT_ARRAYS[index] = Arrays.copyOf(OBJECT_ARRAYS[RANGE], size);
+
+            OBJECTS[index] = OBJECT;
+            THROWABLES[index] = THROWABLE;
+            STRINGS[index] = STRING_BUILDER.substring(0, size);
+
+            index--;
+            size -= DEFAULTSIZE;
+        } 
+    }
+
+    private static void generateMax() {
         char c = 0;
+        boolean b = true;
+        byte by = 0;
+        int v = 0;
+        long l = 0;
+        short s = 0;
+        double d = 0;
+        float f = 0;
+
+        BOOLEAN_ARRAYS[RANGE] = new boolean[MAXSIZE];
+        CHAR_ARRAYS[RANGE] = new char[MAXSIZE];
+        BYTE_ARRAYS[RANGE] = new byte[MAXSIZE];
+        INT_ARRAYS[RANGE] = new int[MAXSIZE];
+        LONG_ARRAYS[RANGE] = new long[MAXSIZE];
+        SHORT_ARRAYS[RANGE] = new short[MAXSIZE];
+        DOUBLE_ARRAYS[RANGE] = new double[MAXSIZE];
+        FLOAT_ARRAYS[RANGE] = new float[MAXSIZE];
+        OBJECT_ARRAYS[RANGE] = new Object[MAXSIZE];
+
         for (int i = 0; i < MAXSIZE; i++) {
-            STRING.append(c);
-            CHAR_ARRAY[i] = c;
+            STRING_BUILDER.append(c);
+
+            BOOLEAN_ARRAYS[RANGE][i] = b;
+            CHAR_ARRAYS[RANGE][i] = c;
+            BYTE_ARRAYS[RANGE][i] = by;
+            INT_ARRAYS[RANGE][i] = v;
+            LONG_ARRAYS[RANGE][i] = l;
+            SHORT_ARRAYS[RANGE][i] = s;
+            DOUBLE_ARRAYS[RANGE][i] = d;
+            FLOAT_ARRAYS[RANGE][i] = f;
+            OBJECT_ARRAYS[RANGE][i] = OBJECT;
+            OBJECTS[RANGE] = OBJECT;
+            THROWABLES[RANGE] = THROWABLE;
+
+            b = !b;
+            by =  (byte)((by + 1) % Byte.MAX_VALUE);
+            v = (v + 1) % Integer.MAX_VALUE;
+            l = (l + 1) % Long.MAX_VALUE;
+            s = (short)((s + 1) % Short.MAX_VALUE);
+            d = (d + 0.1);
+            f = (f + 0.1f);
             c = (char)((char)(c + '\u0001') % (char)Character.MAX_VALUE);
         }
-    }
-    private static void generateBooleanArray() {
-        boolean b = true;
-        for (int i = 0; i < MAXSIZE; i++) {
-            BOOLEAN_ARRAY[i] = b;
-            b = !b;
-        }
-    }
-    private static void generateByteArray() {
-        byte b = 0;
-        for (int i = 0; i < MAXSIZE; i++) {
-            BYTE_ARRAY[i] = b;
-            b =  (byte)((b + 1) % Byte.MAX_VALUE);
-        }
-    }
-    private static void generateIntArray() {
-        int v = 0;
-        for (int i = 0; i < MAXSIZE; i++) {
-            INT_ARRAY[i] = v;
-            v = (v + 1) % Integer.MAX_VALUE;
-        }
-    }
-    private static void generateLongArray() {
-        long l = 0;
-        for (int i = 0; i < MAXSIZE; i++) {
-            LONG_ARRAY[i] = l;
-            l = (l + 1) % Long.MAX_VALUE;
-        }
-    }
-    private static void generateShortArray() {
-        short s = 0;
-        for (int i = 0; i < MAXSIZE; i++) {
-            SHORT_ARRAY[i] = s;
-            s = (short)((s + 1) % Short.MAX_VALUE);
-        }
-    }
-    private static void generateDoubleArray() {
-        double d = 0;
-        for (int i = 0; i < MAXSIZE; i++) {
-            DOUBLE_ARRAY[i] = d;
-            d = (d + 0.1);
-        }
-    }
-    private static void generateFloatArray() {
-        float f = 0;
-        for (int i = 0; i < MAXSIZE; i++) {
-            FLOAT_ARRAY[i] = f;
-            f = (f + 0.1f);
-        }
-    }
-    private static void generateObjectArray() {
-        for (int i = 0; i < MAXSIZE; i++) {
-            OBJECT_ARRAY[i] = OBJECT;
-        }
+        STRINGS[RANGE] = STRING_BUILDER.substring(0, MAXSIZE);
     }
 
-    private int size;
+    private int index;
     private static boolean generated = false;
 
-    private static final StringBuilder STRING    = new StringBuilder(MAXSIZE);
-    private static final Object OBJECT           = new Object();
-    private static final Class CLASS             = OBJECT.getClass();
-    private static final Throwable THROWABLE     = new Exception();
-    private static final boolean[] BOOLEAN_ARRAY = new boolean[MAXSIZE];
-    private static final byte[] BYTE_ARRAY       = new byte[MAXSIZE];
-    private static final char[] CHAR_ARRAY       = new char[MAXSIZE];
-    private static final double[] DOUBLE_ARRAY   = new double[MAXSIZE];
-    private static final float[] FLOAT_ARRAY     = new float[MAXSIZE];
-    private static final int[] INT_ARRAY         = new int[MAXSIZE];
-    private static final long[] LONG_ARRAY       = new long[MAXSIZE];
-    private static final short[] SHORT_ARRAY     = new short[MAXSIZE];
-    private static final Object[] OBJECT_ARRAY   = new Object[MAXSIZE];
+    private static final StringBuilder STRING_BUILDER = new StringBuilder();
+    private static final Object OBJECT                = new Object();
+    private static final Throwable THROWABLE          = new Exception();
+
+    private static final String[] STRINGS             = new String[RANGE + 1];
+    private static final Object[] OBJECTS             = new Object[RANGE + 1];
+    private static final Throwable[] THROWABLES       = new Exception[RANGE + 1];
+
+    private static final boolean[][] BOOLEAN_ARRAYS   = new boolean[RANGE + 1][];
+    private static final byte[][] BYTE_ARRAYS         = new byte[RANGE + 1][];
+    private static final char[][] CHAR_ARRAYS         = new char[RANGE + 1][];
+    private static final double[][] DOUBLE_ARRAYS     = new double[RANGE + 1][];
+    private static final float[][] FLOAT_ARRAYS       = new float[RANGE + 1][];
+    private static final int[][] INT_ARRAYS           = new int[RANGE + 1][];
+    private static final long[][] LONG_ARRAYS         = new long[RANGE + 1][];
+    private static final short[][] SHORT_ARRAYS       = new short[RANGE + 1][];
+    private static final Object[][] OBJECT_ARRAYS     = new Object[RANGE + 1][];
 
 }
 

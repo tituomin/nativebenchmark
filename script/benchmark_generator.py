@@ -177,6 +177,7 @@ def generate_benchmarks():
                             '2'.join((from_lang, to_lang)),
                             sequence_no)
 
+
                         if to_lang == 'C':
                             counterpart_method_name = 'nativemethod'
                         elif to_lang == 'J':

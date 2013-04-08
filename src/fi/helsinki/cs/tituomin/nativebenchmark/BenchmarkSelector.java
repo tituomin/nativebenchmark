@@ -51,13 +51,16 @@ public class BenchmarkSelector extends Activity implements ApplicationState {
         //        roundPick.setOnValueChangedListener(listener);
         listener.onValueChange(numPick, 0, 0);
 
-        this.resources  = getResources();
+        Resources resources  = getResources();
         PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
         wakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "Benchmarking");
 
         if (resources.getString(R.string.app_dirty).equals("1")) {
             this.resultView.setText(R.string.warning_changed);
         }
+
+        this.appChecksum = resources.getText(R.string.app_checksum);
+        this.appRevision = resources.getText(R.string.app_revision);
     }
 
     public void setMessage(int id) {
@@ -69,7 +72,7 @@ public class BenchmarkSelector extends Activity implements ApplicationState {
     }
 
     public void setMessage(int id, String message) {
-        this.resultView.setText(resources.getString(id) + " " + message);
+        this.resultView.setText(getResources().getString(id) + " " + message);
     }
 
     public void updateState(ApplicationState.State state) {
@@ -109,6 +112,10 @@ public class BenchmarkSelector extends Activity implements ApplicationState {
                 break;
             case MILESTONE:
                 break;
+
+                // -----------------------------
+
+            case ERROR:
             case INTERRUPTED:
                 // intended fallthrough
             case MEASURING_FINISHED:
@@ -156,7 +163,7 @@ public class BenchmarkSelector extends Activity implements ApplicationState {
         measuringThread = new Thread(
             new Runnable () {
                 public void run() {
-                    BenchmarkRunner.runBenchmarks(BenchmarkSelector.this, repetitions, resources);
+                    BenchmarkRunner.runBenchmarks(BenchmarkSelector.this, repetitions, appRevision, appChecksum);
                 }
             });
         this.updateState(ApplicationState.State.MEASURING);
@@ -177,8 +184,8 @@ public class BenchmarkSelector extends Activity implements ApplicationState {
     private MeasuringTool tool;
     private TextView textView, resultView, repView;
     private NumberPicker numPick, expPick;//, roundPick;
+    private CharSequence appRevision, appChecksum;
     private Button button;
-    private Resources resources;
     private long repetitions;
     //    private int rounds;
     private static final String TAG = "BenchmarkSelector";

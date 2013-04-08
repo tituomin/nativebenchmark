@@ -6,7 +6,9 @@ import fi.helsinki.cs.tituomin.nativebenchmark.measuringtool.MeasuringTool;
 import fi.helsinki.cs.tituomin.nativebenchmark.measuringtool.PlainRunner;
 import fi.helsinki.cs.tituomin.nativebenchmark.measuringtool.ResponseTimeRecorder;
 import fi.helsinki.cs.tituomin.nativebenchmark.measuringtool.LinuxPerfRecordTool;
+import fi.helsinki.cs.tituomin.nativebenchmark.measuringtool.CommandlineTool;
 import fi.helsinki.cs.tituomin.nativebenchmark.BenchmarkRegistry;
+import fi.helsinki.cs.tituomin.nativebenchmark.BenchmarkResult;
 import fi.helsinki.cs.tituomin.nativebenchmark.Utils;
 
 import java.util.Date;
@@ -37,7 +39,6 @@ import java.util.TreeSet;
 import android.os.Environment;
 import android.util.Log;
 import android.os.SystemClock;
-import android.content.res.Resources;
 
 public class BenchmarkRunner {
     private static final String SEPARATOR     = ",";
@@ -53,35 +54,35 @@ public class BenchmarkRunner {
         return benchmarkParameter;
     }
 
-    public static void initTools(File dataDir) {
+    public static void initTools(File dataDir) throws IOException, InterruptedException {
         File perfDir = new File(dataDir, "perf");
         perfDir.mkdir();
 
         measuringTools = new ArrayList<MeasuringTool> ();
+
         measuringTools.add(new PlainRunner(1)); // warmup round
         measuringTools.add(new LinuxPerfRecordTool(1) // call profile
-                           .set(BasicOption.OUTPUT_FILEPATH, perfDir.getPath())
-                           .set(BasicOption.MEASURE_LENGTH, "0.1")); // todo: proper val
+            .set(BasicOption.OUTPUT_FILEPATH, perfDir.getPath())
+            .set(BasicOption.MEASURE_LENGTH, "0.001")); // todo: proper val
         measuringTools.add(new ResponseTimeRecorder(1000)); // total response time
     }
 
 
-    public static void
-    runBenchmarks(ApplicationState mainUI, long repetitions,
-                  Resources resources) {
+    public static void runBenchmarks(
+        ApplicationState mainUI, long repetitions,
+        CharSequence appRevision, CharSequence appChecksum) {
 
         File sd = Environment.getExternalStorageDirectory();
         File dataDir = new File(sd, "results");
         dataDir.mkdir();
 
-        initTools(dataDir);
-
         try {
             BenchmarkRegistry.init(repetitions);
+            initTools(dataDir);
         }
-        catch (ClassNotFoundException e) {
+        catch (Exception e) {
             mainUI.updateState(ApplicationState.State.ERROR);
-            Log.e("BenchmarkRunner", "Class not found.", e);
+            Log.e("BenchmarkRunner", "Error initialising", e);
             return;
         }
 
@@ -89,12 +90,6 @@ public class BenchmarkRunner {
         BenchmarkInitialiser.init(benchmarkParameter);
 
         List<Benchmark> benchmarks = BenchmarkRegistry.getBenchmarks();
-        Map<Class, Map<String,String>> benchmarkBaseData = new HashMap<Class, Map<String,String>>();
-        for (Benchmark b : benchmarks) {
-            // notice, order must be preserved for inspectbenchmark
-            benchmarkBaseData.put(b.getClass(), inspectBenchmark(b));
-        }
-
         Collections.shuffle(benchmarks);
 
         for (MeasuringTool tool : measuringTools) {
@@ -106,11 +101,11 @@ public class BenchmarkRunner {
                 long endTime = 0;
 
                 long startTime = SystemClock.uptimeMillis();
-                List<Map<String,String>> collectedData;
+                List<BenchmarkResult> collectedData;
                 try {
                     System.gc();
                     Thread.sleep(500);
-                    collectedData = runSeries(benchmarks, benchmarkBaseData, mainUI, tool);                    
+                    collectedData = runSeries(benchmarks, mainUI, tool);                    
                 }
                 catch (InterruptedException e) {
                     logE("Measuring thread was interrupted", e);
@@ -135,30 +130,31 @@ public class BenchmarkRunner {
                 measurementID = Utils.getUUID();
 
                 // 1. gather all labels (!ordered!)
-                SortedSet<String> labels = new TreeSet<String> ();
-                for (Map<String,String> measurementData : collectedData) {
-                    labels.addAll(measurementData.keySet());
-                }
+                // SortedSet<String> labels = new TreeSet<String> ();
+                // for (Map<String,String> measurementData : collectedData) {
+                //     labels.addAll(measurementData.keySet());
+                // }
 
                 PrintWriter writer = null;
 
                 try {
                     writer = makeWriter(dataDir, "benchmarks-" + measurementID + ".csv", false);
-                    for (String label : labels) {
-                        writer.print(label + SEPARATOR);
+
+                    String[] labels = BenchmarkResult.labels();
+                    for (int i = 0; i < BenchmarkResult.size(); i++) {
+                        writer.print(labels[i] + SEPARATOR);
                     }
                     writer.println("");
-                    String[] values = new String[labels.size()];
+                    String[] values = new String[labels.length];
 
                     // 2. print all possible values for all benchmarks
-                    for (Map<String,String> measuredData : collectedData) {
-                        int i = 0;
-                        for (String label : labels) {
-                            String val = measuredData.get(label);
-                            values[i++] = (val == null ? MISSING_VALUE : val);
-                        }
-                        for (i = 0; i < values.length; i++) {
-                            writer.print(values[i] + SEPARATOR);
+                    for (BenchmarkResult result: collectedData) {
+                        for (int i = 0; i < BenchmarkResult.size(); i++) {
+                            String value = result.get(i);
+                            if (value == null) {
+                                value = MISSING_VALUE;
+                            }
+                            writer.print(value + SEPARATOR);
                         }
                         writer.println("");
                     }
@@ -185,8 +181,8 @@ public class BenchmarkRunner {
                     writer.println("duration: "         + humanTime(endTime - startTime));
                     writer.println("tool: "             + tool.getClass().getName());
                     writer.println("benchmarks: "       + benchmarks.size());
-                    writer.println("code-revision: "    + resources.getText(R.string.app_revision));
-                    writer.println("code-checksum: "    + resources.getText(R.string.app_checksum));
+                    writer.println("code-revision: "    + appRevision);
+                    writer.println("code-checksum: "    + appChecksum);
                     writer.println("");
                 }
                 catch (IOException e ) {
@@ -278,54 +274,62 @@ public class BenchmarkRunner {
         return new HashMap<String,String> ();
     }
 
-    private static List<Map<String,String>> runSeries(
-        List<Benchmark> benchmarks, Map<Class, Map<String,String>> basedata,
-        ApplicationState mainUI, MeasuringTool tool)
+    private static List<String> makeList() {
+        return new ArrayList<String> (200);
+    }
+
+    private static List<BenchmarkResult> runSeries(
+        List<Benchmark> benchmarks, ApplicationState mainUI, MeasuringTool tool)
         throws InterruptedException, IOException {
 
         final ApplicationState.State state = ApplicationState.State.MILESTONE;
         boolean runGC = tool.explicitGC();
         int j = 0;
-        List<Map<String,String>> compiledMetadata = new ArrayList<Map<String,String>> ();
+        List<BenchmarkResult> compiledMetadata = new ArrayList<BenchmarkResult> (benchmarks.size());
 
         for (Benchmark benchmark : benchmarks) {
-            Map<String,String> results = makeMap();
             if (Thread.interrupted()) {
                 throw new InterruptedException();
             }
-            Map<String,String> benchmarkProperties = basedata.get(benchmark.getClass());
             BenchmarkParameter bPar = getBenchmarkParameter();
-            int[] sizeRange = { bPar.DEFAULTSIZE };
-
-            // if parameter size can be varied, vary it
-            if (benchmarkProperties.get("has_reference_types").equals("1") &&
-                Integer.parseInt(benchmarkProperties.get("parameter_count")) < 2) {
-
-                    sizeRange = new int[bPar.RANGE + 1];
-                    for (int i = 0; i < sizeRange.length; i++) {
-                        sizeRange[i] = (bPar.MAXSIZE / sizeRange.length) * i;
-                    }
+            BenchmarkResult introspected;
+            try {
+                 introspected = inspectBenchmark(benchmark);
             }
-            for (int i = 0; i < sizeRange.length; i++) {
-                bPar.setSize(sizeRange[i]);
-                bPar.initReturnvalues();
+            catch  (ClassNotFoundException e) {
+                Log.e("BenchmarkRunner", "Could not find class", e);
+                return compiledMetadata;
+            }
 
-                tool.start(benchmark);
-                Map<String,String> measurement = tool.getMeasurement();
+
+            boolean onlyDefault = 
+                !introspected.get("has_reference_types").equals("1") ||
+                Integer.parseInt(introspected.get("parameter_count")) > 1;
+
+            for (Integer i : bPar) {
+                bPar.initReturnvalues(); // (I) needs free (see II)
+                tool.startMeasuring(benchmark);
+                BenchmarkResult measurement = tool.getMeasurement();
                 if (!measurement.isEmpty()) {
-                    // todo: actual vs. requested size
-                    results.put("dynamic_size", "" + sizeRange[i]);
-                    results.putAll(benchmarkProperties);
-                    results.putAll(measurement);
-                    compiledMetadata.add(results);
+                    // todo: actual vs. requested size (objects etc.)
+                    if (!onlyDefault) {
+                        measurement.put("dynamic_size", "" + i);
+                    }
+                    measurement.put("class", benchmark.getClass().getName());
+                    measurement.putAll(introspected);
+                    compiledMetadata.add(measurement);
                 }
                 // todo: remove UI overhead?
                 mainUI.updateState(state, "tool " + tool.getClass().getName() + " benchmark " + ++j);
+                bPar.freeReturnvalues(); // (II) needs init (see I)
 
-                bPar.freeReturnvalues();
                 if (runGC && j % 50 == 0) {
                     System.gc();
                     Thread.sleep(200);
+                }
+                // if parameter size can be varied, vary it - else break with first size
+                if (onlyDefault) {
+                    break;
                 }
             }
         }
@@ -377,83 +381,62 @@ public class BenchmarkRunner {
             "(" + seconds_total + " s tot.)");
     }
 
-    private static Map<String,String> lastMetadata = null;
-    // this method has to be called with the benchmarks
-    // in the original order (j2c, the others)
-    private static Map<String,String> inspectBenchmark(Benchmark benchmark) {
-        Map<String,String> bdata = new HashMap<String,String>();
-        Class c = benchmark.getClass();
+    private static BenchmarkResult inspectBenchmark(Benchmark benchmark) throws ClassNotFoundException {
+        BenchmarkResult bdata = new BenchmarkResult();
+        int seqNo = benchmark.sequenceNo();
+
+        Class c = Class.forName("fi.helsinki.cs.tituomin.nativebenchmark.benchmark.J2CBenchmark" + String.format("%05d", seqNo));
+        
+        Method[] methods = c.getDeclaredMethods();
+        for (int i = 0; i < methods.length; i++) {
+
+            Method m = methods[i];
+            int modifiers = m.getModifiers();
+
+            if (Modifier.isNative(modifiers)) {
+
+                Class [] parameters = m.getParameterTypes();
+                List<Class> parameterList = new ArrayList<Class>(Arrays.asList(parameters));
+
+                Map<String,Integer> parameterTypes = new HashMap<String,Integer> ();
+                for (Class param : parameterList) {
+                    Integer previousValue = null;
+                    String param_typename = param.getCanonicalName();
+                    previousValue = parameterTypes.get(param_typename);
+                    parameterTypes.put(
+                        param_typename,
+                        (previousValue == null ? 1 : ((int)previousValue) + 1));
+                }
+                for (String typename : parameterTypes.keySet()) {
+                    bdata.put("parameter_type_" + typename + "_count", parameterTypes.get(typename) + "");
+                }
+
+                Class returnType = m.getReturnType();
+
+                boolean hasRefTypes = false;
+                parameterList.add(returnType);
+                for (Class cl : parameterList) {
+                    if (c instanceof Object) {
+                        hasRefTypes = true;
+                        break;
+                    }
+                }
+
+                bdata.put("has_reference_types",  hasRefTypes ? "1" : "0");
+                bdata.put("parameter_type_count", parameterTypes.keySet().size() + "");
+                bdata.put("parameter_count",      parameters.length + "");
+                bdata.put("return_type",          returnType.getCanonicalName());
+                bdata.put("native_static",        Modifier.isStatic(modifiers) ? "1" : "0");
+                bdata.put("native_private",       Modifier.isPrivate(modifiers) ? "1" : "0");
+                bdata.put("native_protected",     Modifier.isProtected(modifiers) ? "1" : "0");
+                bdata.put("native_public",        Modifier.isPublic(modifiers) ? "1" : "0");
+            }
+        }
         String from = benchmark.from();
         String to   = benchmark.to();
-
-        // reflection only works for J2C version,
-        // results are cached for other versions
-        if (from.equals("J") && to.equals("C")) {
-            Method[] methods = c.getDeclaredMethods();
-            for (int i = 0; i < methods.length; i++) {
-
-                Method m = methods[i];
-                int modifiers = m.getModifiers();
-
-                if (Modifier.isNative(modifiers)) {
-
-                    Class [] parameters = m.getParameterTypes();
-                    List<Class> parameterList = new ArrayList<Class>(Arrays.asList(parameters));
-
-                    Map<String,Integer> parameterTypes = new HashMap<String,Integer> ();
-                    for (Class param : parameterList) {
-                        Integer previousValue = null;
-                        String param_typename = param.getCanonicalName();
-                        previousValue = parameterTypes.get(param_typename);
-                        parameterTypes.put(
-                            param_typename,
-                            (previousValue == null ? 1 : ((int)previousValue) + 1));
-                    }
-                    for (String typename : parameterTypes.keySet()) {
-                        bdata.put("parameter_type_" + typename + "_count", parameterTypes.get(typename) + "");
-                    }
-
-                    Class returnType = m.getReturnType();
-
-                    boolean hasRefTypes = false;
-                    parameterList.add(returnType);
-                    for (Class cl : parameterList) {
-                        if (c instanceof Object) {
-                            hasRefTypes = true;
-                            break;
-                        }
-                    }
-
-                    bdata.put("has_reference_types",  hasRefTypes ? "1" : "0");
-                    bdata.put("parameter_type_count", parameterTypes.keySet().size() + "");
-                    bdata.put("parameter_count",      parameters.length + "");
-                    bdata.put("return_type",          returnType.getCanonicalName());
-                    bdata.put("native_static",        Modifier.isStatic(modifiers) ? "1" : "0");
-                    bdata.put("native_private",       Modifier.isPrivate(modifiers) ? "1" : "0");
-                    bdata.put("native_protected",     Modifier.isProtected(modifiers) ? "1" : "0");
-                    bdata.put("native_public",        Modifier.isPublic(modifiers) ? "1" : "0");
-                }
-            }
-            bdata.put("no", "" + benchmark.sequenceNo());
-            bdata.put("description", benchmark.description());
-
-            lastMetadata = bdata;
-        }
-        else {
-            // other than J2C
-            if (lastMetadata == null) {
-                Log.e("BenchmarkRunner", "Could not retrieve inspected metadata.");
-                return null;
-            }
-            bdata.putAll(lastMetadata);
-            if (!("" + benchmark.sequenceNo()).equals(bdata.get("no"))) {
-                Log.e("BenchmarkRunner", "Retrieved metadata has wrong number.");
-                return null;
-            }
-        }
-
+        bdata.put("no", "" + benchmark.sequenceNo());
+        bdata.put("description", benchmark.description());
         bdata.put("direction", from + " > " + to);
-
         return bdata;
     }
 }
