@@ -22,6 +22,10 @@ import android.widget.NumberPicker;
 import android.view.WindowManager;
 import android.os.PowerManager;
 import android.content.Context;
+import android.content.DialogInterface;
+import android.app.DialogFragment;
+import android.app.AlertDialog;
+import android.app.Dialog;
 
 public class BenchmarkSelector extends Activity implements ApplicationState {
     /** Called when the activity is first created. */
@@ -61,6 +65,8 @@ public class BenchmarkSelector extends Activity implements ApplicationState {
 
         this.appChecksum = resources.getText(R.string.app_checksum);
         this.appRevision = resources.getText(R.string.app_revision);
+
+        this.retry = false;
     }
 
     public void setMessage(int id) {
@@ -131,6 +137,35 @@ public class BenchmarkSelector extends Activity implements ApplicationState {
         }
     }
 
+    public boolean userWantsToRetry(final Exception e) {
+        runOnUiThread(new Runnable() {
+                public void run() {
+                    DialogFragment dialog = new RetryDialog(e.getMessage());
+                    dialog.show(getFragmentManager(), "foo");
+                }
+            });
+        boolean waiting = true;
+        while (waiting) {
+            synchronized (this) {
+                try {
+                    this.wait();
+                    waiting = false;
+                }
+                catch (InterruptedException ie) {
+                    waiting = true;
+                }
+            }
+        }
+        return this.retry;
+    }
+
+    private void setRetry(boolean answer) {
+        this.retry = answer;
+        synchronized (this) {
+            this.notify();
+        }
+    }
+
     private void resetButton(Button button) {
         button.setText(R.string.start_task);
         button.setOnClickListener(new View.OnClickListener() {
@@ -181,6 +216,34 @@ public class BenchmarkSelector extends Activity implements ApplicationState {
         }
     }
 
+    private class RetryDialog extends DialogFragment {
+        private String message;
+
+        public RetryDialog(String message) {
+            this.message = message;
+        }
+
+        @Override
+        public Dialog onCreateDialog(Bundle savedInstanceState) {
+            // Use the Builder class for convenient dialog construction
+            AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+            builder.setMessage(getResources().getText(R.string.retry_question) + ":\n" + this.message)
+                .setPositiveButton(R.string.retry_answer_positive, new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int id) {
+                            setRetry(true);
+                        }
+                    })
+                .setNegativeButton(R.string.retry_answer_negative, new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int id) {
+                            setRetry(false);
+                        }
+                    });
+            // Create the AlertDialog object and return it
+            return builder.create();
+        }
+    }
+
+    private boolean retry;
     private MeasuringTool tool;
     private TextView textView, resultView, repView;
     private NumberPicker numPick, expPick;//, roundPick;

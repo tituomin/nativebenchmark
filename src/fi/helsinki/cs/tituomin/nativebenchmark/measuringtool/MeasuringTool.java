@@ -92,6 +92,10 @@ public abstract class MeasuringTool implements Runnable {
         return this;
     }
 
+    public String getOption(OptionSpec id) {
+        return this.options.get(id).value();
+    }
+
     public void setOption(MeasuringOption option) {
         if (this.allowedOptions == null) {
             specifyOptions();

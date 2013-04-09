@@ -10,6 +10,9 @@
     <string name="interrupting">Interrupting...</string>
     <string name="interrupted">Measuring interrupted.</string>
     <string name="error">An error occurred</string>
+    <string name="retry_question">Do you want to retry?</string>
+    <string name="retry_answer_positive">Retry</string>
+    <string name="retry_answer_negative">Abort</string>
     <string name="base_val">repetitions</string>
     <string name="exponent">exponent</string>
     <string name="rounds">rounds</string>

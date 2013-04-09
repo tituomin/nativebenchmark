@@ -20,6 +20,7 @@ import java.util.HashMap;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.BufferedOutputStream;
@@ -44,6 +45,7 @@ public class BenchmarkRunner {
     private static final String SEPARATOR     = ",";
     private static final String MISSING_VALUE = "-";
     private static final long WARMUP_REPS = 2000;
+    private static final String CPUFREQ = "400000";
     private static BenchmarkParameter benchmarkParameter;
     private static List<MeasuringTool> measuringTools;
 
@@ -60,7 +62,15 @@ public class BenchmarkRunner {
 
         measuringTools = new ArrayList<MeasuringTool> ();
 
-        measuringTools.add(new PlainRunner(1)); // warmup round
+        PlainRunner p = (PlainRunner) new PlainRunner(1)
+            .set(BasicOption.CPUFREQ, CPUFREQ);
+
+        CommandlineTool.execute(p.initScript());
+
+        measuringTools.add(p); // warmup round
+
+
+
         measuringTools.add(new LinuxPerfRecordTool(1) // call profile
             .set(BasicOption.OUTPUT_FILEPATH, perfDir.getPath())
             .set(BasicOption.MEASURE_LENGTH, "0.001")); // todo: proper val
@@ -113,27 +123,12 @@ public class BenchmarkRunner {
                         ApplicationState.State.INTERRUPTED);
                     return;
                 }
-                catch (IOException e) {
-                    logE("Measuring caused IO exception", e);
-                    mainUI.updateState(
-                        ApplicationState.State.ERROR, e.getMessage());
-                    return;
-
-                }
                 if (collectedData.isEmpty()) {
-                    // a warmup round or an interrupted round
-                    // contains no data
                     continue;
                 }
 
                 endTime = SystemClock.uptimeMillis();
                 measurementID = Utils.getUUID();
-
-                // 1. gather all labels (!ordered!)
-                // SortedSet<String> labels = new TreeSet<String> ();
-                // for (Map<String,String> measurementData : collectedData) {
-                //     labels.addAll(measurementData.keySet());
-                // }
 
                 PrintWriter writer = null;
 
@@ -175,6 +170,7 @@ public class BenchmarkRunner {
                     writer = makeWriter(dataDir, "measurements.txt", true);
                     writer.println("");
                     writer.println("id: "               + measurementID);
+                    writer.println("cpu-freq: "         + CPUFREQ);
                     writer.println("repetitions: "      + repetitions);
                     writer.println("start: "            + start);
                     writer.println("end: "              + end);
@@ -192,28 +188,30 @@ public class BenchmarkRunner {
                     writer.close();
                 }
                 OutputStream os = null;
-                try {
-                    File zip = new File(dataDir, "perfdata-" + measurementID + ".zip");
-                    os = makeOutputStream(zip, false);
-                    List<String> filenames = tool.getFilenames();
-                    Log.v("BenchmarkRunner", "filenames " + filenames.size());
-                    filenames.add(new File(dataDir, "benchmarks-" + measurementID + ".csv").getAbsolutePath());
-                    writeToZipFile(os, filenames, measurementID);
-                    // deleteFiles(filenames);
-                }
-                catch (FileNotFoundException e) {
-                    logE(e);
-                }
-                catch (IOException e) {
-                    logE("Error writing zip file.",  e);
-                }
-                try {
-                    if (os != null) {
-                        os.close();
+                List<String> filenames = tool.getFilenames();
+                if (!filenames.isEmpty()) {
+                    try {
+                        File zip = new File(dataDir, "perfdata-" + measurementID + ".zip");
+                        os = makeOutputStream(zip, false);
+                        Log.v("BenchmarkRunner", "filenames " + filenames.size());
+                        filenames.add(new File(dataDir, "benchmarks-" + measurementID + ".csv").getAbsolutePath());
+                        writeToZipFile(os, filenames, measurementID);
+                        deleteFiles(filenames);
                     }
-                }
-                catch (IOException e) {
-                    logE("Error closing file.", e);
+                    catch (FileNotFoundException e) {
+                        logE(e);
+                    }
+                    catch (IOException e) {
+                        logE("Error writing zip file.",  e);
+                    }
+                    try {
+                        if (os != null) {
+                            os.close();
+                        }
+                    }
+                    catch (IOException e) {
+                        logE("Error closing file.", e);
+                    }
                 }
             }
         }
@@ -280,7 +278,7 @@ public class BenchmarkRunner {
 
     private static List<BenchmarkResult> runSeries(
         List<Benchmark> benchmarks, ApplicationState mainUI, MeasuringTool tool)
-        throws InterruptedException, IOException {
+        throws InterruptedException {
 
         final ApplicationState.State state = ApplicationState.State.MILESTONE;
         boolean runGC = tool.explicitGC();
@@ -301,14 +299,38 @@ public class BenchmarkRunner {
                 return compiledMetadata;
             }
 
-
             boolean onlyDefault = 
-                !introspected.get("has_reference_types").equals("1") ||
-                Integer.parseInt(introspected.get("parameter_count")) > 1;
+                (!introspected.get("has_reference_types").equals("1") ||
+                 (Integer.parseInt(introspected.get("parameter_count")) > 1));
 
-            for (Integer i : bPar) {
+            Iterator<Integer> iterator = bPar.iterator();
+            Integer i;
+            if (iterator.hasNext()) {
+                i = iterator.next();
+            }
+            else {
+                i = null;
+            }
+            while (i != null) {
                 bPar.initReturnvalues(); // (I) needs free (see II)
-                tool.startMeasuring(benchmark);
+
+                try {
+                    tool.startMeasuring(benchmark);
+                }
+                catch (IOException e) {
+                    logE("Measuring caused IO exception", e);
+                    if (mainUI.userWantsToRetry(e)) {
+                        Log.v("BenchmarkRunner", "yes he wants to retry");
+                        continue; // without incrementing i
+                    }
+                    else {
+                        throw new InterruptedException("User wants to abort");
+                    }
+                }
+                finally {
+                    bPar.freeReturnvalues(); // (II) needs init (see I)
+                }
+
                 BenchmarkResult measurement = tool.getMeasurement();
                 if (!measurement.isEmpty()) {
                     // todo: actual vs. requested size (objects etc.)
@@ -321,7 +343,6 @@ public class BenchmarkRunner {
                 }
                 // todo: remove UI overhead?
                 mainUI.updateState(state, "tool " + tool.getClass().getName() + " benchmark " + ++j);
-                bPar.freeReturnvalues(); // (II) needs init (see I)
 
                 if (runGC && j % 50 == 0) {
                     System.gc();
@@ -329,6 +350,12 @@ public class BenchmarkRunner {
                 }
                 // if parameter size can be varied, vary it - else break with first size
                 if (onlyDefault) {
+                    break;
+                }
+                if (iterator.hasNext()) {
+                    i = iterator.next();
+                }
+                else {
                     break;
                 }
             }
@@ -416,7 +443,7 @@ public class BenchmarkRunner {
                 boolean hasRefTypes = false;
                 parameterList.add(returnType);
                 for (Class cl : parameterList) {
-                    if (c instanceof Object) {
+                    if (Object.class.isAssignableFrom(cl)) {
                         hasRefTypes = true;
                         break;
                     }

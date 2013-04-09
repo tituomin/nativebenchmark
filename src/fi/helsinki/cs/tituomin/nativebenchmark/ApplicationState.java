@@ -4,6 +4,7 @@ import android.util.Pair;
 public interface ApplicationState {
     public void updateState(State state);
     public void updateState(State state, String message);
+    public boolean userWantsToRetry(Exception exception);
 
     public static enum State {
         INITIALISED        ( R.string.app_name ),

@@ -52,61 +52,50 @@ public abstract class CommandlineTool extends MeasuringTool {
     }
 
     // thanks http://muzikant-android.blogspot.fi/2011/02/how-to-get-root-access-and-execute.html
-    private boolean execute(List<String> commands) throws IOException
-    {
+    public static boolean execute(List<String> commands) throws IOException {
         boolean retval = false;
         DataOutputStream os = null;
         Process suProcess = null;
-        try
-            {
-                if (null != commands && commands.size() > 0)
-                    {
-                        suProcess = Runtime.getRuntime().exec("su");
+        try {
+            if (null != commands && commands.size() > 0) {
+                suProcess = Runtime.getRuntime().exec("su");
 
-                        os = new DataOutputStream(suProcess.getOutputStream());
+                os = new DataOutputStream(suProcess.getOutputStream());
 
-                        // Execute commands that require root access
-                        for (String currCommand : commands)
-                            {
-                                os.writeBytes(currCommand + "\n");
-                                os.flush();
-                            }
+                // Execute commands that require root access
+                for (String currCommand : commands) {
+                    os.writeBytes(currCommand + "\n");
+                    os.flush();
+                }
 
-                        os.writeBytes("exit\n");
-                        os.flush();
+                os.writeBytes("exit\n");
+                os.flush();
 
-                        try
-                            {
-                                int suProcessRetval = suProcess.waitFor();
-                                if (255 != suProcessRetval)
-                                    {
-                                        // Root access granted
-                                        retval = true;
-                                    }
-                                else
-                                    {
-                                        // Root access denied
-                                        retval = false;
-                                    }
-                            }
-                        catch (Exception ex)
-                            {
-                                Log.e("ROOT", "Error executing root action", ex);
-                            }
+                try {
+                    int suProcessRetval = suProcess.waitFor();
+                    if (255 != suProcessRetval) {
+                        // Root access granted
+                        retval = true;
                     }
+                    else {
+                        // Root access denied
+                        retval = false;
+                    }
+                }
+                catch (Exception ex) {
+                    Log.e("ROOT", "Error executing root action", ex);
+                }
             }
-        catch (IOException ex)
-            {
-                Log.w("ROOT", "Can't get root access", ex);
-            }
-        catch (SecurityException ex)
-            {
-                Log.w("ROOT", "Can't get root access", ex);
-            }
-        catch (Exception ex)
-            {
-                Log.w("ROOT", "Error executing internal operation", ex);
-            }
+        }
+        catch (IOException ex) {
+            Log.w("ROOT", "Can't get root access", ex);
+        }
+        catch (SecurityException ex) {
+            Log.w("ROOT", "Can't get root access", ex);
+        }
+        catch (Exception ex) {
+            Log.w("ROOT", "Error executing internal operation", ex);
+        }
         finally {
             if (suProcess != null) {
                 suProcess.destroy();
@@ -125,8 +114,8 @@ public abstract class CommandlineTool extends MeasuringTool {
         Process process = null;
         InputStream err = null;
         try {
-        process = Runtime.getRuntime().exec(command);
-        err = process.getErrorStream();
+            process = Runtime.getRuntime().exec(command);
+            err = process.getErrorStream();
             process.waitFor();
         
             if (process.exitValue() != 0) {
@@ -179,8 +168,6 @@ public abstract class CommandlineTool extends MeasuringTool {
         benchmarkThread.start();
         //Thread.sleep(delay);
 
-        this.startDate = new Date();
-
         try {
             runAsCommand(this.command);
         }
@@ -195,7 +182,6 @@ public abstract class CommandlineTool extends MeasuringTool {
         if (Thread.interrupted()) {
             throw new InterruptedException();
         }
-        putMeasurement("Started", dateFormat.format(this.startDate));
     }
 
     public void setFilename(String name, String path) {
