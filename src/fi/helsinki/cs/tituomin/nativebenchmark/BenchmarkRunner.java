@@ -69,11 +69,12 @@ public class BenchmarkRunner {
 
         measuringTools.add(p); // warmup round
 
-
+        measuringTools.add(new ResponseTimeRecorder(1)); // total response time
 
         measuringTools.add(new LinuxPerfRecordTool(1) // call profile
             .set(BasicOption.OUTPUT_FILEPATH, perfDir.getPath())
-            .set(BasicOption.MEASURE_LENGTH, "0.001")); // todo: proper val
+            .set(BasicOption.MEASURE_LENGTH, "10")); // todo: proper val
+
         measuringTools.add(new ResponseTimeRecorder(1000)); // total response time
     }
 
@@ -123,7 +124,7 @@ public class BenchmarkRunner {
                         ApplicationState.State.INTERRUPTED);
                     return;
                 }
-                if (collectedData.isEmpty()) {
+                if (collectedData.isEmpty() || tool.ignore()) {
                     continue;
                 }
 
@@ -281,7 +282,6 @@ public class BenchmarkRunner {
         throws InterruptedException {
 
         final ApplicationState.State state = ApplicationState.State.MILESTONE;
-        boolean runGC = tool.explicitGC();
         int j = 0;
         List<BenchmarkResult> compiledMetadata = new ArrayList<BenchmarkResult> (benchmarks.size());
 
@@ -312,6 +312,9 @@ public class BenchmarkRunner {
                 i = null;
             }
             while (i != null) {
+                if (Thread.interrupted()) {
+                    throw new InterruptedException();
+                }
                 bPar.initReturnvalues(); // (I) needs free (see II)
 
                 try {
@@ -344,9 +347,9 @@ public class BenchmarkRunner {
                 // todo: remove UI overhead?
                 mainUI.updateState(state, "tool " + tool.getClass().getName() + " benchmark " + ++j);
 
-                if (runGC && j % 50 == 0) {
+                if (tool.explicitGC() && j % 50 == 0) {
                     System.gc();
-                    Thread.sleep(200);
+                    Thread.sleep(350);
                 }
                 // if parameter size can be varied, vary it - else break with first size
                 if (onlyDefault) {

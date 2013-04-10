@@ -33,6 +33,10 @@ public class PlainRunner extends MeasuringTool {
         return false;
     }
 
+    public boolean ignore() {
+        return true;
+    }
+
     public List<String> initScript() {
         List<String> commands = new LinkedList<String>();
         String frequency = getOption(BasicOption.CPUFREQ);

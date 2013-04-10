@@ -117,6 +117,9 @@ public abstract class MeasuringTool implements Runnable {
         benchmark = b;
     }
 
+    public boolean ignore() {
+        return false;
+    }
 
     public void addObserver(ApplicationState o) {
         if (this.observers == null) {
