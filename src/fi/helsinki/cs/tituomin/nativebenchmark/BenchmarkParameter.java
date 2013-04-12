@@ -133,6 +133,7 @@ public class BenchmarkParameter implements Iterable<Integer> {
         return OBJECTS[index];
     }
     public Class retrieveClass() {
+        // todo: causes bump in measurements
         return OBJECTS[index].getClass();
     }
     public String retrieveString() {
