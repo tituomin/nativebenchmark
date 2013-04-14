@@ -5,6 +5,9 @@ import java.util.Iterator;
 import java.util.NoSuchElementException;
 import android.util.Log;
 
+// Important! Imported as an example class.
+import android.content.pm.PermissionInfo;
+
 public class BenchmarkParameter implements Iterable<Integer> {
 
     public native int initReturnvalues();
@@ -220,11 +223,11 @@ public class BenchmarkParameter implements Iterable<Integer> {
     private static boolean generated = false;
 
     private static final StringBuilder STRING_BUILDER = new StringBuilder();
-    private static final Object OBJECT                = new Object();
+    private static final Object OBJECT                = new PermissionInfo();
     private static final Throwable THROWABLE          = new Exception();
 
     private static final String[] STRINGS             = new String[RANGE + 1];
-    private static final Object[] OBJECTS             = new Object[RANGE + 1];
+    private static final Object[] OBJECTS             = new PermissionInfo[RANGE + 1];
     private static final Throwable[] THROWABLES       = new Exception[RANGE + 1];
 
     private static final boolean[][] BOOLEAN_ARRAYS   = new boolean[RANGE + 1][];
