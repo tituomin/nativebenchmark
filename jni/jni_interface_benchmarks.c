@@ -10,36 +10,36 @@ jvalue * jvalue_buf = jvalue[MAX_SIZE];
 #define VARIABLE(_ctype, direction) \
 _ctype _ctype ## __ ## direction = 0;
 
-#define VARIABLE_IN(_ctype)   \
+#define VARIABLE_IN(_ctype)         \
     VARIABLE(_ctype, IN)
 
-#define VARIABLE_OUT(_ctype) \
+#define VARIABLE_OUT(_ctype)        \
     VARIABLE(_ctype, OUT)
-    
-#define POINTER_IN(_ctype)    \
+
+#define POINTER_IN(_ctype)          \
     _ctype * _ctype ## _ptr__IN = 0;
 
-#define BUFFER_IN(_ctype)     \
+#define BUFFER_IN(_ctype)           \
     _ctype * _ctype ## _buf__IN = (_ctype *) jvalue_buf;
 
-#define PRIMITIVE__IN(_ctype) \
-    VARIABLE_IN(_ctype);          \
-    POINTER_IN(_ctype);           \
+#define PRIMITIVE__IN(_ctype)       \
+    VARIABLE_IN(_ctype);            \
+    POINTER_IN(_ctype);             \
     BUFFER_IN(_ctype);
 
-#define REFERENCE__IN(_ctype) \
-    VARIABLE_IN(_ctype);          \
+#define REFERENCE__IN(_ctype)       \
+    VARIABLE_IN(_ctype);            \
 
 // primitives
 
-PRIMITIVE_IN(jboolean);       
-PRIMITIVE_IN(jbyte);          
-PRIMITIVE_IN(jchar);          
-PRIMITIVE_IN(jshort);         
-PRIMITIVE_IN(jint);           
-PRIMITIVE_IN(jlong);          
-PRIMITIVE_IN(jfloat);         
-PRIMITIVE_IN(jdouble);        
+PRIMITIVE_IN(jboolean);
+PRIMITIVE_IN(jbyte);
+PRIMITIVE_IN(jchar);
+PRIMITIVE_IN(jshort);
+PRIMITIVE_IN(jint);
+PRIMITIVE_IN(jlong);
+PRIMITIVE_IN(jfloat);
+PRIMITIVE_IN(jdouble);
 PRIMITIVE_IN(jsize);
 
 POINTER_IN(void);
@@ -68,16 +68,16 @@ REFERENCE_IN(jfloatArray);
 REFERENCE_IN(jdoubleArray);
 REFERENCE_IN(jthrowable);
 
-PRIMITIVE_OUT(jboolean);       
-PRIMITIVE_OUT(jbyte);          
-PRIMITIVE_OUT(jchar);          
-PRIMITIVE_OUT(jshort);         
-PRIMITIVE_OUT(jint);           
-PRIMITIVE_OUT(jlong);          
-PRIMITIVE_OUT(jfloat);         
-PRIMITIVE_OUT(jdouble);        
+PRIMITIVE_OUT(jboolean);
+PRIMITIVE_OUT(jbyte);
+PRIMITIVE_OUT(jchar);
+PRIMITIVE_OUT(jshort);
+PRIMITIVE_OUT(jint);
+PRIMITIVE_OUT(jlong);
+PRIMITIVE_OUT(jfloat);
+PRIMITIVE_OUT(jdouble);
 PRIMITIVE_OUT(jsize);
-PRIMITIVE_OUT(jobject);       
+PRIMITIVE_OUT(jobject);
 
 // par -----
 
@@ -107,7 +107,7 @@ jchar * string_unicode__OUT = jchar[MAX_SIZE];
 
 
 #define ASSIGN_AND_CHECK(lhs, rhs)      \
-    if ((lhs = rhs) == NULL) return;        
+    if ((lhs = rhs) == NULL) return;
 
 #define ASSIGN_AND_CHECK_NNEG(lhs, rhs) \
     if ((lhs = rhs) < 0) return;
@@ -115,7 +115,7 @@ jchar * string_unicode__OUT = jchar[MAX_SIZE];
 #define GET_STATIC_TYPE_FIELD(_ctype, _jname, _check_exceptions)                                           \
     _ctype##__IN = GetStatic##_jname##Field(env, jclassValue, jfieldIDValue);                              \
     if (_check_exceptions) {if (*env)->ExceptionCheck(env) return};
-                         
+
 #define SET_STATIC_TYPE_FIELD(_ctype, _jname, _check_exceptions)                                           \
     SetStatic##_jname##Field(env, jclassValue, jfieldIDValue, _ctype##__OUT);                              \
     if (_check_exceptions) {if (*env)->ExceptionCheck(env)) return;}
@@ -147,18 +147,18 @@ jchar * string_unicode__OUT = jchar[MAX_SIZE];
 
 #define GET_PRIMITIVE_ARRAY_ELEMENTS(_ctype, _jname)                                                       \
     ASSIGN_AND_CHECK(_ctype ##_ptr__IN, Get##_jname##ArrayElements(env,                                    \
-        _ctype##ArrayValue, &jboolean__IN));                                                               
+        _ctype##ArrayValue, &jboolean__IN));
 
 #define RELEASE_PRIMITIVE_ARRAY_ELEMENTS(_ctype, _jname)                                                   \
     Release##_jname##ArrayElements(env, _ctype##ArrayValue, _ctype ## _ptr__IN, 0)                         \
 
 #define GET_PRIMITIVE_ARRAY_REGION(_ctype, _jname)                                                         \
     Get##_jname##ArrayRegion(JNIEnv* env,                                                                  \
-        _ctype##Array jarr, 0, current_size, _ctype ## _buf__IN)                                           
+        _ctype##Array jarr, 0, current_size, _ctype ## _buf__IN)
 
 #define SET_PRIMITIVE_ARRAY_REGION(_ctype, _jname)                                                         \
 Set##_jname##ArrayRegion(JNIEnv* env,                                                                      \
-    _ctype##ArrayValue, 0, current_size, _ctype ## _buf__IN)                                               
+    _ctype##ArrayValue, 0, current_size, _ctype ## _buf__IN)
 
 /* PRIMITIVE_ARRAY_FUNCTIONS(_ctype, _jname) */
 
@@ -319,7 +319,7 @@ void function_wrapper() {
 
     // @new-objectarray vary=size
 
-    // todo initialelement 
+    // todo initialelement
     ASSIGN_AND_CHECK(
         jobjectArray__IN,
         (*env)->NewObjectArray(env,
@@ -333,7 +333,7 @@ void function_wrapper() {
         jobject__IN,
         (*env)->NewDirectByteBuffer(env,
             (void*) jchar_buf__OUT, current_size));
-    
+
     // @global-ref
 
     ASSIGN_AND_CHECK(
