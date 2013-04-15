@@ -69,11 +69,11 @@ public class BenchmarkRunner {
 
         measuringTools.add(p); // warmup round
 
-        measuringTools.add(new ResponseTimeRecorder(1)); // total response time
+        // measuringTools.add(new ResponseTimeRecorder(1)); // total response time
 
-        measuringTools.add(new LinuxPerfRecordTool(1) // call profile
-            .set(BasicOption.OUTPUT_FILEPATH, perfDir.getPath())
-            .set(BasicOption.MEASURE_LENGTH, "10")); // todo: proper val
+        // measuringTools.add(new LinuxPerfRecordTool(1) // call profile
+        //     .set(BasicOption.OUTPUT_FILEPATH, perfDir.getPath())
+        //     .set(BasicOption.MEASURE_LENGTH, "10")); // todo: proper val
 
         measuringTools.add(new ResponseTimeRecorder(1000)); // total response time
     }
@@ -315,7 +315,7 @@ public class BenchmarkRunner {
                 if (Thread.interrupted()) {
                     throw new InterruptedException();
                 }
-                bPar.initReturnvalues(); // (I) needs free (see II)
+                bPar.setUp(); // (I) needs tearDown (see II)
 
                 try {
                     tool.startMeasuring(benchmark);
@@ -331,7 +331,7 @@ public class BenchmarkRunner {
                     }
                 }
                 finally {
-                    bPar.freeReturnvalues(); // (II) needs init (see I)
+                    bPar.tearDown(); // (II) needs setUp (see I)
                 }
 
                 BenchmarkResult measurement = tool.getMeasurement();

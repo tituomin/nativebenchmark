@@ -1,5 +1,7 @@
 package fi.helsinki.cs.tituomin.nativebenchmark;
 
+import fi.helsinki.cs.tituomin.nativebenchmark.benchmark.JavaCounterparts;
+
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
@@ -10,8 +12,18 @@ import android.content.pm.PermissionInfo;
 
 public class BenchmarkParameter implements Iterable<Integer> {
 
-    public native int initReturnvalues();
-    public native void freeReturnvalues();
+    private native int initReturnvalues();
+    private native void freeReturnvalues();
+
+    public void setUp() {
+        initReturnvalues();
+        JavaCounterparts.initParams(this);
+    }
+
+    public void tearDown() {
+        freeReturnvalues();
+    }
+    
 
     public static int DEFAULTSIZE = 16;
     private static int RANGE = 8;
