@@ -165,6 +165,8 @@ Set##_jname##ArrayRegion(JNIEnv* env,                                           
 
 void function_wrapper() {
 
+    // @BEGIN
+
     // todo
     // @new-object
     // todo this heavily depends on object type ...
@@ -365,5 +367,7 @@ void function_wrapper() {
         (*env)->PushLocalFrame(env, 16));
 
     jobject__IN = (*env)->PopLocalFrame(env, NULL);
+
+    // @END
 
 }
