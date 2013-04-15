@@ -7,6 +7,10 @@ class PartialDict(dict):
     def __missing__(self, key):
         return "<% " + key + " %>"
 
+class PurgeDict(dict):
+    def __missing__(self, key):
+        return ""
+
 def escape(string):
     string = string.replace('{', '__BEG__')
     string = string.replace('}', '__END__')
@@ -21,7 +25,7 @@ def unescape(string):
     string = string.replace('__END__', '}')
     return string
 
-def put(template, remove = None, **kwargs):
+def put(template, remove = None, purge = False, **kwargs):
     try:
         template = escape(template)
         for k, v in kwargs.iteritems():
@@ -32,7 +36,11 @@ def put(template, remove = None, **kwargs):
             for k in remove:
                 kwargs[k] = ''
 
-        fdict = PartialDict(**kwargs)
+        if purge:
+            fdict = PurgeDict(**kwargs)
+        else:
+            fdict = PartialDict(**kwargs)
+
         result = formatter.vformat(template, (), fdict)
         result = unescape(result)
         return result

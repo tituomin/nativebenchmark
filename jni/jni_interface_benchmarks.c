@@ -2,6 +2,8 @@
 #include <jni.h>
 #include <stdio.h>
 
+jint __a, __b; 
+
 // todo set max size from par?
 jvalue * jvalue_buf = jvalue[MAX_SIZE];
 
@@ -162,20 +164,17 @@ Set##_jname##ArrayRegion(JNIEnv* env,                                           
 
 /* PRIMITIVE_ARRAY_FUNCTIONS(_ctype, _jname) */
 
+    // @BEGIN
+
 
 void function_wrapper() {
 
-    // @BEGIN
 
-    // todo
-    // @new-object
-    // todo this heavily depends on object type ...
-    // @new-object-v
-    // @new-object-a
+    // todo new object etc
 
     // -----------------------
 
-    // @read-unicode vary=size
+    // @ReadUnicode vary=size
 
     ASSIGN_AND_CHECK(
         jchar_ptr__IN,
@@ -189,7 +188,7 @@ void function_wrapper() {
         stringValue,
         jchar_ptr__IN);
 
-    // @read-utf vary=size
+    // @ReadUtf vary=sizeobjectarrayelement
 
     ASSIGN_AND_CHECK(
         jbyte_ptr__IN,
@@ -201,7 +200,7 @@ void function_wrapper() {
         stringValue,
         jbyte_ptr__IN);
 
-    // @read-unicode-critical vary=size
+    // @ReadUnicodeCritical vary=size
 
     ASSIGN_AND_CHECK(
         jchar_ptr__IN,
@@ -213,7 +212,7 @@ void function_wrapper() {
         string,
         jchar_ptr__IN);
 
-    // @copy-unicode vary=size
+    // @CopyUnicode vary=size
 
     jsize__IN = (*env)->GetStringLength(env, stringValue);
 
@@ -223,7 +222,7 @@ void function_wrapper() {
         jsize__IN,
         jchar_buf__IN);
 
-    // @read-primitive-array-critical vary=size
+    // @ReadPrimitiveArrayCritical vary=size
 
     ASSIGN_AND_CHECK(
         void_ptr__IN,
@@ -236,19 +235,19 @@ void function_wrapper() {
         void_ptr__IN,
         0);
 
-    // @read-object-array-element vary=size
+    // @ReadObjectArrayElement vary=size
 
     jobject__IN = (*env)->GetObjectArrayElement(env,
         jobjectArrayValue, 0);
 
-    // @write-object-array-element
+    // @WriteObjectArrayElement
 
     (*env)->SetObjectArrayElement(env,
         jobjectArrayValue,
         0,
         jobject__OUT);
 
-    // @access-direct-buffer
+    // @AccessDirectBuffer
 
     ASSIGN_AND_CHECK_NNEG(
         jlong__IN,
@@ -258,18 +257,18 @@ void function_wrapper() {
         void_ptr__IN,
         (*env)->GetDirectBufferAddress(env, directBufferValue));
 
-    // @get-object-class
+    // @GetObjectClass
 
     jclass__IN = (*env)->GetObjectClass(env, jobjectValue);
 
-    // @find-class
+    // @FindClass
 
     ASSIGN_AND_CHECK(
         jclass__IN,
         (*env)->FindClass(env, classNameValue));
 
     // todo: specify requires behaviour --- V
-    // @get-field-id  requires=find-class vary=size
+    // @GetFieldId requires=findclass vary=size
 
     ASSIGN_AND_CHECK(
         jfieldID__IN,
@@ -278,7 +277,7 @@ void function_wrapper() {
             field_name__OUT,
             field_signature__OUT));
 
-    // @get-static-field-id vary=size
+    // @GetStaticFieldId vary=size
 
     ASSIGN_AND_CHECK(
         jfieldID__IN,
@@ -287,7 +286,7 @@ void function_wrapper() {
             static_field_name__OUT,
             field_signature__OUT));
 
-    // @get-method-id vary=size
+    // @GetMethodId vary=size
 
     ASSIGN_AND_CHECK(
         jmethodID__IN,
@@ -296,7 +295,7 @@ void function_wrapper() {
             method_name__OUT,
             method_signature__OUT));
 
- // @get-static-method-id vary=size
+ // @GetStaticMethodId vary=size
 
     ASSIGN_AND_CHECK(
         jmethodID__IN,
@@ -305,21 +304,21 @@ void function_wrapper() {
             static_method_name__OUT,
             method_signature__OUT));
 
-    // @new-string-utf
+    // @NewStringUtf
 
     ASSIGN_AND_CHECK(
         jstring__IN,
         (*env)->NewStringUTF(env,
             string_utf__OUT));
 
-    // @new-string vary=size
+    // @NewString vary=size
 
     ASSIGN_AND_CHECK(
         jstring__IN,
         (*env)->NewString(env,
             string_unicode__OUT, current_size));
 
-    // @new-objectarray vary=size
+    // @NewObjectArray vary=size
 
     // todo initialelement
     ASSIGN_AND_CHECK(
@@ -329,14 +328,14 @@ void function_wrapper() {
             jelement_class__OUT,
             jobject__OUT));
 
-    // @new-direct-buffer vary=size
+    // @NewDirectBuffer vary=size
 
     ASSIGN_AND_CHECK(
         jobject__IN,
         (*env)->NewDirectByteBuffer(env,
             (void*) jchar_buf__OUT, current_size));
 
-    // @global-ref
+    // @GlobalRef
 
     ASSIGN_AND_CHECK(
         jobject__IN,
@@ -344,7 +343,7 @@ void function_wrapper() {
 
     (*env)->DeleteGlobalRef(env, jobject__IN);
 
-    // @local-ref
+    // @LocalRef
 
     ASSIGN_AND_CHECK(
         jobject__IN,
@@ -352,7 +351,7 @@ void function_wrapper() {
 
     (*env)->DeleteLocalRef(env, jobject__IN);
 
-    // @weak-global-ref
+    // @WeakGlobalRef
 
     ASSIGN_AND_CHECK(
         jobject__IN,
@@ -360,7 +359,7 @@ void function_wrapper() {
 
     (*env)->DeleteWeakGlobalRef(env, jobject__IN);
 
-    // @local-frame
+    // @LocalFrame
 
     ASSIGN_AND_CHECK_NNEG(
         jint__IN,

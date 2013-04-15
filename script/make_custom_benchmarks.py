@@ -1,7 +1,10 @@
 import re
 import logging
 from os import path
+from sys import argv
+import sys
 
+from templating import put
 from templates import c_nativemethod
 from templates import java_benchmark
 
@@ -9,8 +12,9 @@ from templates import java_benchmark
 logging.basicConfig(level=logging.DEBUG)
 
 
-begin_re = re.compile('\s*//\s*@begin\s*', flags=re.IGNORECASE)
-end_re = re.compile('\s*//\s*@end\s*', flags=re.IGNORECASE)
+i = re.IGNORECASE
+begin_re = re.compile('\s*//\s*@begin\s*', flags=i)
+end_re = re.compile('\s*//\s*@end\s*', flags=i)
 benchmark_re = re.compile('\s*//\s*@(\S+)\s*')
 
 def begins_block(line):
@@ -29,81 +33,112 @@ def parse_benchmark_header(line):
     return b_properties
 
 def parse_properties(seq):
-    return dict([(sp.split('=') for sp in seq)])
+    kvs = []
+    for s in seq:
+        splitted = s.split('=')
+        kvs.append((splitted[0], splitted[1]))
+    try:
+        return dict(kvs)
+    except ValueError as e:
+        print seq
+        print seq[0].split('=')
+        exit(1)
 
 def abort_if_last(line):
     if line == '':
         logging.error("Invalid benchmark input file.")
         exit(1)
 
-def read_until(f, predicate, line, collect=None):
+def read_until(f, predicate, collect=None):
     line = ''
     while not predicate(line):
         if collect != None:
-            collect += line
+            collect.append(line)
         line = f.readline()
+        abort_if_last(line)
     abort_if_last(line)
     return line
 
 def read_benchmarks(definition_files):
     benchmarks = {}
-    for lang, f in definition_files:
+    for lang, f in definition_files.iteritems():
         benchmarks[lang] = []
 
-        read_until(f, begins_block)
+        module_start = []
+        read_until(f, begins_block, collect = module_start)
         line = read_until(f, is_benchmark_header)
 
-        while True:
+        while line != '':
             bm_props = parse_benchmark_header(line)
             
-            bm_code  = ''
-            read_until(f,
+            bm_code  = []
+            line = read_until(f,
                 lambda x: ends_block(x) or is_benchmark_header(x),
                 collect = bm_code)
 
-            bm_props['code'] = bm_code
+            bm_props['code'] = ''.join(bm_code)
+            benchmarks[lang].append(bm_props)
 
             if ends_block(line):
-                benchmarks[lang].append(bm_props)
+                break
 
-    return benchmarks
             
-def generate_manual_benchmarks(definitions_files, java_output_dir):
-    all_benchmarks = read_benchmarks(definition_files)
+    add_overhead_benchmarks(benchmarks)
+    return ''.join(module_start), benchmarks
 
-    c_dir = path.dirname(definition_files['C'])
+OVERHEAD_STEP = 100
+OVERHEAD_STEPS = 11 # incl. zero
+OVERHEAD_CODE_STATEMENT = "__a = (((__a * __a * __a) / __b) + __b) / __a;\n"
+
+def add_overhead_benchmarks(benchmarks):
+    for i in range(0, OVERHEAD_STEPS * OVERHEAD_STEP, OVERHEAD_STEP):
+        overhead_code = []
+        for j in range(0, i):
+            overhead_code.append(OVERHEAD_CODE_STATEMENT)
+        benchmarks['C'].append({
+                'code': ''.join(overhead_code),
+                'description' : i,
+                'id'  : 'Overhead' + str(i).zfill(5) })
+    
+            
+def generate_custom_benchmarks(definition_files, java_output_dir):
+    file_beginning, all_benchmarks = read_benchmarks(definition_files)
+
+    c_dir = path.dirname(definition_files['C'].name)
     out_c = open(path.join(c_dir, 'custom_benchmarks.c'), 'w')
+
+    out_c.write(file_beginning)
 
     java_classes = {} #classname, contents
     packagename = ('fi', 'helsinki', 'cs', 'tituomin', 'nativebenchmark', 'benchmark')
 
     for benchmark in all_benchmarks['C']:
 
-        out_c.write(c_nativemethod.t_caller_native.format(
-            packagename = '_'.join(packagename),
-            classname = benchmark['id'],
-            parameter_declarations = ''
-            parameter_initialisations = ''
-            counterpart_method_name = benchmark['code'],
-            counterpart_method_arguments = '')) # todo hack dont work - need to modify template
+        classname = 'C2J' + benchmark['id']
 
-        java_classes[benchmark['id']] = (
-            java_benchmark.t.format(
+        out_c.write(put(
+                c_nativemethod.t_run_method,
+                packagename = '_'.join(packagename),
+                classname = classname,
+                body = benchmark['code'],
+                purge = True))
+
+        java_classes[classname] = (put(
+                java_benchmark.t,
                 packagename = '.'.join(packagename),
-                imports = '',
-                classname  = benchmark['id'],
+                classname  = classname,
+                description = benchmark.get('description', ''),
                 from_language = 'C',
                 to_language = 'J',
                 seq_no = '-1',
-                description = '',
-                native_method = '',
-                run_method = java_benchmark.native_method_t))
+                run_method = 'public native void run();',
+                purge = True))
 
     out_c.flush()
     out_c.close()
 
-    for benchmark in all_benchmarks['J']:
-        pass # todo
+#    for benchmark in all_benchmarks['J']:
+#        pass # todo
 
     for classname, contents in java_classes.iteritems():
         f = open(path.join(java_output_dir, classname + '.java'), 'w')
@@ -115,11 +150,10 @@ if __name__ == "__main__":
     try:
         definition_files = {
             'C' : open(argv[1])
-            'J' : open(argv[2])
             }
 
-        java_output_dir = argv[3]
-        generate_manual_benchmarks(definition_files, java_output_dir)
+        java_output_dir = argv[2]
+        generate_custom_benchmarks(definition_files, java_output_dir)
 
     except Exception as e:
         logging.exception("Exception was thrown.")
