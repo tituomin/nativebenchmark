@@ -1,6 +1,7 @@
 
 from benchmark_generator import create_benchmarks
 from templates import java_registry_init
+from templating import put
 
 import sys
 from sys import argv
@@ -49,7 +50,7 @@ def write_benchmarks(c_output, c_run_output, java_output_dir):
         'BenchmarkInitialiser.java')
 
     init_output = open(path, 'w')
-    init_output.write(java_registry_init.t.format(register_benchmarks = "\n".join(benchmark_inits)))
+    init_output.write(put(java_registry_init.t, register_benchmarks = "\n".join(benchmark_inits)))
 
     classes = [bm['class'] for bm in benchmarks['java']]
     return classes

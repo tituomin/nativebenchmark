@@ -4,6 +4,8 @@ from templates import c_module
 from templates import c_jni_function
 from templates import c_nativemethod
 
+from templating import put
+
 import itertools
 import logging
 
@@ -36,19 +38,19 @@ def benchmark_classname(prefix, number):
 def parameter_initialisation(language, type_data, name):
     if type_data.get('is-array', False):
         if language == 'java':
-            expression = 'benchmarkParameter.retrieve{tipe}Array()'.format(
-                tipe = type_data['java-element-type'].capitalize())
+            expression = 'benchmarkParameter.retrieve{_type}Array()'.format(
+                _type = type_data['java-element-type'].capitalize())
         else:
-            expression = '{tipe}ArrayValue'.format(
-                tipe = type_data['c-element-type'])
+            expression = '{_type}ArrayValue'.format(
+                _type = type_data['c-element-type'])
 
     elif type_data.get('is-object', False):
         if language == 'java':
-            expression = 'benchmarkParameter.retrieve{tipe}()'.format(
-                tipe = type_data['java'])
+            expression = 'benchmarkParameter.retrieve{_type}()'.format(
+                _type = type_data['java'])
         else:
-            expression = '{tipe}Value'.format(
-                tipe = type_data['c'])
+            expression = '{_type}Value'.format(
+                _type = type_data['c'])
 
     elif language == 'java':
         if type_data.get('java-literal'):
@@ -213,7 +215,7 @@ def generate_benchmarks():
                                 'filename' : classname + ".java",
                                 'class'    : '.'.join(packagename) + "." + classname,
                                 'path'     : '/'.join(packagename),
-                                'code'     : java_benchmark.t.format(
+                                'code'     : put(java_benchmark.t,
                                     imports                      = '',
                                     description                  = spec['description'],
                                     seq_no                       = class_counter,
@@ -226,20 +228,27 @@ def generate_benchmarks():
                                     run_method                   = run_method,
                                     native_method                = native_method)})
 
+
+                        if return_type.get('is-object') or return_type.get('is-array'):
+                            ret_expression = "{_type}Value".format(
+                                _type = return_type['c'])
+                        else:
+                            ret_expression = parameter_initialisation('java', return_type, None)
+
                         if (from_lang, to_lang) == ('J', 'J'):
                             java_callees.append(
                                 java_counterparts.counterpart_method(
                                     return_type       = return_type['java'],
                                     methodname        = counterpart_method_name,
                                     parameters        = ", ".join(parameter_declarations[0:i+1]),
-                                    return_expression = parameter_initialisation('java', return_type, None)))
+                                    return_expression = ret_expression))
 
                             # todo append return expressions !! (performance optimisation)
                             # to counterpart class (at the end or beginning) ?
 
                         if (from_lang, to_lang) == ('J', 'C'):
                             c.append(
-                                c_nativemethod.t.format(
+                                put(c_nativemethod.t,
                                     return_type               = return_type['c'],
                                     packagename               = ('_').join(packagename),
                                     classname                 = classname,
@@ -252,7 +261,7 @@ def generate_benchmarks():
                             jni_param_names.extend(parameter_names)
 
                             c_runners.append(
-                                c_nativemethod.t_caller_native.format(
+                                put(c_nativemethod.t_caller_native,
                                     packagename = '_'.join(packagename),
                                     classname = classname,
                                     parameter_declarations = "; ".join(c_parameter_declarations[1:i+2]),
@@ -275,7 +284,7 @@ def generate_benchmarks():
                             if arguments != '':
                                 arguments = ', ' + arguments
                             c_runners.append(
-                                c_nativemethod.t_caller_java.format(
+                                put(c_nativemethod.t_caller_java,
                                     seq_no = class_counter,
                                     packagename = '_'.join(packagename),
                                     classname = classname,
@@ -286,29 +295,38 @@ def generate_benchmarks():
                                     arguments = arguments))
 
                             c_methodid_inits.append(
-                                c_module.mid_init_t.format(
+                                put(c_module.mid_init_t,
                                     seq_no = class_counter,
                                     method_name = counterpart_method_name,
                                     method_descriptor = jni_types.method_descriptor(
                                         return_type, type_combination[0:i+1])))
 
+    ref_types = jni_types.object_types.values() + jni_types.array_types.values()
+    jcp_decl = ''
+    jcp_init = ''
+    for _type in ref_types:
+        jcp_decl += "private static {_type1} {_type2}Value;\n".format(_type1 = _type['java'], _type2 = _type['c'])
+        jcp_init += parameter_initialisation('java', _type, _type['c'] + 'Value') + ";\n"
 
+    
     java_counterparts_class = {
             'filename' : java_counterpart_classname + ".java",
             'class'    : '.'.join(packagename) + "." + java_counterpart_classname,
             'path'     : '/'.join(packagename),
-            'code'     : java_counterparts.t.format(
+            'code'     : put(java_counterparts.t,
                 packagename = '.'.join(packagename),
                 imports = '',
+                return_value_declarations = jcp_decl,
+                return_value_inits = jcp_init,
                 counterpart_methods = ''.join(java_callees))}
 
-    c_file = c_module.t.format(
+    c_file = put(c_module.t,
         jni_function_templates = ''.join(c),
         initialisers='')
     
-    c_runners_file = c_module.t.format(
+    c_runners_file = put(c_module.t,
         jni_function_templates = ''.join(c_runners),
-        initialisers=c_module.initialisers_t.format(
+        initialisers= put(c_module.initialisers_t,
             mid_inits = ''.join(c_methodid_inits),
             amount_of_methods = len(c_methodid_inits)))
 

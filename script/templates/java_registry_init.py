@@ -1,4 +1,6 @@
 
+from templating import put
+
 t = """
 package fi.helsinki.cs.tituomin.nativebenchmark;
 
@@ -8,18 +10,18 @@ import fi.helsinki.cs.tituomin.nativebenchmark.BenchmarkParameter;
 import fi.helsinki.cs.tituomin.nativebenchmark.benchmark.*;
 import java.util.List;
 
-public class BenchmarkInitialiser {{
+public class BenchmarkInitialiser {
 
-    public static void init(BenchmarkParameter bp) {{
+    public static void init(BenchmarkParameter bp) {
         List<Benchmark> benchmarks = BenchmarkRegistry.getBenchmarks();
 
-        {register_benchmarks}
-    }}
+        <% register_benchmarks %>
+    }
 
-}}
+}
 
 """
 
 def inits(classname):
-    return """
-    benchmarks.add(new {classname} (BenchmarkRegistry.repetitions, bp));""".format(classname=classname)
+    return put("""
+    benchmarks.add(new <% classname %> (BenchmarkRegistry.repetitions, bp));""", classname=classname)

@@ -7,6 +7,7 @@ other_types = None
 types = None
 return_types = None
 
+array_types = None
 
 primitive_type_definitions = [
     {
@@ -168,7 +169,7 @@ def method_descriptor(return_type, parameter_types):
     
 
 def init_types():
-    global primitive_types, object_types, other_types, types, return_types
+    global primitive_types, object_types, other_types, types, return_types, array_types
     primitive_types = dict([(typedef['symbol'], typedef) for typedef in primitive_type_definitions])
     object_types = dict([(typedef['symbol'], typedef) for typedef in object_type_definitions])
     other_types = dict([(typedef['symbol'], typedef) for typedef in other_type_definitions])
