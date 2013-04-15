@@ -7,6 +7,7 @@ import sys
 from templating import put
 from templates import c_nativemethod
 from templates import java_benchmark
+from templates import java_registry_init
 
 # Log everything, and send it to stderr.
 logging.basicConfig(level=logging.DEBUG)
@@ -95,13 +96,14 @@ def add_overhead_benchmarks(benchmarks):
         overhead_code = []
         for j in range(0, i):
             overhead_code.append(OVERHEAD_CODE_STATEMENT)
+
         benchmarks['C'].append({
                 'code': ''.join(overhead_code),
                 'description' : i,
                 'id'  : 'Overhead' + str(i).zfill(5) })
     
             
-def generate_custom_benchmarks(definition_files, java_output_dir):
+def write_custom_benchmarks(definition_files, java_output_dir):
     file_beginning, all_benchmarks = read_benchmarks(definition_files)
 
     c_dir = path.dirname(definition_files['C'].name)
@@ -115,6 +117,7 @@ def generate_custom_benchmarks(definition_files, java_output_dir):
     for benchmark in all_benchmarks['C']:
 
         classname = 'C2J' + benchmark['id']
+        full_classname = '.'.join(packagename + (classname,))
 
         out_c.write(put(
                 c_nativemethod.t_run_method,
@@ -123,7 +126,7 @@ def generate_custom_benchmarks(definition_files, java_output_dir):
                 body = benchmark['code'],
                 purge = True))
 
-        java_classes[classname] = (put(
+        java_classes[full_classname] = {'code': (put(
                 java_benchmark.t,
                 packagename = '.'.join(packagename),
                 classname  = classname,
@@ -132,7 +135,8 @@ def generate_custom_benchmarks(definition_files, java_output_dir):
                 to_language = 'J',
                 seq_no = '-1',
                 run_method = 'public native void run();',
-                purge = True))
+                purge = True)),
+                                        'filename':classname + '.java'}
 
     out_c.flush()
     out_c.close()
@@ -141,22 +145,9 @@ def generate_custom_benchmarks(definition_files, java_output_dir):
 #        pass # todo
 
     for classname, contents in java_classes.iteritems():
-        f = open(path.join(java_output_dir, classname + '.java'), 'w')
-        f.write(contents)
+        f = open(path.join(java_output_dir, '/'.join(packagename), contents['filename']), 'w')
+        f.write(contents['code'])
         f.flush()
         f.close()
 
-if __name__ == "__main__":
-    try:
-        definition_files = {
-            'C' : open(argv[1])
-            }
-
-        java_output_dir = argv[2]
-        generate_custom_benchmarks(definition_files, java_output_dir)
-
-    except Exception as e:
-        logging.exception("Exception was thrown.")
-        sys.exit(1)
-    else:
-        sys.exit(0)
+    return java_classes.keys()

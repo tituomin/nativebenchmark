@@ -1,5 +1,6 @@
 
 from benchmark_generator import create_benchmarks
+from make_custom_benchmarks import write_custom_benchmarks
 from templates import java_registry_init
 from templating import put
 
@@ -60,9 +61,16 @@ if __name__ == "__main__":
         c_output_name = argv[1]
         c_run_output_name = argv[2]
         java_output_dir = argv[3]
+        c_definition_filename = argv[4]
+
+        definition_files = {
+                'C' : open(c_definition_filename)
+                }
+
         c_output = open(c_output_name, 'w')
         c_run_output = open(c_run_output_name, 'w')
         classes = write_benchmarks(c_output, c_run_output, java_output_dir)
+        classes.extend(write_custom_benchmarks(definition_files, java_output_dir))
         print(",".join(classes))
     except Exception as e:
         logging.exception("Exception was thrown.")

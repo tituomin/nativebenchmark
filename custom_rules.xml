@@ -15,7 +15,7 @@
   </target>
 
   <fileset dir="${codegen_script.dir}" id="python-codegen" includes="**/*.py">
-    <modified />
+    <modified /> <!-- todo include jni_interface_benchmarks.c -->
   </fileset>
   <pathconvert
       refid="python-codegen"
@@ -43,6 +43,7 @@
           <arg value="${jni_src.dir}/nativebenchmark.c" />
           <arg value="${jni_src.dir}/nativerunners.c" />
           <arg value="${gen_src.dir}" />
+          <arg value="${jni_src.dir}/jni_interface_benchmarks.c" />
     </exec>
     <property name="code.generated" value="true" />
   </target>

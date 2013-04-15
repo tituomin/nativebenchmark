@@ -30,8 +30,8 @@ t_caller_native = put(
     body = put(
         loop_code.t_c,
         benchmark_body = (
-            '<% counterpart_method_name %> (<% counterpart_method_arguments %>);'),
-        prebody = ''))
+            '<% counterpart_method_name %> (<% counterpart_method_arguments %>);')),
+    prebody = '')
 
 t_caller_java = put(
     t_run_method,
