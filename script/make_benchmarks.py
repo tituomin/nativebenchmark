@@ -1,5 +1,5 @@
 
-from benchmark_generator import create_benchmarks
+from benchmark_generator import create_benchmarks, packagename
 from make_custom_benchmarks import write_custom_benchmarks
 from templates import java_registry_init
 from templating import put
@@ -32,18 +32,23 @@ def write_benchmark(benchmark, java_output_dir):
     
 
 def write_benchmarks(c_output, c_run_output, java_output_dir):
-
     benchmarks = create_benchmarks()
     c_output.write(benchmarks['c'])
     c_run_output.write(benchmarks['c_run'])
 
-    benchmark_inits = []
-
     for benchmark in benchmarks['java']:
         write_benchmark(benchmark, java_output_dir)
-        benchmark_inits.append(java_registry_init.inits(benchmark["class"]))
 
     write_benchmark(benchmarks['java_counter'], java_output_dir)
+
+    return [benchmark['class'] for benchmark in benchmarks['java']]
+
+
+def write_benchmark_initialiser(classes):
+    benchmark_inits = []
+
+    for _class in classes:
+        benchmark_inits.append(java_registry_init.inits(_class))
 
     path = os.path.join(
         java_output_dir,
@@ -52,9 +57,7 @@ def write_benchmarks(c_output, c_run_output, java_output_dir):
 
     init_output = open(path, 'w')
     init_output.write(put(java_registry_init.t, register_benchmarks = "\n".join(benchmark_inits)))
-
-    classes = [bm['class'] for bm in benchmarks['java']]
-    return classes
+        
  
 if __name__ == "__main__":
     try:
@@ -67,10 +70,13 @@ if __name__ == "__main__":
                 'C' : open(c_definition_filename)
                 }
 
-        c_output = open(c_output_name, 'w')
         c_run_output = open(c_run_output_name, 'w')
-        classes = write_benchmarks(c_output, c_run_output, java_output_dir)
-        classes.extend(write_custom_benchmarks(definition_files, java_output_dir))
+        c_output =     open(c_output_name, 'w')
+
+        classes = (write_benchmarks(c_output, c_run_output, java_output_dir) +
+                   write_custom_benchmarks(definition_files, java_output_dir))
+
+        write_benchmark_initialiser(classes)
         print(",".join(classes))
     except Exception as e:
         logging.exception("Exception was thrown.")

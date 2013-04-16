@@ -104,6 +104,7 @@ def add_overhead_benchmarks(benchmarks):
     
             
 def write_custom_benchmarks(definition_files, java_output_dir):
+    packagename = ('fi', 'helsinki', 'cs', 'tituomin', 'nativebenchmark', 'benchmark')
     file_beginning, all_benchmarks = read_benchmarks(definition_files)
 
     c_dir = path.dirname(definition_files['C'].name)
@@ -112,12 +113,10 @@ def write_custom_benchmarks(definition_files, java_output_dir):
     out_c.write(file_beginning)
 
     java_classes = {} #classname, contents
-    packagename = ('fi', 'helsinki', 'cs', 'tituomin', 'nativebenchmark', 'benchmark')
 
     for benchmark in all_benchmarks['C']:
 
         classname = 'C2J' + benchmark['id']
-        full_classname = '.'.join(packagename + (classname,))
 
         out_c.write(put(
                 c_nativemethod.t_run_method,
@@ -126,7 +125,7 @@ def write_custom_benchmarks(definition_files, java_output_dir):
                 body = benchmark['code'],
                 purge = True))
 
-        java_classes[full_classname] = {'code': (put(
+        java_classes[classname] = {'code': (put(
                 java_benchmark.t,
                 packagename = '.'.join(packagename),
                 classname  = classname,
@@ -150,4 +149,4 @@ def write_custom_benchmarks(definition_files, java_output_dir):
         f.flush()
         f.close()
 
-    return java_classes.keys()
+    return (['.'.join(packagename + (classname,)) for classname in java_classes.keys()])
