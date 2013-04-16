@@ -25,6 +25,7 @@ Java_fi_helsinki_cs_tituomin_nativebenchmark_BenchmarkParameter_initReturnvalues
     CHECK_AND_CALL(jstring,       String,       "()Ljava/lang/String;")
     CHECK_AND_CALL(jthrowable,    Throwable,    "()Ljava/lang/Throwable;")
 
+    set_up_custom_context(env, benchmarkParameter, size);
     return 1;
 
 }
@@ -55,23 +56,25 @@ void set_up_custom_context(JNIEnv* env, jobject bPar, jint size) {
     jfieldIDValue = 0;
     jmethodIDValue = 0;
 
-    classNameValue = 'android/content/pm/PermissionInfo';
-    field_name__OUT = 'flags';
-    field_signature__OUT = 'I';
-    static_field_name__OUT = 'FLAG_COSTS_MONEY'; // todo: is final...
-    static_field_signature__OUT = 'I';
-    method_name__OUT = 'loadDescription';
-    method_signature__OUT = '(Landroid/content/pm/PackageManager;)Ljava/lang/CharSequence;';
-    static_method_name__OUT = 'protectionToString';
-    static_method_signature__OUT = '(I)Ljava/lang/String;';
+    classNameValue = "android/content/pm/PermissionInfo";
+    field_name__OUT = "flags";
+    field_signature__OUT = "I";
+    static_field_name__OUT = "FLAG_COSTS_MONEY"; // todo: is final...
+    static_field_signature__OUT = "I";
+    method_name__OUT = "loadDescription";
+    method_signature__OUT = "(Landroid/content/pm/PackageManager;)Ljava/lang/CharSequence;";
+    static_method_name__OUT = "protectionToString";
+    static_method_signature__OUT = "(I)Ljava/lang/String;";
 
     current_size = size;
-    init_utf_string(size);
+    init_strings(size);
 }
 
-void init_utf_string(int size) {
-    for (int i = 0; i < size; i++) {
+void init_strings(int size) {
+    int i;
+    for (i = 0; i < size; i++) {
         string_utf__OUT[i] = 'a';
+        string_unicode__OUT[i] = 1;
     }
     string_utf__OUT[i] = 0;
 }

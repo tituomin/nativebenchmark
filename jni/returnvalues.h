@@ -51,9 +51,9 @@ RETURN_VALUE(jdoubleArray)
 // ---------------------------
 // -- for custom benchmarks --
 
-void set_up_custom_context(JNIEnv*, jobject);
+void set_up_custom_context(JNIEnv*, jobject, jint);
 void tear_down_custom_context();
-void init_utf_string(int);
+void init_strings(int);
 
 jint __a, __b;
 
@@ -154,10 +154,12 @@ VARIABLE_OUT(jobject);
 const char* field_name__OUT;
 const char* static_field_name__OUT;
 const char* field_signature__OUT;
+const char* static_field_signature__OUT;
 
 const char* method_name__OUT;
 const char* static_method_name__OUT;
 const char* method_signature__OUT;
+const char* static_method_signature__OUT;
 
 // must get method/field names from class somehow
 // add to par
