@@ -20,6 +20,7 @@ RETURN_VALUE(jobjectArray)
 RETURN_VALUE(jbyteArray)
 RETURN_VALUE(jshortArray)
 RETURN_VALUE(jdoubleArray)
+jobject directByteBufferValue;
 
 #define CHECK_AND_CALL(variable, Type, signature)                   \
                                                                     \

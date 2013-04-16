@@ -91,11 +91,11 @@ void function_wrapper() {
 
     ASSIGN_AND_CHECK_NNEG(
         jlong__IN,
-        (*env)->GetDirectBufferCapacity(env, directBufferValue));
+        (*env)->GetDirectBufferCapacity(env, directByteBufferValue));
 
     ASSIGN_AND_CHECK(
         void_ptr__IN,
-        (*env)->GetDirectBufferAddress(env, directBufferValue));
+        (*env)->GetDirectBufferAddress(env, directByteBufferValue));
 
     // @GetObjectClass
 

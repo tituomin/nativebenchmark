@@ -2,6 +2,7 @@ package fi.helsinki.cs.tituomin.nativebenchmark;
 
 import fi.helsinki.cs.tituomin.nativebenchmark.benchmark.JavaCounterparts;
 
+import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
@@ -159,6 +160,9 @@ public class BenchmarkParameter implements Iterable<Integer> {
     public Throwable retrieveThrowable() {
         return THROWABLES[index];
     }
+    public ByteBuffer retrieveDirectByteBuffer() {
+        return BYTEBUFFER;
+    }
 
     // -------------------------------------------------
 
@@ -253,6 +257,8 @@ public class BenchmarkParameter implements Iterable<Integer> {
     private static final long[][] LONG_ARRAYS         = new long[RANGE + 1][];
     private static final short[][] SHORT_ARRAYS       = new short[RANGE + 1][];
     private static final Object[][] OBJECT_ARRAYS     = new Object[RANGE + 1][];
+
+    private static final ByteBuffer BYTEBUFFER        = ByteBuffer.allocateDirect(MAXSIZE);
 
 }
 
