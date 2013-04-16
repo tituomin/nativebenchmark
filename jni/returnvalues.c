@@ -6,7 +6,7 @@
 
 JNIEXPORT jint JNICALL
 Java_fi_helsinki_cs_tituomin_nativebenchmark_BenchmarkParameter_initReturnvalues
-(JNIEnv* env, jobject benchmarkParameter)
+(JNIEnv* env, jobject benchmarkParameter, jint size)
 {
     jclass cls = (*env)->GetObjectClass(env, benchmarkParameter);
     jobject local_reference;
@@ -46,4 +46,35 @@ Java_fi_helsinki_cs_tituomin_nativebenchmark_BenchmarkParameter_freeReturnvalues
     (*env)->DeleteGlobalRef(env, jbyteArrayValue);
     (*env)->DeleteGlobalRef(env, jshortArrayValue);
     (*env)->DeleteGlobalRef(env, jdoubleArrayValue);
+}
+
+
+void set_up_custom_context(JNIEnv* env, jobject bPar, jint size) {
+    __a = 2;
+    __b = 3;
+    jfieldIDValue = 0;
+    jmethodIDValue = 0;
+
+    classNameValue = 'android/content/pm/PermissionInfo';
+    field_name__OUT = 'flags';
+    field_signature__OUT = 'I';
+    static_field_name__OUT = 'FLAG_COSTS_MONEY'; // todo: is final...
+    static_field_signature__OUT = 'I';
+    method_name__OUT = 'loadDescription';
+    method_signature__OUT = '(Landroid/content/pm/PackageManager;)Ljava/lang/CharSequence;';
+    static_method_name__OUT = 'protectionToString';
+    static_method_signature__OUT = '(I)Ljava/lang/String;';
+
+    current_size = size;
+    init_utf_string(size);
+}
+
+void init_utf_string(int size) {
+    for (int i = 0; i < size; i++) {
+        string_utf__OUT[i] = 'a';
+    }
+    string_utf__OUT[i] = 0;
+}
+
+void tear_down_custom_context() {
 }

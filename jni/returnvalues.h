@@ -51,14 +51,22 @@ RETURN_VALUE(jdoubleArray)
 // ---------------------------
 // -- for custom benchmarks --
 
+void set_up_custom_context(JNIEnv*, jobject);
+void tear_down_custom_context();
+void init_utf_string(int);
+
 jint __a, __b;
 
 #define MAX_SIZE 1024
-// todo set max size from par?
+// todo set max size from par? (final static...)
+
 jvalue jvalue_buf[MAX_SIZE];
 
 #define VARIABLE(_ctype, direction) \
-_ctype _ctype ## __ ## direction = 0;
+    _ctype _ctype ## __ ## direction;
+
+#define ASSIGN_VARIABLE(_ctype, direction, val)     \
+    _ctype ## __ ## direction = val;
 
 #define VARIABLE_IN(_ctype)         \
     VARIABLE(_ctype, IN)
@@ -67,10 +75,11 @@ _ctype _ctype ## __ ## direction = 0;
     VARIABLE(_ctype, OUT)
 
 #define POINTER_IN(_ctype)          \
-    _ctype * _ctype ## _ptr__IN = 0;
+    _ctype * _ctype ## _ptr__IN;
 
 #define BUFFER_IN(_ctype)           \
-    _ctype * _ctype ## _buf__IN = (_ctype *) jvalue_buf;
+    _ctype * _ctype ## _buf__IN;
+//todo = (_ctype *) jvalue_buf;
 
 #define PRIMITIVE_IN(_ctype)       \
     VARIABLE_IN(_ctype);            \
@@ -140,28 +149,28 @@ VARIABLE_OUT(jobject);
 // par -----
 
 // todo todo todo
-jclass jelement_class__OUT = NULL;
+//jclass jelement_class__OUT;
 
-const char* field_name__OUT = "needle";
-const char* static_field_name__OUT = "sneedle";
-const char* field_signature__OUT = "I;";
+const char* field_name__OUT;
+const char* static_field_name__OUT;
+const char* field_signature__OUT;
 
-const char* method_name__OUT = "needle";
-const char* static_method_name__OUT = "sneedle";
-const char* method_signature__OUT = "I;";
+const char* method_name__OUT;
+const char* static_method_name__OUT;
+const char* method_signature__OUT;
 
 // must get method/field names from class somehow
 // add to par
 // add to par: native init code for native structures (byteArray)
 // also set current_size
 // todo directBufferValue > par !!
-jsize current_size = 0; // todo set from java?
-jfieldID jfieldIDValue = 0;
-jfieldID jmethodIDValue = 0;
-char *classNameValue = NULL;
+jsize current_size; // todo set from java?
+jfieldID jfieldIDValue;
+jfieldID jmethodIDValue;
+char *classNameValue;
 
 // todo par must init (utf version)
-char string_utf__OUT[MAX_SIZE];
+char string_utf__OUT[MAX_SIZE + 1];
 jchar string_unicode__OUT[MAX_SIZE];
 
 

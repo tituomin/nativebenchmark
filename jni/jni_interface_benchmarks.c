@@ -104,8 +104,7 @@ void function_wrapper() {
         jclass__IN,
         (*env)->FindClass(env, classNameValue));
 
-    // todo: specify requires behaviour --- V
-    // @GetFieldId requires=findclass vary=size
+    // @GetFieldId vary=size
 
     ASSIGN_AND_CHECK(
         jfieldID__IN,
@@ -162,7 +161,8 @@ void function_wrapper() {
         jobjectArray__IN,
         (*env)->NewObjectArray(env,
             current_size,
-            jelement_class__OUT,
+            // todo option parametrize
+            jclassValue,
             jobject__OUT));
 
     // @NewDirectBuffer vary=size
