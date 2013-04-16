@@ -7,7 +7,10 @@
 
 void function_wrapper() {
 
-    // todo new object etc
+    // @CreateObject
+    ASSIGN_AND_CHECK(
+        jobject__IN,
+        (*env)->NewObject(env, jclassValue));
 
     // -----------------------
 
