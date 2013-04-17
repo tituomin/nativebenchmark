@@ -5,6 +5,7 @@ from sys import argv
 import sys
 
 from templating import put
+from templates import loop_code
 from templates import c_nativemethod
 from templates import java_benchmark
 from templates import java_registry_init
@@ -98,7 +99,7 @@ def add_overhead_benchmarks(benchmarks):
             overhead_code.append(OVERHEAD_CODE_STATEMENT)
 
         benchmarks['C'].append({
-                'code': ''.join(overhead_code),
+                'code':  ''.join(overhead_code),
                 'description' : i,
                 'id'  : 'Overhead' + str(i).zfill(5) })
     
@@ -117,15 +118,27 @@ def write_custom_benchmarks(definition_files, java_output_dir):
     for benchmark in all_benchmarks['C']:
 
         classname = 'C2J' + benchmark['id']
+        if 'vary' in benchmark:
+            dyn_par = 'true'
+        else:
+            dyn_par = 'false'
 
         out_c.write(put(
                 c_nativemethod.t_run_method,
+                return_type = 'void',
+                parameters = 'jobject instance',
+                function = 'run',
                 packagename = '_'.join(packagename),
                 classname = classname,
-                body = benchmark['code'],
+                body = put(
+                    loop_code.t_c_jni_call,
+                    debug = classname,
+                    benchmark_body = benchmark['code']),
                 purge = True))
 
-        java_classes[classname] = {'code': (put(
+        java_classes[classname] = {
+            'filename':classname + '.java',
+            'code': (put(
                 java_benchmark.t,
                 packagename = '.'.join(packagename),
                 classname  = classname,
@@ -133,9 +146,10 @@ def write_custom_benchmarks(definition_files, java_output_dir):
                 from_language = 'C',
                 to_language = 'J',
                 seq_no = '-1',
+                has_dynamic_parameters = dyn_par,
                 run_method = 'public native void run();',
-                purge = True)),
-                                        'filename':classname + '.java'}
+                purge = True))}
+
 
     out_c.flush()
     out_c.close()

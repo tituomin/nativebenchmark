@@ -1,5 +1,7 @@
 
 #include <jni.h>
+#include <stdio.h>
+#include <android/log.h>
 #include "returnvalues.h"
 #include "custom_benchmarks.h"
 
@@ -10,7 +12,7 @@ void function_wrapper() {
     // @CreateObject
     ASSIGN_AND_CHECK(
         jobject__IN,
-        (*env)->NewObject(env, jclassValue));
+        (*env)->NewObject(env, jclassValue, objectConstructorID));
 
     // -----------------------
 
@@ -19,13 +21,13 @@ void function_wrapper() {
     ASSIGN_AND_CHECK(
         jchar_ptr__IN,
         (*env)->GetStringChars(env,
-            stringValue,
+            jstringValue,
             &jboolean__IN));
 
-    jsize__IN = (*env)->GetStringLength(env, stringValue);
+    jsize__IN = (*env)->GetStringLength(env, jstringValue);
 
     (*env)->ReleaseStringChars(env,
-        stringValue,
+        jstringValue,
         jchar_ptr__IN);
 
     // @ReadUtf vary=sizeobjectarrayelement
@@ -33,34 +35,37 @@ void function_wrapper() {
     ASSIGN_AND_CHECK(
         jbyte_ptr__IN,
         (*env)->GetStringUTFChars(env,
-            stringValue,
+            jstringValue,
             &jboolean__IN));
 
     (*env)->ReleaseStringUTFChars(env,
-        stringValue,
-        jbyte_ptr__IN);
+        jstringValue,
+        (char *)jbyte_ptr__IN);
 
     // @ReadUnicodeCritical vary=size
 
     ASSIGN_AND_CHECK(
         jchar_ptr__IN,
         (*env)->GetStringCritical(env,
-            stringValue,
+            jstringValue,
             &jboolean__IN));
 
     (*env)->ReleaseStringCritical(env,
-        string,
+        jstringValue,
         jchar_ptr__IN);
 
     // @CopyUnicode vary=size
 
-    jsize__IN = (*env)->GetStringLength(env, stringValue);
+    jsize__IN = (*env)->GetStringLength(env, jstringValue);
 
-    (*env)->GetStringRegion(env,
-        stringValue,
-        0,
-        jsize__IN,
-        jchar_buf__IN);
+    if (jsize__IN > 0) {
+        (*env)->GetStringRegion(
+            env,
+            jstringValue,
+            0,
+            jsize__IN,
+            jchar_buf__IN);
+    }
 
     // @ReadPrimitiveArrayCritical vary=size
 
@@ -77,15 +82,21 @@ void function_wrapper() {
 
     // @ReadObjectArrayElement vary=size
 
-    jobject__IN = (*env)->GetObjectArrayElement(env,
-        jobjectArrayValue, 0);
+    if (current_size > 0) {
+        jobject__IN = (*env)->GetObjectArrayElement(
+            env,
+            jobjectArrayValue, 0);
+    }
 
     // @WriteObjectArrayElement
 
-    (*env)->SetObjectArrayElement(env,
-        jobjectArrayValue,
-        0,
-        jobject__OUT);
+    if (current_size > 0) {
+        (*env)->SetObjectArrayElement(
+            env,
+            jobjectArrayValue,
+            0,
+            jobject__OUT);
+    }
 
     // @AccessDirectBuffer
 
@@ -141,7 +152,7 @@ void function_wrapper() {
         (*env)->GetStaticMethodID(env,
             jclassValue,
             static_method_name__OUT,
-            method_signature__OUT));
+            static_method_signature__OUT));
 
     // @NewStringUtf
 

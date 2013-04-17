@@ -11,7 +11,6 @@ t = """
     interval = interval + 1;
 
     <% additional_init %>
-
     while (--division != 0) { 
         while (--interval != 0) { 
             <% pre_body %>
@@ -37,8 +36,6 @@ jni_push_frame = """
 if (refs == 0) {
     refs = LOCAL_FRAME_SIZE;
     if ((*env)->PushLocalFrame(env, LOCAL_FRAME_SIZE) < 0) {
-        __android_log_write(ANDROID_LOG_ERROR,                      
-            "nativebenchmark", "can't ensure capacity");
         return;
     }
 }
@@ -55,7 +52,7 @@ if (--refs == 0) {
 t_c_base = put(
     t,
     declare_counters = 'jlong interval, division, remainder;',
-    init_counters    = 'interval = CHECK_INTERRUPTED_INTERVAL;',
+    init_counters    = 'interval = CHECK_INTERRUPTED_INTERVAL;',#;\n__android_log_print(ANDROID_LOG_DEBUG, "nativebenchmark", "interval is %lld", interval);',
     test_interrupted = 'check_interrupted(env)')
 
 t_c_jni_call = put(

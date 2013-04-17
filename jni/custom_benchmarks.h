@@ -25,7 +25,7 @@
     if (_check_exceptions) { if (*env)->ExceptionCheck(env)) return;}
 
 #define CALL_VIRTUAL(_lhs, _jname, _parameters, _check_exceptions)                                         \
-    _lhs ## Call##_jname##Method(env, jobjectValue, jmethodIDValue ## _parameters);                        \ // plus parameters! (python)
+    _lhs ## Call##_jname##Method(env, jobjectValue, jmethodIDValue ## _parameters);                        \
     if (_check_exceptions) { if (*env)->ExceptionCheck(env)) return;}
     // todo variations ?
 

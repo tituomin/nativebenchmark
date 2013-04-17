@@ -13,18 +13,13 @@ t = """
 """
 
 initialisers_t = """
-static jlong CHECK_INTERRUPTED_INTERVAL;
-static jlong repetitions;
-static jclass java_counterparts_class;
 static jmethodID mids[<% amount_of_methods %>];
-static jclass thread_class;
-static jmethodID current_thread_mid;
-static jmethodID is_interrupted_mid;
 
 static void init_methodids(JNIEnv *env) {
     jmethodID mid;
 <% mid_inits %>
 }
+
 
 int check_interrupted(JNIEnv *env) {
     jobject current_thread = NULL;

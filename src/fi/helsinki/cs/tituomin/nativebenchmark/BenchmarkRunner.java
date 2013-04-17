@@ -65,7 +65,7 @@ public class BenchmarkRunner {
         PlainRunner p = (PlainRunner) new PlainRunner(1)
             .set(BasicOption.CPUFREQ, CPUFREQ);
 
-        CommandlineTool.execute(p.initScript());
+        CommandlineTool.execute(p.initScript()); // todo cleaner api
 
         measuringTools.add(p); // warmup round
 
@@ -78,7 +78,6 @@ public class BenchmarkRunner {
         measuringTools.add(new ResponseTimeRecorder(1000)); // total response time
     }
 
-
     public static void runBenchmarks(
         ApplicationState mainUI, long repetitions,
         CharSequence appRevision, CharSequence appChecksum) {
@@ -86,7 +85,6 @@ public class BenchmarkRunner {
         File sd = Environment.getExternalStorageDirectory();
         File dataDir = new File(sd, "results");
         dataDir.mkdir();
-
         try {
             BenchmarkRegistry.init(repetitions);
             initTools(dataDir);
@@ -101,7 +99,7 @@ public class BenchmarkRunner {
         BenchmarkInitialiser.init(benchmarkParameter);
 
         List<Benchmark> benchmarks = BenchmarkRegistry.getBenchmarks();
-        Collections.shuffle(benchmarks);
+        //Collections.shuffle(benchmarks);
 
         for (MeasuringTool tool : measuringTools) {
             String measurementID;
@@ -299,9 +297,14 @@ public class BenchmarkRunner {
                 return compiledMetadata;
             }
 
-            boolean onlyDefault = 
-                (!introspected.get("has_reference_types").equals("1") ||
-                 (Integer.parseInt(introspected.get("parameter_count")) > 1));
+            String refTypesString = introspected.get("has_reference_types");
+            String parameterCountString = introspected.get("parameter_count");
+            boolean hasRefTypes = refTypesString != null && refTypesString.equals("1");
+            int parameterCount = parameterCountString == null ? -1 : Integer.parseInt(parameterCountString);
+            
+            boolean dynamicParameters =
+                benchmark.dynamicParameters() ||
+                (hasRefTypes && (-1 > parameterCount && parameterCount < 2));
 
             Iterator<Integer> iterator = bPar.iterator();
             Integer i;
@@ -337,7 +340,7 @@ public class BenchmarkRunner {
                 BenchmarkResult measurement = tool.getMeasurement();
                 if (!measurement.isEmpty()) {
                     // todo: actual vs. requested size (objects etc.)
-                    if (!onlyDefault) {
+                    if (dynamicParameters) {
                         measurement.put("dynamic_size", "" + i);
                     }
                     measurement.put("class", benchmark.getClass().getName());
@@ -352,7 +355,7 @@ public class BenchmarkRunner {
                     Thread.sleep(350);
                 }
                 // if parameter size can be varied, vary it - else break with first size
-                if (onlyDefault) {
+                if (!dynamicParameters) {
                     break;
                 }
                 if (iterator.hasNext()) {
@@ -414,7 +417,17 @@ public class BenchmarkRunner {
     private static BenchmarkResult inspectBenchmark(Benchmark benchmark) throws ClassNotFoundException {
         BenchmarkResult bdata = new BenchmarkResult();
         int seqNo = benchmark.sequenceNo();
+        String from = benchmark.from();
+        String to   = benchmark.to();
+        bdata.put("no", "" + benchmark.sequenceNo());
+        bdata.put("description", benchmark.description());
+        bdata.put("direction", from + " > " + to);
 
+        if (seqNo == -1) {
+            bdata.put("custom", "1");
+            return bdata;
+        }
+        
         Class c = Class.forName("fi.helsinki.cs.tituomin.nativebenchmark.benchmark.J2CBenchmark" + String.format("%05d", seqNo));
         
         Method[] methods = c.getDeclaredMethods();
@@ -462,11 +475,6 @@ public class BenchmarkRunner {
                 bdata.put("native_public",        Modifier.isPublic(modifiers) ? "1" : "0");
             }
         }
-        String from = benchmark.from();
-        String to   = benchmark.to();
-        bdata.put("no", "" + benchmark.sequenceNo());
-        bdata.put("description", benchmark.description());
-        bdata.put("direction", from + " > " + to);
         return bdata;
     }
 }

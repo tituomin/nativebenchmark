@@ -27,6 +27,10 @@ public class <% classname %> <% class_relations %> implements Benchmark {
         return <% seq_no %>;
     }
 
+    public boolean dynamicParameters() {
+        return <% has_dynamic_parameters %>;
+    }
+
     public String description() {
         return "<% description %>";
     }

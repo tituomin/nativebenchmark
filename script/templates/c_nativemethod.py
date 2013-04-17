@@ -2,6 +2,8 @@
 from templating import put
 import loop_code
 
+# todo: templates confusingly named
+
 t_run_method = """
 JNIEXPORT <% return_type %> JNICALL
 Java_<% packagename %>_<% classname %>_<% function %>
@@ -40,7 +42,7 @@ t_caller_java = put(
     parameters = 'jobject instance',
     prebody = 'jmethodID mid = mids[<% seq_no %> - 1];',
     body = put(
-        loop_code.t_c,
+        loop_code.t_c_jni_call,
         benchmark_body = (
             '(*env)->CallStatic<% java_method_type %>Method<% call_variant %>' +
             '(env, java_counterparts_class, mid<% arguments %>);')))

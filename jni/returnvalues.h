@@ -5,6 +5,15 @@
 #define RETURN_VALUE(type) type type ## Value;
 //#define NULL 0
 
+int check_interrupted(JNIEnv *);
+
+jlong CHECK_INTERRUPTED_INTERVAL;
+jlong repetitions;
+jclass thread_class;
+jclass java_counterparts_class;
+jmethodID current_thread_mid;
+jmethodID is_interrupted_mid;
+
 #define LOCAL_FRAME_SIZE 100
 
 RETURN_VALUE(jclass)
@@ -80,7 +89,9 @@ jvalue jvalue_buf[MAX_SIZE];
 
 #define BUFFER_IN(_ctype)           \
     _ctype * _ctype ## _buf__IN;
-//todo = (_ctype *) jvalue_buf;
+
+#define ASSIGN_BUFFER(_ctype) \
+    _ctype ## _buf__IN = (_ctype *) jvalue_buf;
 
 #define PRIMITIVE_IN(_ctype)       \
     VARIABLE_IN(_ctype);            \
@@ -170,6 +181,7 @@ const char* static_method_signature__OUT;
 jsize current_size; // todo set from java?
 jfieldID jfieldIDValue;
 jfieldID jmethodIDValue;
+jmethodID objectConstructorID; 
 char *classNameValue;
 
 // todo par must init (utf version)

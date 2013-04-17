@@ -217,6 +217,7 @@ def generate_benchmarks():
                                 'path'     : '/'.join(packagename),
                                 'code'     : put(java_benchmark.t,
                                     imports                      = '',
+                                    has_dynamic_parameters       = 'false', # todo
                                     description                  = spec['description'],
                                     seq_no                       = class_counter,
                                     from_language                = from_lang,
@@ -283,6 +284,7 @@ def generate_benchmarks():
                             arguments = ', '.join(parameter_names[0:i+1])
                             if arguments != '':
                                 arguments = ', ' + arguments
+
                             c_runners.append(
                                 put(c_nativemethod.t_caller_java,
                                     seq_no = class_counter,
