@@ -6,7 +6,7 @@
 
 JNIEXPORT jint JNICALL
 Java_fi_helsinki_cs_tituomin_nativebenchmark_BenchmarkParameter_initReturnvalues
-(JNIEnv* env, jobject benchmarkParameter, jint size)
+(JNIEnv* env, jobject benchmarkParameter, jint size, jobject mockObject)
 {
     jclass cls = (*env)->GetObjectClass(env, benchmarkParameter);
     jobject local_reference;
@@ -26,7 +26,7 @@ Java_fi_helsinki_cs_tituomin_nativebenchmark_BenchmarkParameter_initReturnvalues
     CHECK_AND_CALL(jthrowable,    Throwable,    "()Ljava/lang/Throwable;");
     CHECK_AND_CALL(directByteBuffer, DirectByteBuffer, "()Ljava/nio/ByteBuffer;");
 
-    set_up_custom_context(env, benchmarkParameter, size);
+    set_up_custom_context(env, benchmarkParameter, size, mockObject);
     return 1;
 
 }
@@ -51,7 +51,7 @@ Java_fi_helsinki_cs_tituomin_nativebenchmark_BenchmarkParameter_freeReturnvalues
 }
 
 
-void set_up_custom_context(JNIEnv* env, jobject bPar, jint size) {
+void set_up_custom_context(JNIEnv* env, jobject bPar, jint size, jobject mockObject) {
     __a = 2;
     __b = 3;
     jfieldIDValue = 0;
@@ -70,17 +70,15 @@ void set_up_custom_context(JNIEnv* env, jobject bPar, jint size) {
     current_size = size;
     init_strings(size);
 
+    ASSIGN_BUFFER(jboolean);
+    ASSIGN_BUFFER(jbyte);
     ASSIGN_BUFFER(jchar);
-    /* PRIMITIVE_IN(jboolean); */
-    /* PRIMITIVE_IN(jbyte); */
-    /* PRIMITIVE_IN(jchar); */
-    /* PRIMITIVE_IN(jshort); */
-    /* PRIMITIVE_IN(jint); */
-    /* PRIMITIVE_IN(jlong); */
-    /* PRIMITIVE_IN(jfloat); */
-    /* PRIMITIVE_IN(jdouble); */
-    /* PRIMITIVE_IN(jsize); */
-
+    ASSIGN_BUFFER(jshort);
+    ASSIGN_BUFFER(jint);
+    ASSIGN_BUFFER(jlong);
+    ASSIGN_BUFFER(jfloat);
+    ASSIGN_BUFFER(jdouble);
+    ASSIGN_BUFFER(jsize);
 
     objectConstructorID = (*env)->GetMethodID(env, jclassValue, "<init>", "()V");
     if (objectConstructorID == 0) {

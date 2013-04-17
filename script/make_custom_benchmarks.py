@@ -10,6 +10,8 @@ from templates import c_nativemethod
 from templates import java_benchmark
 from templates import java_registry_init
 
+import jni_types
+
 # Log everything, and send it to stderr.
 logging.basicConfig(level=logging.DEBUG)
 
@@ -84,7 +86,7 @@ def read_benchmarks(definition_files):
             if ends_block(line):
                 break
 
-            
+    add_field_and_array_benchmarks(benchmarks)            
     add_overhead_benchmarks(benchmarks)
     return ''.join(module_start), benchmarks
 
@@ -102,7 +104,77 @@ def add_overhead_benchmarks(benchmarks):
                 'code':  ''.join(overhead_code),
                 'description' : i,
                 'id'  : 'Overhead' + str(i).zfill(5) })
-    
+
+
+def macro_call(template, _type):
+    return template.format(
+        _type = _type['c'],
+        java_type_name = _type['java'].capitalize())
+
+def make_id(template, _type):
+    return template.format(
+        _type = _type['java'].capitalize())
+
+def add_field_and_array_benchmarks(benchmarks):
+    bmc = benchmarks['C']
+    for _type in jni_types.primitive_types.values() + [jni_types.object_types['O']]:
+        
+        bmc.append({
+                'id' : make_id('GetStatic{_type}Field', _type),
+                'code' : macro_call(
+                    'GET_STATIC_TYPE_FIELD({_type}, {java_type_name});',
+                    _type)})
+
+        bmc.append({
+                'id' : make_id('SetStatic{_type}Field', _type),
+                'code' : macro_call(
+                    'SET_STATIC_TYPE_FIELD({_type}, {java_type_name});',
+                    _type)})
+
+        bmc.append({
+                'id' : make_id('Get{_type}Field', _type),
+                'code' : macro_call(
+                    'GET_TYPE_FIELD({_type}, {java_type_name});',
+                    _type)})
+
+        bmc.append({
+                'id' : make_id('Set{_type}Field', _type),
+                'code' : macro_call(
+                    'SET_TYPE_FIELD({_type}, {java_type_name});',
+                    _type)})
+
+    for _type in jni_types.primitive_types.values():
+
+        bmc.append({
+                'id' : make_id('New{_type}Array', _type),
+                'vary' : 'size',
+                'code' : macro_call(
+                    'NEW_PRIMITIVE_ARRAY({_type}, {java_type_name});',
+                    _type)
+                })
+
+        bmc.append({
+                'id' : make_id('Get{_type}ArrayElements', _type),
+                'vary' : 'size',
+                'code' : macro_call(
+                    'GET_PRIMITIVE_ARRAY_ELEMENTS({_type}, {java_type_name});' +
+                    'RELEASE_PRIMITIVE_ARRAY_ELEMENTS({_type}, {java_type_name});',
+                    _type)})
+
+        bmc.append({
+                'vary' : 'size',
+                'id' : make_id('Get{_type}ArrayRegion', _type),
+                'code' : macro_call(
+                    'GET_PRIMITIVE_ARRAY_REGION({_type}, {java_type_name});',
+                    _type)})
+        
+        bmc.append({
+                'vary' : 'size',
+                'id' : make_id('Set{_type}ArrayRegion', _type),
+                'code' : macro_call(
+                    'SET_PRIMITIVE_ARRAY_REGION({_type}, {java_type_name});',
+                    _type)})
+
             
 def write_custom_benchmarks(definition_files, java_output_dir):
     packagename = ('fi', 'helsinki', 'cs', 'tituomin', 'nativebenchmark', 'benchmark')
@@ -130,11 +202,11 @@ def write_custom_benchmarks(definition_files, java_output_dir):
                 function = 'run',
                 packagename = '_'.join(packagename),
                 classname = classname,
+                purge = True,
                 body = put(
                     loop_code.t_c_jni_call,
                     debug = classname,
-                    benchmark_body = benchmark['code']),
-                purge = True))
+                    benchmark_body = benchmark['code'])))
 
         java_classes[classname] = {
             'filename':classname + '.java',

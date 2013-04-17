@@ -173,6 +173,10 @@ const char* static_method_name__OUT;
 const char* method_signature__OUT;
 const char* static_method_signature__OUT;
 
+const jobject mock_object;
+const jfieldID mock_field_id;
+const jfieldID mock_static_field_id;
+
 // must get method/field names from class somehow
 // add to par
 // add to par: native init code for native structures (byteArray)

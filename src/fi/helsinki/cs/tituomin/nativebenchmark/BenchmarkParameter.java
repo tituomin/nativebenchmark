@@ -13,11 +13,11 @@ import android.content.pm.PermissionInfo;
 
 public class BenchmarkParameter implements Iterable<Integer> {
 
-    private native int initReturnvalues(int size);
+    private native int initReturnvalues(int size, MockObject o);
     private native void freeReturnvalues();
 
     public void setUp() {
-        initReturnvalues(index * DEFAULTSIZE);
+        initReturnvalues(index * DEFAULTSIZE, new MockObject());
         JavaCounterparts.initParams(this);
     }
 
@@ -25,9 +25,6 @@ public class BenchmarkParameter implements Iterable<Integer> {
         freeReturnvalues();
     }
     
-    // todo add to par: native init code for native structures (byteArray)
-    // todo directBufferValue > par !!
-
     public static int DEFAULTSIZE = 16;
     private static int RANGE = 8;
     private static int MAXSIZE = DEFAULTSIZE * RANGE;

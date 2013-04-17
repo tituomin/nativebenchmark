@@ -177,7 +177,7 @@ void function_wrapper() {
             current_size,
             // todo option parametrize
             jclassValue,
-            jobject__OUT));
+            jobjectValue));
 
     // @NewDirectBuffer vary=size
 
