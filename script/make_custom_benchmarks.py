@@ -90,7 +90,7 @@ def read_benchmarks(definition_files):
     add_overhead_benchmarks(benchmarks)
     return ''.join(module_start), benchmarks
 
-OVERHEAD_STEP = 100
+OVERHEAD_STEP = 10
 OVERHEAD_STEPS = 11 # incl. zero
 OVERHEAD_CODE_STATEMENT = "__a = (((__a * __a * __a) / __b) + __b) / __a;\n"
 
