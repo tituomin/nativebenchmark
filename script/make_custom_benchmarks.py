@@ -117,8 +117,8 @@ def make_id(template, _type):
 
 def add_field_and_array_benchmarks(benchmarks):
     bmc = benchmarks['C']
+
     for _type in jni_types.primitive_types.values() + [jni_types.object_types['O']]:
-        
         bmc.append({
                 'id' : make_id('GetStatic{_type}Field', _type),
                 'code' : macro_call(
@@ -144,7 +144,6 @@ def add_field_and_array_benchmarks(benchmarks):
                     _type)})
 
     for _type in jni_types.primitive_types.values():
-
         bmc.append({
                 'id' : make_id('New{_type}Array', _type),
                 'vary' : 'size',

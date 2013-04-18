@@ -134,7 +134,7 @@ void function_wrapper() {
         (*env)->GetStaticFieldID(env,
             jclassValue,
             static_field_name__OUT,
-            field_signature__OUT));
+            static_field_signature__OUT));
 
     // @GetMethodId vary=size
 

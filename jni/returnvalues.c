@@ -80,6 +80,34 @@ void set_up_custom_context(JNIEnv* env, jobject bPar, jint size, jobject mockObj
     ASSIGN_BUFFER(jdouble);
     ASSIGN_BUFFER(jsize);
 
+    jobject mock_object_l = mockObject;
+    jclass mock_class_l = (*env)->GetObjectClass(env, mock_object_l);
+
+    mock_object = (*env)->NewGlobalRef(env, mock_object_l);
+    if (mock_object == NULL) {
+        __android_log_write(                                         
+            ANDROID_LOG_ERROR,                                       
+            "nativebenchmark",                                       
+            "can't create global reference mock_object");
+    }  
+    mock_class  = (*env)->NewGlobalRef(env, mock_class_l);
+    if (mock_class == NULL) {
+        __android_log_write(                                         
+            ANDROID_LOG_ERROR,                                       
+            "nativebenchmark",                                       
+            "can't create global reference mock_class");
+    }  
+
+    MOCK_FIELD_ID_DEF(jboolean, "Z");
+    MOCK_FIELD_ID_DEF(jbyte, "B");
+    MOCK_FIELD_ID_DEF(jchar, "C");
+    MOCK_FIELD_ID_DEF(jshort, "S");
+    MOCK_FIELD_ID_DEF(jint, "I");
+    MOCK_FIELD_ID_DEF(jlong, "J");
+    MOCK_FIELD_ID_DEF(jfloat, "F");
+    MOCK_FIELD_ID_DEF(jdouble, "D");
+    MOCK_FIELD_ID_DEF(jobject, "Ljava/lang/Object;");
+
     objectConstructorID = (*env)->GetMethodID(env, jclassValue, "<init>", "()V");
     if (objectConstructorID == 0) {
         __android_log_write(ANDROID_LOG_VERBOSE, "returnvalues.c", "Object constructor not found.");

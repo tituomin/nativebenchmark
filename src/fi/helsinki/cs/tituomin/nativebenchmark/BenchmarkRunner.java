@@ -298,13 +298,14 @@ public class BenchmarkRunner {
             }
 
             String refTypesString = introspected.get("has_reference_types");
+            boolean hasRefTypes = (refTypesString != null) && (refTypesString.equals("1"));
+
             String parameterCountString = introspected.get("parameter_count");
-            boolean hasRefTypes = refTypesString != null && refTypesString.equals("1");
-            int parameterCount = parameterCountString == null ? -1 : Integer.parseInt(parameterCountString);
+            int parameterCount = (parameterCountString == null) ? -1 : Integer.parseInt(parameterCountString);
             
             boolean dynamicParameters =
                 benchmark.dynamicParameters() ||
-                (hasRefTypes && (-1 > parameterCount && parameterCount < 2));
+                (hasRefTypes && (-1 < parameterCount && parameterCount < 2));
 
             Iterator<Integer> iterator = bPar.iterator();
             Integer i;

@@ -9,16 +9,16 @@
     if ((lhs = rhs) < 0) return;
 
 #define GET_STATIC_TYPE_FIELD(_ctype, _jname)                                           \
-    _ctype##__IN = (*env)->GetStatic##_jname##Field(env, jclassValue, jfieldIDValue);                              
+    _ctype##__IN = (*env)->GetStatic##_jname##Field(env, mock_class, mock_ ## _ctype ## _static_field_id);                              
 
 #define SET_STATIC_TYPE_FIELD(_ctype, _jname)                                           \
-    (*env)->SetStatic##_jname##Field(env, jclassValue, jfieldIDValue, _ctype##__OUT);                              
+    (*env)->SetStatic##_jname##Field(env, mock_class, mock_ ## _ctype ## _static_field_id, _ctype##__OUT);                              
 
 #define GET_TYPE_FIELD(_ctype, _jname)                                                  \
-    _ctype##__IN = (*env)->Get##_jname##Field(env, jobjectValue, jfieldIDValue);                                   
+    _ctype##__IN = (*env)->Get##_jname##Field(env, mock_object, mock_ ## _ctype ## _field_id);                                   
 
 #define SET_TYPE_FIELD(_ctype, _jname)                                                  \
-    (*env)->Set##_jname##Field(env, jobjectValue, jfieldIDValue, _ctype##__OUT); \
+    (*env)->Set##_jname##Field(env, mock_object, mock_ ## _ctype ## _field_id, _ctype##__OUT); \
 
 #define NEW_PRIMITIVE_ARRAY(_c_el_type, _jname)                                                            \
     ASSIGN_AND_CHECK(_c_el_type ## Array ## __IN, (*env)->New##_jname##Array(env, current_size));
