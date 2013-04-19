@@ -198,7 +198,7 @@ public class BenchmarkSelector extends Activity implements ApplicationState {
         measuringThread = new Thread(
             new Runnable () {
                 public void run() {
-                    BenchmarkRunner.runBenchmarks(BenchmarkSelector.this, repetitions, appRevision, appChecksum);
+                    BenchmarkRunner.runBenchmarks(BenchmarkSelector.this, repetitions, appRevision, appChecksum, getCacheDir());
                 }
             });
         this.updateState(ApplicationState.State.MEASURING);

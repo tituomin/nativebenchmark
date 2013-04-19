@@ -80,10 +80,11 @@ public class BenchmarkRunner {
 
     public static void runBenchmarks(
         ApplicationState mainUI, long repetitions,
-        CharSequence appRevision, CharSequence appChecksum) {
+        CharSequence appRevision, CharSequence appChecksum, File cacheDir) {
 
         File sd = Environment.getExternalStorageDirectory();
         File dataDir = new File(sd, "results");
+        byte[] buffer = new byte[128 * 1024];
         dataDir.mkdir();
         try {
             BenchmarkRegistry.init(repetitions);
@@ -100,9 +101,21 @@ public class BenchmarkRunner {
 
         List<Benchmark> benchmarks = BenchmarkRegistry.getBenchmarks();
         //Collections.shuffle(benchmarks);
+        final ApplicationState.State state = ApplicationState.State.MILESTONE;
 
         for (MeasuringTool tool : measuringTools) {
-            String measurementID;
+            String measurementID = Utils.getUUID();
+            PrintWriter tempWriter = null;
+            File tempFile = new File(cacheDir, "benchmarks-temp.csv");
+            try {
+                tempWriter = makeWriter(tempFile, false);
+            }
+            catch (FileNotFoundException e) {
+                logE(e);
+                mainUI.updateState(
+                    ApplicationState.State.ERROR);
+                return;
+            }
 
             int max_rounds = tool.getRounds();
             for (int series = 0; series < max_rounds; series++) {
@@ -111,10 +124,10 @@ public class BenchmarkRunner {
 
                 long startTime = SystemClock.uptimeMillis();
                 List<BenchmarkResult> collectedData;
+
                 try {
                     System.gc();
                     Thread.sleep(500);
-                    collectedData = runSeries(benchmarks, mainUI, tool);                    
                 }
                 catch (InterruptedException e) {
                     logE("Measuring thread was interrupted", e);
@@ -122,70 +135,122 @@ public class BenchmarkRunner {
                         ApplicationState.State.INTERRUPTED);
                     return;
                 }
-                if (collectedData.isEmpty() || tool.ignore()) {
-                    continue;
-                }
 
-                endTime = SystemClock.uptimeMillis();
-                measurementID = Utils.getUUID();
-
-                PrintWriter writer = null;
-
-                try {
-                    writer = makeWriter(dataDir, "benchmarks-" + measurementID + ".csv", false);
-
-                    String[] labels = BenchmarkResult.labels();
-                    for (int i = 0; i < BenchmarkResult.size(); i++) {
-                        writer.print(labels[i] + SEPARATOR);
+                int j = 0;
+                for (Benchmark benchmark : benchmarks) {
+                    try {
+                        collectedData = runSeries(benchmark, mainUI, tool);                    
+                        if (tool.explicitGC() && j % 50 == 0) {
+                            System.gc();
+                            Thread.sleep(350);
+                        }
                     }
-                    writer.println("");
-                    String[] values = new String[labels.length];
+                    catch (InterruptedException e) {
+                        logE("Measuring thread was interrupted", e);
+                        mainUI.updateState(
+                            ApplicationState.State.INTERRUPTED);
+                        return;
+                    }
+                    // todo: remove UI overhead?
+                    mainUI.updateState(state, "tool " + tool.getClass().getName() + " benchmark " + ++j);
 
-                    // 2. print all possible values for all benchmarks
+                    if (collectedData.isEmpty() || tool.ignore()) {
+                        continue;
+                    }
+
+                    endTime = SystemClock.uptimeMillis();
+
+                    // print data
                     for (BenchmarkResult result: collectedData) {
                         for (int i = 0; i < BenchmarkResult.size(); i++) {
                             String value = result.get(i);
                             if (value == null) {
                                 value = MISSING_VALUE;
                             }
-                            writer.print(value + SEPARATOR);
+                            tempWriter.print(value);
+                            tempWriter.print(SEPARATOR);
                         }
-                        writer.println("");
+                        tempWriter.println("");
+                        tempWriter.flush();
                     }
-                    writer.flush();
-                    writer.close();
 
+                } // benchmark loop
+                endTime = SystemClock.uptimeMillis();
+                tempWriter.close();
+
+                InputStream in = null;
+                OutputStream out = null;
+                PrintWriter resultWriter = null;
+                try {
+                    File resultFile = new File(dataDir, "benchmarks-" + measurementID + ".csv");
+
+                    resultWriter = makeWriter(resultFile, false);
+
+                    String[] labels = BenchmarkResult.labels();
+                    for (int i = 0; i < BenchmarkResult.size(); i++) {
+                        resultWriter.print(labels[i] + SEPARATOR);
+                    }
+                    resultWriter.println("");
+                    resultWriter.close();
+
+                    in = new FileInputStream(tempFile);
+                    out = makeOutputStream(resultFile, true);
+                    int count;
+                    while ((count = in.read(buffer, 0, 128 * 1024)) != -1) {
+                        out.write(buffer, 0, count);
+                    }
+                    out.flush();
+                    //tempFile.delete();
                 }
-                catch (IOException e) {
-                    logE(e);
+                catch (Exception e) {
+                    mainUI.updateState(ApplicationState.State.ERROR);
+                    Log.e("BenchmarkRunner", "Error writing results", e);
+                    return;
                 }
-                if (writer != null) {
-                    writer.close();
+                finally {
+                    try {
+                        if (in != null) {
+                            in.close();
+                        }
+                        if (out != null) {
+                            out.flush();
+                            out.close();
+                        }
+                        if (resultWriter != null) {
+                            resultWriter.close();
+                        }
+                    }
+                    catch (IOException e) {
+                        mainUI.updateState(ApplicationState.State.ERROR);
+                        Log.e("BenchmarkRunner", "Error closing files", e);
+                        return;
+                    }
                 }
 
                 Date end = new Date();
-
+                PrintWriter catalogWriter = null;
                 try {
-                    writer = makeWriter(dataDir, "measurements.txt", true);
-                    writer.println("");
-                    writer.println("id: "               + measurementID);
-                    writer.println("cpu-freq: "         + CPUFREQ);
-                    writer.println("repetitions: "      + repetitions);
-                    writer.println("start: "            + start);
-                    writer.println("end: "              + end);
-                    writer.println("duration: "         + humanTime(endTime - startTime));
-                    writer.println("tool: "             + tool.getClass().getName());
-                    writer.println("benchmarks: "       + benchmarks.size());
-                    writer.println("code-revision: "    + appRevision);
-                    writer.println("code-checksum: "    + appChecksum);
-                    writer.println("");
+                    catalogWriter = makeWriter(dataDir, "measurements.txt", true);
+                    catalogWriter.println("");
+                    catalogWriter.println("id: "               + measurementID);
+                    catalogWriter.println("cpu-freq: "         + CPUFREQ);
+                    catalogWriter.println("repetitions: "      + repetitions);
+                    catalogWriter.println("start: "            + start);
+                    catalogWriter.println("end: "              + end);
+                    catalogWriter.println("duration: "         + humanTime(endTime - startTime));
+                    catalogWriter.println("tool: "             + tool.getClass().getName());
+                    catalogWriter.println("benchmarks: "       + benchmarks.size());
+                    catalogWriter.println("code-revision: "    + appRevision);
+                    catalogWriter.println("code-checksum: "    + appChecksum);
+                    catalogWriter.println("");
                 }
                 catch (IOException e ) {
                     logE(e);
                 }
                 finally {
-                    writer.close();
+                    catalogWriter.close();
                 }
+
                 OutputStream os = null;
                 List<String> filenames = tool.getFilenames();
                 if (!filenames.isEmpty()) {
@@ -211,7 +276,7 @@ public class BenchmarkRunner {
                     catch (IOException e) {
                         logE("Error closing file.", e);
                     }
-                }
+                }                    
             }
         }
         mainUI.updateState(
@@ -276,95 +341,84 @@ public class BenchmarkRunner {
     }
 
     private static List<BenchmarkResult> runSeries(
-        List<Benchmark> benchmarks, ApplicationState mainUI, MeasuringTool tool)
+        Benchmark benchmark, ApplicationState mainUI, MeasuringTool tool)
         throws InterruptedException {
 
-        final ApplicationState.State state = ApplicationState.State.MILESTONE;
-        int j = 0;
-        List<BenchmarkResult> compiledMetadata = new ArrayList<BenchmarkResult> (benchmarks.size());
+        List<BenchmarkResult> compiledMetadata = new ArrayList<BenchmarkResult> ();
 
-        for (Benchmark benchmark : benchmarks) {
+        if (Thread.interrupted()) {
+            throw new InterruptedException();
+        }
+        BenchmarkParameter bPar = getBenchmarkParameter();
+        BenchmarkResult introspected;
+        try {
+            introspected = inspectBenchmark(benchmark);
+        }
+        catch  (ClassNotFoundException e) {
+            Log.e("BenchmarkRunner", "Could not find class", e);
+            return compiledMetadata;
+        }
+
+        String refTypesString = introspected.get("has_reference_types");
+        boolean hasRefTypes = (refTypesString != null) && (refTypesString.equals("1"));
+
+        String parameterCountString = introspected.get("parameter_count");
+        int parameterCount = (parameterCountString == null) ? -1 : Integer.parseInt(parameterCountString);
+            
+        boolean dynamicParameters =
+            benchmark.dynamicParameters() ||
+            (hasRefTypes && (-1 < parameterCount && parameterCount < 2));
+
+        Iterator<Integer> iterator = bPar.iterator();
+        Integer i;
+        if (iterator.hasNext()) {
+            i = iterator.next();
+        }
+        else {
+            i = null;
+        }
+        while (i != null) {
             if (Thread.interrupted()) {
                 throw new InterruptedException();
             }
-            BenchmarkParameter bPar = getBenchmarkParameter();
-            BenchmarkResult introspected;
+            bPar.setUp(); // (I) needs tearDown (see II)
+
             try {
-                 introspected = inspectBenchmark(benchmark);
+                tool.startMeasuring(benchmark);
             }
-            catch  (ClassNotFoundException e) {
-                Log.e("BenchmarkRunner", "Could not find class", e);
-                return compiledMetadata;
+            catch (IOException e) {
+                logE("Measuring caused IO exception", e);
+                if (mainUI.userWantsToRetry(e)) {
+                    Log.v("BenchmarkRunner", "yes he wants to retry");
+                    continue; // without incrementing i
+                }
+                else {
+                    throw new InterruptedException("User wants to abort");
+                }
+            }
+            finally {
+                bPar.tearDown(); // (II) needs setUp (see I)
             }
 
-            String refTypesString = introspected.get("has_reference_types");
-            boolean hasRefTypes = (refTypesString != null) && (refTypesString.equals("1"));
-
-            String parameterCountString = introspected.get("parameter_count");
-            int parameterCount = (parameterCountString == null) ? -1 : Integer.parseInt(parameterCountString);
-            
-            boolean dynamicParameters =
-                benchmark.dynamicParameters() ||
-                (hasRefTypes && (-1 < parameterCount && parameterCount < 2));
-
-            Iterator<Integer> iterator = bPar.iterator();
-            Integer i;
+            BenchmarkResult measurement = tool.getMeasurement();
+            if (!measurement.isEmpty()) {
+                // todo: actual vs. requested size (objects etc.)
+                if (dynamicParameters) {
+                    measurement.put("dynamic_size", "" + i);
+                }
+                measurement.put("class", benchmark.getClass().getName());
+                measurement.putAll(introspected);
+                compiledMetadata.add(measurement);
+            }
+            // if parameter size can be varied, vary it - else break with first size
+            if (!dynamicParameters) {
+                break;
+            }
             if (iterator.hasNext()) {
                 i = iterator.next();
             }
             else {
-                i = null;
-            }
-            while (i != null) {
-                if (Thread.interrupted()) {
-                    throw new InterruptedException();
-                }
-                bPar.setUp(); // (I) needs tearDown (see II)
-
-                try {
-                    tool.startMeasuring(benchmark);
-                }
-                catch (IOException e) {
-                    logE("Measuring caused IO exception", e);
-                    if (mainUI.userWantsToRetry(e)) {
-                        Log.v("BenchmarkRunner", "yes he wants to retry");
-                        continue; // without incrementing i
-                    }
-                    else {
-                        throw new InterruptedException("User wants to abort");
-                    }
-                }
-                finally {
-                    bPar.tearDown(); // (II) needs setUp (see I)
-                }
-
-                BenchmarkResult measurement = tool.getMeasurement();
-                if (!measurement.isEmpty()) {
-                    // todo: actual vs. requested size (objects etc.)
-                    if (dynamicParameters) {
-                        measurement.put("dynamic_size", "" + i);
-                    }
-                    measurement.put("class", benchmark.getClass().getName());
-                    measurement.putAll(introspected);
-                    compiledMetadata.add(measurement);
-                }
-                // todo: remove UI overhead?
-                mainUI.updateState(state, "tool " + tool.getClass().getName() + " benchmark " + ++j);
-
-                if (tool.explicitGC() && j % 50 == 0) {
-                    System.gc();
-                    Thread.sleep(350);
-                }
-                // if parameter size can be varied, vary it - else break with first size
-                if (!dynamicParameters) {
-                    break;
-                }
-                if (iterator.hasNext()) {
-                    i = iterator.next();
-                }
-                else {
-                    break;
-                }
+                break;
             }
         }
         return compiledMetadata;
@@ -375,6 +429,13 @@ public class BenchmarkRunner {
     throws FileNotFoundException
     {
         return new PrintWriter(makeOutputStream(dir, filename, append));
+    }
+
+    private static PrintWriter
+    makeWriter(File file, boolean append)
+    throws FileNotFoundException
+    {
+        return new PrintWriter(makeOutputStream(file, append));
     }
 
     private static OutputStream
