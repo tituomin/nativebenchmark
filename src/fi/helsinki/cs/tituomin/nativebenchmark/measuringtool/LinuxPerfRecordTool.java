@@ -12,8 +12,8 @@ import fi.helsinki.cs.tituomin.nativebenchmark.Utils;
 
 public class LinuxPerfRecordTool extends CommandlineTool {
 
-    public LinuxPerfRecordTool(int i) throws IOException, InterruptedException {
-        super(i);
+    public LinuxPerfRecordTool(int i, long reps) throws IOException, InterruptedException {
+        super(i, reps);
     }
 
     protected List<OptionSpec> specifyAllowedOptions(List<OptionSpec> options) {

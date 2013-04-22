@@ -12,7 +12,7 @@ public class BenchmarkRegistry {
     private static List<Benchmark> benchmarks;
 
     public static long repetitions;
-    public static final long CHECK_INTERRUPTED_INTERVAL = 1000000;
+    public static final long CHECK_INTERRUPTED_INTERVAL = 1000;
 
     public static List<Benchmark> getBenchmarks() {
         return benchmarks;

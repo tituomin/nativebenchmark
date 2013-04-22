@@ -26,6 +26,7 @@ import android.content.DialogInterface;
 import android.app.DialogFragment;
 import android.app.AlertDialog;
 import android.app.Dialog;
+import android.app.ActivityManager;
 
 public class BenchmarkSelector extends Activity implements ApplicationState {
     /** Called when the activity is first created. */
@@ -62,6 +63,12 @@ public class BenchmarkSelector extends Activity implements ApplicationState {
         if (resources.getString(R.string.app_dirty).equals("1")) {
             this.resultView.setText(R.string.warning_changed);
         }
+
+        Log.v("Selector", "Memory size " + Runtime.getRuntime().maxMemory());
+
+        ActivityManager am = (ActivityManager) getSystemService(ACTIVITY_SERVICE);
+        int memoryClass = am.getLargeMemoryClass();
+        Log.v("onCreate", "memoryClass:" + Integer.toString(memoryClass));
 
         this.appChecksum = resources.getText(R.string.app_checksum);
         this.appRevision = resources.getText(R.string.app_revision);

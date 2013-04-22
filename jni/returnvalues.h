@@ -14,7 +14,7 @@ jclass java_counterparts_class;
 jmethodID current_thread_mid;
 jmethodID is_interrupted_mid;
 
-#define LOCAL_FRAME_SIZE 100
+#define LOCAL_FRAME_SIZE 256
 
 RETURN_VALUE(jclass)
 RETURN_VALUE(jobject)

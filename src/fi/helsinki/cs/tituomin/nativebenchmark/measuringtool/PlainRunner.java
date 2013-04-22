@@ -15,8 +15,8 @@ import android.util.Log;
 
 public class PlainRunner extends MeasuringTool {
 
-    public PlainRunner(int i) throws IOException, InterruptedException {
-        super(i);
+    public PlainRunner(int i, long reps) throws IOException, InterruptedException {
+        super(i, reps);
     }
 
     protected List<MeasuringOption> defaultOptions(List<MeasuringOption> options) {
@@ -37,6 +37,8 @@ public class PlainRunner extends MeasuringTool {
         return true;
     }
 
+    
+
     public List<String> initScript() {
         List<String> commands = new LinkedList<String>();
         String frequency = getOption(BasicOption.CPUFREQ);
@@ -45,10 +47,12 @@ public class PlainRunner extends MeasuringTool {
         return commands;
     }
 
-    public void start(Benchmark benchmark)
+    public long repetitions() {
+        return 3000;
+    }
+
+    public void start(Runnable benchmark)
     throws InterruptedException, IOException {
-        benchmark.setRepetitions(3000);
         benchmark.run();
-        benchmark.restoreRepetitions();
     }
 }

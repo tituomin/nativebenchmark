@@ -218,6 +218,7 @@ def generate_benchmarks():
                                 'code'     : put(java_benchmark.t,
                                     imports                      = '',
                                     has_dynamic_parameters       = 'false', # todo
+                                    max_repetitions              = -1,
                                     description                  = spec['description'],
                                     seq_no                       = class_counter,
                                     from_language                = from_lang,

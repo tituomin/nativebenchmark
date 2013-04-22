@@ -147,6 +147,7 @@ def add_field_and_array_benchmarks(benchmarks):
         bmc.append({
                 'id' : make_id('New{_type}Array', _type),
                 'vary' : 'size',
+                'alloc' : 'true',
                 'code' : macro_call(
                     'NEW_PRIMITIVE_ARRAY({_type}, {java_type_name});',
                     _type)
@@ -207,6 +208,12 @@ def write_custom_benchmarks(definition_files, java_output_dir):
                     debug = classname,
                     benchmark_body = benchmark['code'])))
 
+        if 'alloc' in benchmark:
+            # large heap 128/2 = 64 Mb, 128 el 8 byte array...
+            max_repetitions = 256
+        else:
+            max_repetitions = -1
+
         java_classes[classname] = {
             'filename':classname + '.java',
             'code': (put(
@@ -214,6 +221,7 @@ def write_custom_benchmarks(definition_files, java_output_dir):
                 packagename = '.'.join(packagename),
                 classname  = classname,
                 description = benchmark.get('description', ''),
+                max_repetitions = max_repetitions, # todo: measure
                 from_language = 'C',
                 to_language = 'J',
                 seq_no = '-1',

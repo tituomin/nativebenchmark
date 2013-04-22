@@ -17,30 +17,159 @@ import fi.helsinki.cs.tituomin.nativebenchmark.measuringtool.MeasuringOption;
 import fi.helsinki.cs.tituomin.nativebenchmark.measuringtool.OptionSpec;
 import fi.helsinki.cs.tituomin.nativebenchmark.Benchmark;
 import fi.helsinki.cs.tituomin.nativebenchmark.BenchmarkResult;
+import fi.helsinki.cs.tituomin.nativebenchmark.BenchmarkRegistry;
 
 public abstract class MeasuringTool implements Runnable {
 
-    public MeasuringTool()  throws IOException, InterruptedException {
-        this(1);
-    }
+    // public MeasuringTool()  throws IOException, InterruptedException {
+    //     this(1, 1000);
+    // }
 
-    public MeasuringTool(int rounds) throws IOException, InterruptedException {
+    public MeasuringTool(int rounds, long userRepetitions) throws IOException, InterruptedException {
         specifyOptions();
-        hasOptions = false;
         this.rounds = rounds;
-        this.measurement = new BenchmarkResult();
+        this.userRepetitions = userRepetitions;
+        clearMeasurements();
         init();
     }
 
     protected void init() throws IOException, InterruptedException { }
 
-    protected abstract void start(Benchmark benchmark)
+    protected abstract void start(Runnable benchmark)
         throws InterruptedException, IOException;
 
+    public long repetitions() {
+        return -1;
+    }
+
+    public boolean isLongRunning() {
+        return false;
+    }
+
+    private Exception exceptionThrown;
+
     public void startMeasuring(Benchmark benchmark) throws InterruptedException, IOException {
-        clearMeasurement();
-        this.hasOptions = false;
-        start(benchmark);
+        clearMeasurements();
+
+        // default: user defined amount of repetitions
+        benchmark.setRepetitions(this.userRepetitions);
+
+        if (benchmark.maxRepetitions() == -1) {
+            long toolOverrideReps = repetitions();
+            if (toolOverrideReps != -1) {
+                // the tool measurement logic requires
+                // overriding the repetition amount
+                Log.v("Tool", "override " + benchmark.getClass().getName());
+                benchmark.setRepetitions(toolOverrideReps);
+            }
+            Log.v("Tool", "normal " + benchmark.getClass().getName());
+            start(benchmark);
+        }
+        else if (benchmark.maxRepetitions() > 0) {
+            // the benchmark does allocations, we have
+            // to limit the amount of loops -> try to compensate
+            // by repeating the loop many times
+            if (isLongRunning()) {
+                Log.v("Tool", "long running " + benchmark.getClass().getName());
+                start(new RepetitiveRunner(benchmark));
+            }
+            else {
+                Log.v("Tool", "not long running " + benchmark.getClass().getName());
+                new RepetitiveRunner(benchmark).run();
+            }
+            if (exceptionThrown != null) {
+                if (exceptionThrown instanceof InterruptedException) {
+                    throw new InterruptedException(exceptionThrown.getMessage());
+                }
+                else {
+                    throw new IOException(exceptionThrown);
+                }
+            }
+        }
+        else {
+            Log.e("MeasuringTool", "Invalid repetition amount");
+            throw new IllegalArgumentException("Invalid repetition amount.");
+        }
+    }
+
+    private class RepetitiveRunner implements Runnable {
+        private Benchmark benchmark;
+        public RepetitiveRunner(Benchmark b) {
+            benchmark = b;
+        }
+        public void run() {
+            exceptionThrown = null;
+            long totalReps = userRepetitions;
+            long benchmarkReps = benchmark.maxRepetitions();
+            long toolReps;
+            if (!isLongRunning()) {
+                toolReps = 20; // todo ? 
+            }
+            else {
+                toolReps = Long.MAX_VALUE;
+            }
+            benchmark.setRepetitions(benchmarkReps);
+            if (isLongRunning()) {
+                putMeasurement("repetitions", benchmarkReps + "");
+                putMeasurement("multiplier", toolReps + "");
+                long interval = BenchmarkRegistry.CHECK_INTERRUPTED_INTERVAL;
+
+                long division, remainder;
+                long repetitions = toolReps;
+
+                division  = repetitions / interval + 1;
+                remainder = repetitions % interval + 1;
+
+                while (--division != 0) { 
+                    interval = BenchmarkRegistry.CHECK_INTERRUPTED_INTERVAL;
+                    interval = interval + 1;
+                    while (--interval != 0) { 
+                        try {
+                            benchmark.run();
+                            System.gc();
+                            Thread.sleep(50);
+                        }
+                        catch (Exception e) {
+                            exceptionThrown = e;
+                            return;
+                        }
+                    }
+                    if (Thread.currentThread().isInterrupted()) {
+                        return;
+                    }
+                }
+
+                while (--remainder != 0) { 
+                    try {
+                        benchmark.run();
+                        System.gc();
+                        Thread.sleep(50);
+                    }
+                    catch (Exception e) {
+                        exceptionThrown = e;
+                        return;
+                    }
+                }
+                finishMeasurement();
+
+            }
+            else {
+                while (--toolReps != 0) {
+                    putMeasurement("repetitions", benchmarkReps + "");
+                    putMeasurement("multiplier", toolReps + "");
+                    try {
+                        start(benchmark);
+                        finishMeasurement();
+                        System.gc();
+                        Thread.sleep(50);
+                    }
+                    catch (Exception e) {
+                        exceptionThrown = e;
+                        return;
+                    }
+                }
+            }
+        }
     }
 
     public void run() {
@@ -147,31 +276,37 @@ public abstract class MeasuringTool implements Runnable {
 
     private List<ApplicationState> observers;
 
-    private BenchmarkResult measurement;
+    private BenchmarkResult currentMeasurement;
+    private List<BenchmarkResult> measurements;
+
+    private long userRepetitions;
 
     protected void putMeasurement(String key, String value) {
-        measurement.put(key, value);
+        currentMeasurement.put(key, value);
     }
 
-    public BenchmarkResult getMeasurement() {
-        if (this.options != null) {
-            if (!hasOptions) {
+    protected void finishMeasurement() {
+        currentMeasurement = new BenchmarkResult();
+        measurements.add(currentMeasurement);
+    }
+
+    public List<BenchmarkResult> getMeasurements() {
+        for (BenchmarkResult measurement : measurements) {
+            if (this.options != null) {
                 for (MeasuringOption op : options.values()) {
-                    this.measurement.put(
+                    measurement.put(
                         op.toStringPair().first,
                         op.toStringPair().second);
                 }
-                hasOptions = true;
             }
         }
-        // if (this.benchmark instanceof MeasuringTool) {
-        //     this.measurement.putAll(((MeasuringTool)this.benchmark).getMeasurement());
-        // }
-        return this.measurement;
+        return this.measurements;
     }
 
-    public void clearMeasurement() {
-        this.measurement = new BenchmarkResult();
+    public void clearMeasurements() {
+        this.currentMeasurement = new BenchmarkResult();
+        this.measurements = new LinkedList<BenchmarkResult> ();
+        measurements.add(currentMeasurement);
     }
 
     private static final List<String> emptyList = new ArrayList<String> ();
@@ -183,7 +318,6 @@ public abstract class MeasuringTool implements Runnable {
         return rounds;
     }
 
-    private boolean hasOptions;
     private Benchmark benchmark;
     private int rounds;
 

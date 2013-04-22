@@ -9,7 +9,7 @@
 
 void function_wrapper() {
 
-    // @CreateObject
+    // @CreateObject alloc=true
     ASSIGN_AND_CHECK(
         jobject__IN,
         (*env)->NewObject(env, jclassValue, objectConstructorID));
@@ -154,21 +154,21 @@ void function_wrapper() {
             static_method_name__OUT,
             static_method_signature__OUT));
 
-    // @NewStringUtf
+    // @NewStringUtf alloc=true
 
     ASSIGN_AND_CHECK(
         jstring__IN,
         (*env)->NewStringUTF(env,
             string_utf__OUT));
 
-    // @NewString vary=size
+    // @NewString vary=size alloc=true
 
     ASSIGN_AND_CHECK(
         jstring__IN,
         (*env)->NewString(env,
             string_unicode__OUT, current_size));
 
-    // @NewObjectArray vary=size
+    // @NewObjectArray vary=size  alloc=true
 
     // todo initialelement
     ASSIGN_AND_CHECK(
@@ -179,7 +179,7 @@ void function_wrapper() {
             jclassValue,
             jobjectValue));
 
-    // @NewDirectBuffer vary=size
+    // @NewDirectBuffer vary=size  alloc=true
 
     ASSIGN_AND_CHECK(
         jobject__IN,

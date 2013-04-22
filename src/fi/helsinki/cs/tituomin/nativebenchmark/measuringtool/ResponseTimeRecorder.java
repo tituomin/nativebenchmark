@@ -11,8 +11,8 @@ import android.util.Log;
 
 public class ResponseTimeRecorder extends MeasuringTool {
 
-    public ResponseTimeRecorder(int i) throws IOException, InterruptedException {
-        super(i);
+    public ResponseTimeRecorder(int i, long reps) throws IOException, InterruptedException {
+        super(i, reps);
     }
 
     protected List<MeasuringOption> defaultOptions(List<MeasuringOption> options) {
@@ -20,7 +20,7 @@ public class ResponseTimeRecorder extends MeasuringTool {
         return options;
     }
 
-    public void start(Benchmark benchmark)
+    public void start(Runnable benchmark)
     throws InterruptedException, IOException {
         long endTime = 0, startTime = SystemClock.uptimeMillis();
         benchmark.run();

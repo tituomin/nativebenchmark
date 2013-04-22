@@ -48,6 +48,8 @@ Java_fi_helsinki_cs_tituomin_nativebenchmark_BenchmarkParameter_freeReturnvalues
     (*env)->DeleteGlobalRef(env, jbyteArrayValue);
     (*env)->DeleteGlobalRef(env, jshortArrayValue);
     (*env)->DeleteGlobalRef(env, jdoubleArrayValue);
+    (*env)->DeleteGlobalRef(env, mock_object);
+    (*env)->DeleteGlobalRef(env, mock_class);
 }
 
 

@@ -35,11 +35,18 @@ public class <% classname %> <% class_relations %> implements Benchmark {
         return "<% description %>";
     }
 
+    public long maxRepetitions() {
+        return <% max_repetitions %>;
+    }
+
     private long repetitions;
     private long storedRepetitions;
     private BenchmarkParameter benchmarkParameter;
 
     public void setRepetitions(long reps) {
+        if (reps < 1) {
+            return;
+        }
         storedRepetitions = repetitions;
         repetitions = reps;
         BenchmarkRegistry.setRepetitions(reps);

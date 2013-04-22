@@ -8,16 +8,20 @@ t = """
     <% init_counters %>
     division  = repetitions / interval + 1;
     remainder = repetitions % interval + 1;
-    interval = interval + 1;
 
+    <% debug %>
     <% additional_init %>
     while (--division != 0) { 
+        <% init_counters %>
+        interval = interval + 1;
         while (--interval != 0) { 
             <% pre_body %>
+            <% extra_debug %>
             <% benchmark_body %>
             <% post_body %>
         }
         if (<% test_interrupted %>) {
+            <% debug_interrupted %>
             return;
         }
     }
@@ -59,16 +63,20 @@ t_c_jni_call = put(
     t_c_base,
     additional_declaration = 'jlong refs;',
     additional_init        = 'refs = 0;',
+    remove = ['extra_debug', 'debug', 'debug_interrupted'],
     pre_body               = jni_push_frame,
     post_body              = jni_pop_frame)
 
 t_c = put(
     t_c_base,
-    remove = ['additional_declaration', 'additional_init', 'pre_body', 'post_body'])
+    remove = ['extra_debug', 'debug', 'debug_interrupted', 'additional_declaration', 'additional_init', 'pre_body', 'post_body'])
 
 t_java = put(
     t,
     test_interrupted = 'Thread.currentThread().isInterrupted()',
-    declare_counters = ('long interval = BenchmarkRegistry.CHECK_INTERRUPTED_INTERVAL;' +
-                        'long division, remainder;'),
-    remove = ['init_counters', 'additional_declaration', 'additional_init', 'pre_body', 'post_body'])
+    extra_debug = '',#,'Log.v("Benchmark", division + " " + interval);',
+    debug = 'Log.v("Benchmark", "interval division remainder " + interval + " " + division + " "+ remainder);',
+    debug_interrupted = 'Log.v("Benchmark", "Is interrupted.");',
+    declare_counters = 'long interval, division, remainder;',
+    init_counters = 'interval = BenchmarkRegistry.CHECK_INTERRUPTED_INTERVAL;',
+    remove = ['additional_declaration', 'additional_init', 'pre_body', 'post_body'])

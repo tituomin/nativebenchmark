@@ -56,13 +56,13 @@ public class BenchmarkRunner {
         return benchmarkParameter;
     }
 
-    public static void initTools(File dataDir) throws IOException, InterruptedException {
+    public static void initTools(File dataDir, long repetitions) throws IOException, InterruptedException {
         File perfDir = new File(dataDir, "perf");
         perfDir.mkdir();
 
         measuringTools = new ArrayList<MeasuringTool> ();
 
-        PlainRunner p = (PlainRunner) new PlainRunner(1)
+        PlainRunner p = (PlainRunner) new PlainRunner(1, repetitions)
             .set(BasicOption.CPUFREQ, CPUFREQ);
 
         CommandlineTool.execute(p.initScript()); // todo cleaner api
@@ -71,11 +71,11 @@ public class BenchmarkRunner {
 
         // measuringTools.add(new ResponseTimeRecorder(1)); // total response time
 
-        // measuringTools.add(new LinuxPerfRecordTool(1) // call profile
-        //     .set(BasicOption.OUTPUT_FILEPATH, perfDir.getPath())
-        //     .set(BasicOption.MEASURE_LENGTH, "10")); // todo: proper val
+        measuringTools.add(new LinuxPerfRecordTool(1, repetitions) // call profile
+           .set(BasicOption.OUTPUT_FILEPATH, perfDir.getPath())
+           .set(BasicOption.MEASURE_LENGTH, "10")); // todo: proper val
 
-        measuringTools.add(new ResponseTimeRecorder(1000)); // total response time
+        measuringTools.add(new ResponseTimeRecorder(1000, repetitions)); // total response time
     }
 
     public static void runBenchmarks(
@@ -88,7 +88,7 @@ public class BenchmarkRunner {
         dataDir.mkdir();
         try {
             BenchmarkRegistry.init(repetitions);
-            initTools(dataDir);
+            initTools(dataDir, repetitions);
         }
         catch (Exception e) {
             mainUI.updateState(ApplicationState.State.ERROR);
@@ -152,6 +152,7 @@ public class BenchmarkRunner {
                         return;
                     }
                     // todo: remove UI overhead?
+                    //                    Log.v(TAG, benchmark.getClass().getName());
                     mainUI.updateState(state, "tool " + tool.getClass().getName() + " benchmark " + ++j);
 
                     if (collectedData.isEmpty() || tool.ignore()) {
@@ -400,15 +401,17 @@ public class BenchmarkRunner {
                 bPar.tearDown(); // (II) needs setUp (see I)
             }
 
-            BenchmarkResult measurement = tool.getMeasurement();
-            if (!measurement.isEmpty()) {
-                // todo: actual vs. requested size (objects etc.)
-                if (dynamicParameters) {
-                    measurement.put("dynamic_size", "" + i);
+            List<BenchmarkResult> measurements = tool.getMeasurements();
+            for (BenchmarkResult measurement : measurements) {
+                if (!measurement.isEmpty()) {
+                    // todo: actual vs. requested size (objects etc.)
+                    if (dynamicParameters) {
+                        measurement.put("dynamic_size", "" + i);
+                    }
+                    measurement.put("class", benchmark.getClass().getName());
+                    measurement.putAll(introspected);
+                    compiledMetadata.add(measurement);
                 }
-                measurement.put("class", benchmark.getClass().getName());
-                measurement.putAll(introspected);
-                compiledMetadata.add(measurement);
             }
             // if parameter size can be varied, vary it - else break with first size
             if (!dynamicParameters) {

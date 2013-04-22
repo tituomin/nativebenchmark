@@ -23,8 +23,8 @@ import java.util.ArrayList;
 
 public abstract class CommandlineTool extends MeasuringTool {
 
-    public CommandlineTool(int i) throws IOException, InterruptedException {
-        super(i);
+    public CommandlineTool(int i, long reps) throws IOException, InterruptedException {
+        super(i, reps);
     }
 
 
@@ -152,7 +152,15 @@ public abstract class CommandlineTool extends MeasuringTool {
 
     protected abstract List<String> initScript();
 
-    public void start(Benchmark benchmark)
+    public boolean isLongRunning() {
+        return true;
+    }
+
+    public long repetitions() {
+        return Long.MAX_VALUE;
+    }
+
+    public void start(Runnable benchmark)
         throws InterruptedException, IOException {
         if (Thread.interrupted()) {
             throw new InterruptedException();
@@ -161,10 +169,9 @@ public abstract class CommandlineTool extends MeasuringTool {
         initCommand();
         Thread benchmarkThread = new Thread(benchmark);
         Random r = new Random();
-        int delay = r.nextInt(200);
+        int delay = r.nextInt(20);
 
-        benchmark.setRepetitions(Long.MAX_VALUE);
-
+        Log.v("Commandlinetool", "Command line going to start().");
         benchmarkThread.start();
         //Thread.sleep(delay);
 
@@ -175,9 +182,11 @@ public abstract class CommandlineTool extends MeasuringTool {
             throw e;
         }
         finally {
+            Log.v("Commandlinetool", "Command line going to interrupt().");
             benchmarkThread.interrupt();
+            Log.v("Commandlinetool", "Command line going to join().");
             benchmarkThread.join();
-            benchmark.restoreRepetitions();
+            Log.v("Commandlinetool", "Command line did join.");
         }
         if (Thread.interrupted()) {
             throw new InterruptedException();
