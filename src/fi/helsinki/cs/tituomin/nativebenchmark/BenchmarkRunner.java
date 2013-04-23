@@ -73,7 +73,7 @@ public class BenchmarkRunner {
 
         measuringTools.add(new LinuxPerfRecordTool(1, repetitions) // call profile
            .set(BasicOption.OUTPUT_FILEPATH, perfDir.getPath())
-           .set(BasicOption.MEASURE_LENGTH, "10")); // todo: proper val
+           .set(BasicOption.MEASURE_LENGTH, "0.1")); // todo: proper val
 
         measuringTools.add(new ResponseTimeRecorder(1000, repetitions)); // total response time
     }
@@ -178,6 +178,10 @@ public class BenchmarkRunner {
                 } // benchmark loop
                 endTime = SystemClock.uptimeMillis();
                 tempWriter.close();
+
+                if (tool.ignore()) {
+                    continue; // todo test
+                }
 
                 InputStream in = null;
                 OutputStream out = null;

@@ -78,7 +78,9 @@ public abstract class MeasuringTool implements Runnable {
                 new RepetitiveRunner(benchmark).run();
             }
             if (exceptionThrown != null) {
-                throw new IOException(exceptionThrown);
+                if (!(exceptionThrown instanceof InterruptedException)) {
+                    throw new IOException(exceptionThrown);
+                }
             }
         }
         else {
