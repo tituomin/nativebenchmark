@@ -35,7 +35,7 @@ public class BasicOption implements MeasuringOption {
     }
 
     public Pair<String,String> toStringPair() {
-        return new Pair<String,String> (this.type.name, this.value);
+        return new Pair<String,String> (this.type.id, this.value);
     }
 
     public String toString() {
