@@ -78,12 +78,7 @@ public abstract class MeasuringTool implements Runnable {
                 new RepetitiveRunner(benchmark).run();
             }
             if (exceptionThrown != null) {
-                if (exceptionThrown instanceof InterruptedException) {
-                    throw new InterruptedException(exceptionThrown.getMessage());
-                }
-                else {
-                    throw new IOException(exceptionThrown);
-                }
+                throw new IOException(exceptionThrown);
             }
         }
         else {
@@ -145,6 +140,9 @@ public abstract class MeasuringTool implements Runnable {
                         System.gc();
                         Thread.sleep(50);
                     }
+                    catch (InterruptedException e) {
+                        return;
+                    }
                     catch (Exception e) {
                         exceptionThrown = e;
                         return;
@@ -154,14 +152,19 @@ public abstract class MeasuringTool implements Runnable {
 
             }
             else {
+                long totalMultiplier = toolReps;
+                toolReps += 1;
                 while (--toolReps != 0) {
                     putMeasurement("repetitions", benchmarkReps + "");
-                    putMeasurement("multiplier", toolReps + "");
+                    putMeasurement("multiplier", totalMultiplier + "");
                     try {
                         start(benchmark);
                         finishMeasurement();
                         System.gc();
                         Thread.sleep(50);
+                    }
+                    catch (InterruptedException e) {
+                        return;
                     }
                     catch (Exception e) {
                         exceptionThrown = e;
