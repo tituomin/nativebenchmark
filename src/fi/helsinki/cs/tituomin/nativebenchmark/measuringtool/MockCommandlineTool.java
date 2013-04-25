@@ -1,0 +1,20 @@
+package fi.helsinki.cs.tituomin.nativebenchmark.measuringtool;
+
+import java.io.IOException;
+import java.util.List;
+
+public class MockCommandlineTool extends CommandlineTool {
+
+    public MockCommandlineTool(int i, long reps) throws IOException, InterruptedException {
+        super(i, reps);
+    }
+
+    protected List<String> initScript() {
+        return null;
+    }
+
+    protected String command() { 
+        return "cat /dev/null";
+    }
+
+}

@@ -50,13 +50,7 @@ public class LinuxPerfRecordTool extends CommandlineTool {
         else if (option.type() == BasicOption.MEASURE_LENGTH) {
             return "sleep " + option.value();
         }
-        else if (option.type() == BasicOption.COMMAND_STRING) {
-            return option.value();
-        }
-        else {
-            throw new UnsupportedOptionException();
-        }
-            
+        return super.formatParameter(option);
     }
 
 }

@@ -29,7 +29,18 @@ public abstract class CommandlineTool extends MeasuringTool {
 
 
     protected abstract String command();
-    protected abstract String formatParameter(MeasuringOption option);
+    protected String formatParameter(MeasuringOption option) {
+        throw new UnsupportedOptionException();
+    }
+
+    protected String formatDefaultParameter(MeasuringOption option) {
+        if (option.type() == BasicOption.COMMAND_STRING) {
+            return option.value();
+        }
+        else {
+            return formatParameter(option);
+        }
+    }
 
     public void initCommand() {
         List<String> commandline = new LinkedList<String> ();
@@ -53,6 +64,9 @@ public abstract class CommandlineTool extends MeasuringTool {
 
     // thanks http://muzikant-android.blogspot.fi/2011/02/how-to-get-root-access-and-execute.html
     public static boolean execute(List<String> commands) throws IOException {
+        if (commands == null) {
+            return true;
+        }
         boolean retval = false;
         DataOutputStream os = null;
         Process suProcess = null;
@@ -215,7 +229,7 @@ public abstract class CommandlineTool extends MeasuringTool {
                 Log.v("mt", type + " is null");
             }
             else {
-                result.add(formatParameter(option));
+                result.add(formatDefaultParameter(option));
             }
         }
         return result;
