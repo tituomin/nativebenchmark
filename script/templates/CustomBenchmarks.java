@@ -1,74 +1,86 @@
-package fi.helsinki.cs.tituomin.nativebenchmark;
+package fi.helsinki.cs.tituomin.nativebenchmark.benchmark;
 
 import android.content.pm.PermissionInfo;
+import java.nio.ByteBuffer;
 
-public class CustomBenchmarks.java {
 
-    private Object objectIn;
-    private Object objectOut;
-    private String stringIn;
-    private Class classIn; 
-    private Object[] objectArrayValue;
-    private ByteBuffer directByteBufferValue;
-    private int size;
-    private int capacity;
-    private WeakReference<Object> weakReferenceIn;
+public class CustomBenchmarks {
+
+    // @BEGIN
+
+
+    // @inits
+    Object objectIn;
+    Object[] objectArrayIn;
+    Class classIn;
+    int capacityIn;
+    ByteBuffer byteBufferIn;
+    Object objectValue = benchmarkParameter.retrieveObject();
+    String stringIn = benchmarkParameter.retrieveString();
+    Object[] objectArrayValue = benchmarkParameter.retrieveObjectArray();
+    ByteBuffer directByteBufferValue = benchmarkParameter.retrieveDirectByteBuffer();
+    int size = benchmarkParameter.getSize();
+    int __a = 2, __b = 3;
+    WeakReference<Object> weakReferenceIn;
+    // @inits-end
 
     private void methodWrapper() {
 
-        // @BEGIN
 
-        // @CreateObject
+        // @CreateObject direction=jj
 
         objectIn = new PermissionInfo();
 
-        // -----------------------
-
-        // @ReadObjectArrayElement vary=size
+        // @ReadObjectArrayElement vary=size direction=jj
 
         // todo loop, params
         if (size > 0) {
             objectIn = objectArrayValue[0];
         }
 
-        // @WriteObjectArrayElement
+        // @WriteObjectArrayElement direction=jj
         if (size > 0) {
-            objectArrayValue[0] == objectOut;
+            objectArrayValue[0] = objectValue;
         }
 
-        // @AccessDirectBuffer
+        // @AccessDirectBuffer direction=jj
 
-        capacity = directByteBufferValue.capacity();
+        capacityIn = directByteBufferValue.capacity();
         // todo : array() ? 
 
-        // @GetObjectClass
+        // @GetObjectClass direction=jj
 
         classIn = objectValue.getClass();
 
-        // @FindClass
+        // @FindClass direction=jj
 
-        classIn = Class.forName("android.content.pm.PermissionInfo");
+        try {
+            classIn = Class.forName("android.content.pm.PermissionInfo");
+        }
+        catch (ClassNotFoundException e) {
+            
+        }
 
-        // @NewStringUtf
+        // @NewStringUtf direction=jj
 
         stringIn = new String();
 
-        // @NewString vary=size
+        // @NewString vary=size direction=jj
 
         stringIn = new String();
 
-        // @NewObjectArray vary=size
+        // @NewObjectArray vary=size direction=jj
 
         objectArrayIn = new PermissionInfo[size];
         // todo initialelement (not in java ... explains O(n))
 
-        // @NewDirectBuffer vary=size
+        // @NewDirectBuffer vary=size direction=jj
 
         byteBufferIn = ByteBuffer.allocateDirect(size);
 
-        // @WeakGlobalRef
+        // @WeakGlobalRef direction=jj
 
-        weakReferenceIn = WeakReference<Object>(objectValue);
+        weakReferenceIn = new WeakReference(objectValue);
 
         // @END
 

@@ -91,6 +91,11 @@ public class BenchmarkParameter implements Iterable<Integer> {
         return this.index;
     }
 
+    public int getSize() {
+        return DEFAULTSIZE * index;
+    }
+        
+
     public Iterator<Integer> iterator() {
         return new RangeIterator();
     }

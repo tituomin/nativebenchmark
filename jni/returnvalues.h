@@ -9,6 +9,7 @@ int check_interrupted(JNIEnv *);
 
 jlong CHECK_INTERRUPTED_INTERVAL;
 jlong repetitions;
+jlong repetitionsLeft;
 jclass thread_class;
 jclass java_counterparts_class;
 jmethodID current_thread_mid;

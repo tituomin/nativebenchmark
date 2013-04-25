@@ -8,6 +8,7 @@ import fi.helsinki.cs.tituomin.nativebenchmark.measuringtool.PlainRunner;
 import fi.helsinki.cs.tituomin.nativebenchmark.measuringtool.ResponseTimeRecorder;
 import fi.helsinki.cs.tituomin.nativebenchmark.measuringtool.LinuxPerfRecordTool;
 import fi.helsinki.cs.tituomin.nativebenchmark.measuringtool.CommandlineTool;
+import fi.helsinki.cs.tituomin.nativebenchmark.measuringtool.MockCommandlineTool;
 import fi.helsinki.cs.tituomin.nativebenchmark.BenchmarkRegistry;
 import fi.helsinki.cs.tituomin.nativebenchmark.BenchmarkResult;
 import fi.helsinki.cs.tituomin.nativebenchmark.Utils;
@@ -68,16 +69,18 @@ public class BenchmarkRunner {
 
         CommandlineTool.execute(p.initScript()); // todo cleaner api
 
-        measuringTools.add(new LinuxPerfRecordTool(1, repetitions) // call profile
-           .set(BasicOption.OUTPUT_FILEPATH, perfDir.getPath())
-           .set(BasicOption.MEASURE_LENGTH, "0.1")); // todo: proper val
+
+        //        measuringTools.add(new MockCommandlineTool(1, repetitions));
 
         measuringTools.add(p); // warmup round
 
 
         // measuringTools.add(new ResponseTimeRecorder(1)); // total response time
+        measuringTools.add(new ResponseTimeRecorder(2, repetitions)); // total response time
+        measuringTools.add(new LinuxPerfRecordTool(1, repetitions) // call profile
+                           .set(BasicOption.OUTPUT_FILEPATH, perfDir.getPath())
+                           .set(BasicOption.MEASURE_LENGTH, "0.1")); // todo: proper val
         measuringTools.add(new ResponseTimeRecorder(1000, repetitions)); // total response time
-
 
     }
 
@@ -400,6 +403,7 @@ public class BenchmarkRunner {
 
             try {
                 tool.startMeasuring(benchmark);
+                Log.i("BenchmarkRunner", "Repetitions left " + benchmark.repetitionsLeft);
             }
             catch (IOException e) {
                 logE("Measuring caused IO exception", e);

@@ -34,6 +34,8 @@ t = """
         <% post_body %>
     }
 
+    <% removal_prevention %>
+
 """
 
 jni_push_frame = """
@@ -63,13 +65,13 @@ t_c_jni_call = put(
     t_c_base,
     additional_declaration = 'jlong refs;',
     additional_init        = 'refs = 0;',
-    remove = ['extra_debug', 'debug', 'debug_interrupted'],
+    remove = ['extra_debug', 'debug', 'debug_interrupted', 'removal_prevention'],
     pre_body               = jni_push_frame,
     post_body              = jni_pop_frame)
 
 t_c = put(
     t_c_base,
-    remove = ['extra_debug', 'debug', 'debug_interrupted', 'additional_declaration', 'additional_init', 'pre_body', 'post_body'])
+    remove = ['extra_debug', 'debug', 'debug_interrupted', 'additional_declaration', 'additional_init', 'pre_body', 'post_body', 'removal_prevention'])
 
 t_java = put(
     t,
@@ -79,4 +81,5 @@ t_java = put(
     debug_interrupted = 'Log.v("Benchmark", "Is interrupted.");',
     declare_counters = 'long interval, division, remainder;',
     init_counters = 'interval = BenchmarkRegistry.CHECK_INTERRUPTED_INTERVAL;',
+    removal_prevention = 'repetitionsLeft = division * interval + remainder;',
     remove = ['additional_declaration', 'additional_init', 'pre_body', 'post_body'])

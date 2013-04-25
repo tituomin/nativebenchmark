@@ -9,14 +9,17 @@
 
 void function_wrapper() {
 
-    // @CreateObject alloc=true
+    // @inits
+    // @inits-end
+
+    // @CreateObject alloc=true direction=cj
     ASSIGN_AND_CHECK(
         jobject__IN,
         (*env)->NewObject(env, jclassValue, objectConstructorID));
 
     // -----------------------
 
-    // @ReadUnicode vary=size
+    // @ReadUnicode vary=size direction=cj
 
     ASSIGN_AND_CHECK(
         jchar_ptr__IN,
@@ -30,7 +33,7 @@ void function_wrapper() {
         jstringValue,
         jchar_ptr__IN);
 
-    // @ReadUtf vary=sizeobjectarrayelement
+    // @ReadUtf vary=sizeobjectarrayelement direction=cj
 
     ASSIGN_AND_CHECK(
         jbyte_ptr__IN,
@@ -42,7 +45,7 @@ void function_wrapper() {
         jstringValue,
         (char *)jbyte_ptr__IN);
 
-    // @ReadUnicodeCritical vary=size
+    // @ReadUnicodeCritical vary=size direction=cj
 
     ASSIGN_AND_CHECK(
         jchar_ptr__IN,
@@ -54,7 +57,7 @@ void function_wrapper() {
         jstringValue,
         jchar_ptr__IN);
 
-    // @CopyUnicode vary=size
+    // @CopyUnicode vary=size direction=cj
 
     jsize__IN = (*env)->GetStringLength(env, jstringValue);
 
@@ -67,7 +70,7 @@ void function_wrapper() {
             jchar_buf__IN);
     }
 
-    // @ReadPrimitiveArrayCritical vary=size
+    // @ReadPrimitiveArrayCritical vary=size direction=cj
 
     ASSIGN_AND_CHECK(
         void_ptr__IN,
@@ -80,7 +83,7 @@ void function_wrapper() {
         void_ptr__IN,
         0);
 
-    // @ReadObjectArrayElement vary=size
+    // @ReadObjectArrayElement vary=size direction=cj
 
     if (current_size > 0) {
         jobject__IN = (*env)->GetObjectArrayElement(
@@ -88,7 +91,7 @@ void function_wrapper() {
             jobjectArrayValue, 0);
     }
 
-    // @WriteObjectArrayElement
+    // @WriteObjectArrayElement direction=cj
 
     if (current_size > 0) {
         (*env)->SetObjectArrayElement(
@@ -98,7 +101,7 @@ void function_wrapper() {
             jobject__OUT);
     }
 
-    // @AccessDirectBuffer
+    // @AccessDirectBuffer direction=cj
 
     ASSIGN_AND_CHECK_NNEG(
         jlong__IN,
@@ -108,17 +111,17 @@ void function_wrapper() {
         void_ptr__IN,
         (*env)->GetDirectBufferAddress(env, directByteBufferValue));
 
-    // @GetObjectClass
+    // @GetObjectClass direction=cj
 
     jclass__IN = (*env)->GetObjectClass(env, jobjectValue);
 
-    // @FindClass
+    // @FindClass direction=cj
 
     ASSIGN_AND_CHECK(
         jclass__IN,
         (*env)->FindClass(env, classNameValue));
 
-    // @GetFieldId vary=size
+    // @GetFieldId vary=size direction=cj
 
     ASSIGN_AND_CHECK(
         jfieldID__IN,
@@ -127,7 +130,7 @@ void function_wrapper() {
             field_name__OUT,
             field_signature__OUT));
 
-    // @GetStaticFieldId vary=size
+    // @GetStaticFieldId vary=size direction=cj
 
     ASSIGN_AND_CHECK(
         jfieldID__IN,
@@ -136,7 +139,7 @@ void function_wrapper() {
             static_field_name__OUT,
             static_field_signature__OUT));
 
-    // @GetMethodId vary=size
+    // @GetMethodId vary=size direction=cj
 
     ASSIGN_AND_CHECK(
         jmethodID__IN,
@@ -145,7 +148,7 @@ void function_wrapper() {
             method_name__OUT,
             method_signature__OUT));
 
- // @GetStaticMethodId vary=size
+ // @GetStaticMethodId vary=size direction=cj
 
     ASSIGN_AND_CHECK(
         jmethodID__IN,
@@ -154,21 +157,21 @@ void function_wrapper() {
             static_method_name__OUT,
             static_method_signature__OUT));
 
-    // @NewStringUtf alloc=true
+    // @NewStringUtf alloc=true direction=cj
 
     ASSIGN_AND_CHECK(
         jstring__IN,
         (*env)->NewStringUTF(env,
             string_utf__OUT));
 
-    // @NewString vary=size alloc=true
+    // @NewString vary=size alloc=true direction=cj
 
     ASSIGN_AND_CHECK(
         jstring__IN,
         (*env)->NewString(env,
             string_unicode__OUT, current_size));
 
-    // @NewObjectArray vary=size  alloc=true
+    // @NewObjectArray vary=size  alloc=true direction=cj
 
     // todo initialelement
     ASSIGN_AND_CHECK(
@@ -179,7 +182,7 @@ void function_wrapper() {
             jclassValue,
             jobjectValue));
 
-    // @NewDirectBuffer vary=size  alloc=true
+    // @NewDirectBuffer vary=size  alloc=true direction=cj
 
     ASSIGN_AND_CHECK(
         jobject__IN,
@@ -187,7 +190,7 @@ void function_wrapper() {
                                     // todo check in/out
             (void*) jchar_buf__IN, current_size));
 
-    // @GlobalRef
+    // @GlobalRef direction=cj
 
     ASSIGN_AND_CHECK(
         jobject__IN,
@@ -195,7 +198,7 @@ void function_wrapper() {
 
     (*env)->DeleteGlobalRef(env, jobject__IN);
 
-    // @LocalRef
+    // @LocalRef direction=cj
 
     ASSIGN_AND_CHECK(
         jobject__IN,
@@ -203,7 +206,7 @@ void function_wrapper() {
 
     (*env)->DeleteLocalRef(env, jobject__IN);
 
-    // @WeakGlobalRef
+    // @WeakGlobalRef direction=cj
 
     ASSIGN_AND_CHECK(
         jobject__IN,
@@ -211,7 +214,7 @@ void function_wrapper() {
 
     (*env)->DeleteWeakGlobalRef(env, jobject__IN);
 
-    // @LocalFrame
+    // @LocalFrame direction=cj
 
     ASSIGN_AND_CHECK_NNEG(
         jint__IN,

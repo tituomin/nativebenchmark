@@ -69,6 +69,15 @@ java_run_method_t   = put("""
 
 """, loop = loop)
 
+java_run_method_inline_t = """
+
+    public void run() {
+        <% init %>
+        <% loop %>
+    }
+
+"""
+
 
 
 def native_method(modifiers=None, return_type=None, name=None, parameters=None):

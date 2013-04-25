@@ -12,10 +12,13 @@ public abstract class Benchmark implements Runnable {
     public abstract long maxRepetitions();
     public abstract boolean dynamicParameters();
 
+    public long repetitionsLeft;
+
     protected BenchmarkParameter benchmarkParameter;
     protected long repetitions;
 
     public void init(BenchmarkParameter bp) {
+        repetitionsLeft = 0;
         benchmarkParameter = bp;
         repetitions = -1;
     }
