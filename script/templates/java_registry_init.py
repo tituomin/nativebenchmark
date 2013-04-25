@@ -24,4 +24,4 @@ public class BenchmarkInitialiser {
 
 def inits(classname):
     return put("""
-    benchmarks.add(new <% classname %> (BenchmarkRegistry.repetitions, bp));""", classname=classname)
+    benchmarks.add(new <% classname %> (bp));""", classname=classname)

@@ -13,7 +13,11 @@ import fi.helsinki.cs.tituomin.nativebenchmark.measuringtool.BasicOption;
 <% imports %>
 import android.util.Log;
 
-public class <% classname %> <% class_relations %> implements Benchmark {
+public class <% classname %> <% class_relations %> extends Benchmark {
+
+    public <% classname %> (BenchmarkParameter bp) {
+        init(bp);
+    }
 
     public String from() {
         return "<% from_language %>";
@@ -39,30 +43,7 @@ public class <% classname %> <% class_relations %> implements Benchmark {
         return <% max_repetitions %>;
     }
 
-    private long repetitions;
-    private long storedRepetitions;
-    private BenchmarkParameter benchmarkParameter;
-
-    public void setRepetitions(long reps) {
-        if (reps < 1) {
-            return;
-        }
-        storedRepetitions = repetitions;
-        repetitions = reps;
-        BenchmarkRegistry.setRepetitions(reps);
-    }
-
-    public void restoreRepetitions() {
-        repetitions = storedRepetitions;
-        BenchmarkRegistry.setRepetitions(storedRepetitions);
-    }
-
     <% native_method %>
-
-    public <% classname %> (long r, BenchmarkParameter bp) {
-        repetitions = r;
-        benchmarkParameter = bp;
-    }
 
     <% run_method %>
 

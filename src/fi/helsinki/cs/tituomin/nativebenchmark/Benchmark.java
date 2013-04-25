@@ -1,14 +1,30 @@
 package fi.helsinki.cs.tituomin.nativebenchmark;
 
 import fi.helsinki.cs.tituomin.nativebenchmark.measuringtool.BasicOption;
+import fi.helsinki.cs.tituomin.nativebenchmark.BenchmarkRegistry;
 
-public interface Benchmark extends Runnable {
-    public String from();
-    public String to();
-    public String description();
-    public int sequenceNo();
-    public long maxRepetitions();
-    public boolean dynamicParameters();
-    public void setRepetitions(long reps);
-    public void restoreRepetitions();
+public abstract class Benchmark implements Runnable {
+    public abstract void run();
+    public abstract String from();
+    public abstract String to();
+    public abstract String description();
+    public abstract int sequenceNo();
+    public abstract long maxRepetitions();
+    public abstract boolean dynamicParameters();
+
+    protected BenchmarkParameter benchmarkParameter;
+    protected long repetitions;
+
+    public void init(BenchmarkParameter bp) {
+        benchmarkParameter = bp;
+        repetitions = -1;
+    }
+
+    public void setRepetitions(long reps) {
+        if (reps < 1) {
+            return;
+        }
+        repetitions = reps;
+        BenchmarkRegistry.setRepetitions(reps);
+    }
 }
