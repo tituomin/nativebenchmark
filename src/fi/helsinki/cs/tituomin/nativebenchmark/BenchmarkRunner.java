@@ -3,6 +3,7 @@ package fi.helsinki.cs.tituomin.nativebenchmark;
 
 import fi.helsinki.cs.tituomin.nativebenchmark.measuringtool.BasicOption;
 import fi.helsinki.cs.tituomin.nativebenchmark.measuringtool.MeasuringTool;
+import fi.helsinki.cs.tituomin.nativebenchmark.measuringtool.MeasuringTool.RunnerException;
 import fi.helsinki.cs.tituomin.nativebenchmark.measuringtool.PlainRunner;
 import fi.helsinki.cs.tituomin.nativebenchmark.measuringtool.ResponseTimeRecorder;
 import fi.helsinki.cs.tituomin.nativebenchmark.measuringtool.LinuxPerfRecordTool;
@@ -67,15 +68,17 @@ public class BenchmarkRunner {
 
         CommandlineTool.execute(p.initScript()); // todo cleaner api
 
-        measuringTools.add(p); // warmup round
-
-        // measuringTools.add(new ResponseTimeRecorder(1)); // total response time
-
         measuringTools.add(new LinuxPerfRecordTool(1, repetitions) // call profile
            .set(BasicOption.OUTPUT_FILEPATH, perfDir.getPath())
            .set(BasicOption.MEASURE_LENGTH, "0.1")); // todo: proper val
 
+        measuringTools.add(p); // warmup round
+
+
+        // measuringTools.add(new ResponseTimeRecorder(1)); // total response time
         measuringTools.add(new ResponseTimeRecorder(1000, repetitions)); // total response time
+
+
     }
 
     public static void runBenchmarks(
@@ -104,21 +107,22 @@ public class BenchmarkRunner {
         final ApplicationState.State state = ApplicationState.State.MILESTONE;
 
         for (MeasuringTool tool : measuringTools) {
-            String measurementID = Utils.getUUID();
-            PrintWriter tempWriter = null;
-            File tempFile = new File(cacheDir, "benchmarks-temp.csv");
-            try {
-                tempWriter = makeWriter(tempFile, false);
-            }
-            catch (FileNotFoundException e) {
-                logE(e);
-                mainUI.updateState(
-                    ApplicationState.State.ERROR);
-                return;
-            }
 
             int max_rounds = tool.getRounds();
             for (int series = 0; series < max_rounds; series++) {
+                String measurementID = Utils.getUUID();
+                PrintWriter tempWriter = null;
+                File tempFile = new File(cacheDir, "benchmarks-temp.csv");
+                try {
+                    tempWriter = makeWriter(tempFile, false);
+                }
+                catch (FileNotFoundException e) {
+                    logE(e);
+                    mainUI.updateState(
+                        ApplicationState.State.ERROR);
+                    return;
+                }
+
                 Date start = new Date();
                 long endTime = 0;
 
@@ -144,6 +148,12 @@ public class BenchmarkRunner {
                             System.gc();
                             Thread.sleep(350);
                         }
+                    }
+                    catch (RunnerException e) {
+                        logE("Exception was thrown", e.getCause());
+                        mainUI.updateState(
+                            ApplicationState.State.ERROR);
+                        return;
                     }
                     catch (InterruptedException e) {
                         logE("Measuring thread was interrupted", e);
@@ -289,10 +299,10 @@ public class BenchmarkRunner {
     }
 
     private final static String TAG = "BenchmarkRunner";
-    private static void logE(String message, Exception e) {
+    private static void logE(String message, Throwable e) {
         Log.e(TAG, message, e);
     }
-    private static void logE(Exception e) {
+    private static void logE(Throwable e) {
         Log.e(TAG, "exception", e);
     }
     private static void logE(String msg) {
@@ -347,7 +357,7 @@ public class BenchmarkRunner {
 
     private static List<BenchmarkResult> runSeries(
         Benchmark benchmark, ApplicationState mainUI, MeasuringTool tool)
-        throws InterruptedException {
+        throws InterruptedException, RunnerException {
 
         List<BenchmarkResult> compiledMetadata = new ArrayList<BenchmarkResult> ();
 

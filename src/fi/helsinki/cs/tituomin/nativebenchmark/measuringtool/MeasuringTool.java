@@ -33,6 +33,18 @@ public abstract class MeasuringTool implements Runnable {
         init();
     }
 
+    public static synchronized void userInterrupt() {
+        userInterrupted = true;
+    }
+
+    public static synchronized boolean userInterrupted() {
+        if (userInterrupted == true) {
+            userInterrupted = false;
+            return true;
+        }
+        return false;
+    }
+
     protected void init() throws IOException, InterruptedException { }
 
     protected abstract void start(Runnable benchmark)
@@ -46,9 +58,7 @@ public abstract class MeasuringTool implements Runnable {
         return false;
     }
 
-    private Exception exceptionThrown;
-
-    public void startMeasuring(Benchmark benchmark) throws InterruptedException, IOException {
+    public void startMeasuring(Benchmark benchmark) throws InterruptedException, IOException, RunnerException {
         clearMeasurements();
 
         // default: user defined amount of repetitions
@@ -69,18 +79,20 @@ public abstract class MeasuringTool implements Runnable {
             // the benchmark does allocations, we have
             // to limit the amount of loops -> try to compensate
             // by repeating the loop many times
+            RepetitiveRunner runner = new RepetitiveRunner(benchmark);
             if (isLongRunning()) {
                 Log.v("Tool", "long running " + benchmark.getClass().getName());
-                start(new RepetitiveRunner(benchmark));
+                start(runner);
             }
             else {
                 Log.v("Tool", "not long running " + benchmark.getClass().getName());
-                new RepetitiveRunner(benchmark).run();
+                runner.run();
             }
-            if (exceptionThrown != null) {
-                if (!(exceptionThrown instanceof InterruptedException)) {
-                    throw new IOException(exceptionThrown);
-                }
+            if (runner.wasInterrupted() && userInterrupted()) {
+                throw new InterruptedException("Interrupted by user");
+            }
+            if (runner.exceptionWasThrown()) {
+                throw new RunnerException(runner.getException());
             }
         }
         else {
@@ -89,28 +101,47 @@ public abstract class MeasuringTool implements Runnable {
         }
     }
 
+    public class RunnerException extends Exception { 
+        public RunnerException(Throwable t) {
+            super(t);
+        }
+    }
+
     private class RepetitiveRunner implements Runnable {
         private Benchmark benchmark;
+        private Exception exceptionThrown;
+        private boolean interrupted;
+
         public RepetitiveRunner(Benchmark b) {
             benchmark = b;
+            exceptionThrown = null;
+            interrupted = false;
         }
+
+        public boolean exceptionWasThrown() {
+            return exceptionThrown != null;
+        }
+
+        public boolean wasInterrupted() {
+            return interrupted;
+        }
+
+        public Exception getException() {
+            return exceptionThrown;
+        }
+
         public void run() {
+            interrupted = false;
             exceptionThrown = null;
             long totalReps = userRepetitions;
             long benchmarkReps = benchmark.maxRepetitions();
-            long toolReps;
-            if (!isLongRunning()) {
-                toolReps = 20; // todo ? 
-            }
-            else {
-                toolReps = Long.MAX_VALUE;
-            }
+            long toolReps = 20; // todo good value?
+            int sleepAfterGC = 200;
+
             benchmark.setRepetitions(benchmarkReps);
             if (isLongRunning()) {
                 putMeasurement("repetitions", benchmarkReps + "");
-                putMeasurement("multiplier", toolReps + "");
                 long interval = BenchmarkRegistry.CHECK_INTERRUPTED_INTERVAL;
-
                 long division, remainder;
                 long repetitions = toolReps;
 
@@ -118,13 +149,16 @@ public abstract class MeasuringTool implements Runnable {
                 remainder = repetitions % interval + 1;
 
                 while (--division != 0) { 
-                    interval = BenchmarkRegistry.CHECK_INTERRUPTED_INTERVAL;
-                    interval = interval + 1;
+                    interval = BenchmarkRegistry.CHECK_INTERRUPTED_INTERVAL + 1;
                     while (--interval != 0) { 
                         try {
                             benchmark.run();
                             System.gc();
-                            Thread.sleep(50);
+                            Thread.sleep(sleepAfterGC);
+                        }
+                        catch (InterruptedException e) {
+                            interrupted = true;
+                            return;
                         }
                         catch (Exception e) {
                             exceptionThrown = e;
@@ -132,6 +166,7 @@ public abstract class MeasuringTool implements Runnable {
                         }
                     }
                     if (Thread.currentThread().isInterrupted()) {
+                        interrupted = true;
                         return;
                     }
                 }
@@ -140,9 +175,10 @@ public abstract class MeasuringTool implements Runnable {
                     try {
                         benchmark.run();
                         System.gc();
-                        Thread.sleep(50);
+                        Thread.sleep(sleepAfterGC);
                     }
                     catch (InterruptedException e) {
+                        interrupted = true;
                         return;
                     }
                     catch (Exception e) {
@@ -153,7 +189,7 @@ public abstract class MeasuringTool implements Runnable {
                 finishMeasurement();
 
             }
-            else {
+            else { // not long running
                 long totalMultiplier = toolReps;
                 toolReps += 1;
                 while (--toolReps != 0) {
@@ -163,9 +199,10 @@ public abstract class MeasuringTool implements Runnable {
                         start(benchmark);
                         finishMeasurement();
                         System.gc();
-                        Thread.sleep(50);
+                        Thread.sleep(sleepAfterGC);
                     }
                     catch (InterruptedException e) {
+                        interrupted = true;
                         return;
                     }
                     catch (Exception e) {
@@ -325,6 +362,7 @@ public abstract class MeasuringTool implements Runnable {
 
     private Benchmark benchmark;
     private int rounds;
+    private static boolean userInterrupted = false;
 
     public static class UnsupportedOptionException extends RuntimeException {}
 }

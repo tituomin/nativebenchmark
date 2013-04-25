@@ -192,6 +192,7 @@ public class BenchmarkSelector extends Activity implements ApplicationState {
                         new View.OnClickListener() {
                             public void onClick(View v) {
                                 setMessage(ApplicationState.State.INTERRUPTING.stringId);
+                                MeasuringTool.userInterrupt();
                                 measuringThread.interrupt();
                             }
                         });

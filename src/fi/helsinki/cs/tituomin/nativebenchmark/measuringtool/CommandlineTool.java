@@ -188,9 +188,6 @@ public abstract class CommandlineTool extends MeasuringTool {
             benchmarkThread.join();
             Log.v("Commandlinetool", "Command line did join.");
         }
-        if (Thread.interrupted()) {
-            throw new InterruptedException();
-        }
     }
 
     public void setFilename(String name, String path) {
