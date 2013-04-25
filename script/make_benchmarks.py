@@ -61,20 +61,23 @@ def write_benchmark_initialiser(classes):
  
 if __name__ == "__main__":
     try:
-        c_output_name = argv[1]
-        c_run_output_name = argv[2]
-        java_output_dir = argv[3]
-        c_definition_filename = argv[4]
+        argv.pop(0)
+        c_output_name            = argv.pop(0)
+        c_run_output_name        = argv.pop(0)
+        c_custom_output_name     = argv.pop(0)
+        java_output_dir          = argv.pop(0)
+        c_definition_filename    = argv.pop(0)
+        java_definition_filename = argv.pop(0)
 
         definition_files = {
-                'C' : open(c_definition_filename)
-                }
+                'C' : open(c_definition_filename),
+                'J' : open(java_definition_filename)}
 
         c_run_output = open(c_run_output_name, 'w')
         c_output =     open(c_output_name, 'w')
 
         classes = (write_benchmarks(c_output, c_run_output, java_output_dir) +
-                   write_custom_benchmarks(definition_files, java_output_dir))
+                   write_custom_benchmarks(definition_files, c_custom_output_name, java_output_dir))
 
         write_benchmark_initialiser(classes)
         print(",".join(classes))

@@ -66,10 +66,11 @@ def read_until(f, predicate, collect=None):
 def read_benchmarks(definition_files):
     benchmarks = {}
     for lang, f in definition_files.iteritems():
-        benchmarks[lang] = []
+        benchmarks[lang] = {'module': None, 'benchmarks': []}
 
         module_start = []
         read_until(f, begins_block, collect = module_start)
+        benchmarks[lang]['module'] = ''.join(module_start)
         line = read_until(f, is_benchmark_header)
 
         while line != '':
@@ -81,14 +82,14 @@ def read_benchmarks(definition_files):
                 collect = bm_code)
 
             bm_props['code'] = ''.join(bm_code)
-            benchmarks[lang].append(bm_props)
+            benchmarks[lang]['benchmarks'].append(bm_props)
 
             if ends_block(line):
                 break
 
     add_field_and_array_benchmarks(benchmarks)            
     add_overhead_benchmarks(benchmarks)
-    return ''.join(module_start), benchmarks
+    return benchmarks
 
 OVERHEAD_STEP = 2
 OVERHEAD_STEPS = 11 # incl. zero
@@ -100,10 +101,13 @@ def add_overhead_benchmarks(benchmarks):
         for j in range(0, i):
             overhead_code.append(OVERHEAD_CODE_STATEMENT)
 
-        benchmarks['C'].append({
-                'code':  ''.join(overhead_code),
-                'description' : i,
-                'id'  : 'Overhead' + str(i).zfill(5) })
+        benchmark = {
+            'code':  ''.join(overhead_code),
+            'description' : i,
+            'id'  : 'Overhead' + str(i).zfill(5) }
+
+        benchmarks['C']['benchmarks'].append(benchmark)
+        benchmarks['J']['benchmarks'].append(benchmark)
 
 
 def macro_call(template, _type):
@@ -116,7 +120,7 @@ def make_id(template, _type):
         _type = _type['java'].capitalize())
 
 def add_field_and_array_benchmarks(benchmarks):
-    bmc = benchmarks['C']
+    bmc = benchmarks['C']['benchmarks']
 
     for _type in jni_types.primitive_types.values() + [jni_types.object_types['O']]:
         bmc.append({
@@ -176,18 +180,17 @@ def add_field_and_array_benchmarks(benchmarks):
                     _type)})
 
             
-def write_custom_benchmarks(definition_files, java_output_dir):
+def write_custom_benchmarks(definition_files, c_custom_output_name, java_output_dir):
     packagename = ('fi', 'helsinki', 'cs', 'tituomin', 'nativebenchmark', 'benchmark')
-    file_beginning, all_benchmarks = read_benchmarks(definition_files)
 
-    c_dir = path.dirname(definition_files['C'].name)
-    out_c = open(path.join(c_dir, 'custom_benchmarks.c'), 'w')
+    all_benchmarks = read_benchmarks(definition_files)
 
-    out_c.write(file_beginning)
+    out_c = open(path.join(c_custom_output_name), 'w')
+    out_c.write(all_benchmarks['C']['module'])
 
     java_classes = {} #classname, contents
 
-    for benchmark in all_benchmarks['C']:
+    for benchmark in all_benchmarks['C']['benchmarks']:
 
         classname = 'C2J' + benchmark['id']
         if 'vary' in benchmark:
@@ -210,7 +213,7 @@ def write_custom_benchmarks(definition_files, java_output_dir):
 
         if 'alloc' in benchmark:
             # large heap 128/2 = 64 Mb, 128 el 8 byte array...
-            max_repetitions = 256
+            max_repetitions = 1024
         else:
             max_repetitions = -1
 
@@ -229,9 +232,11 @@ def write_custom_benchmarks(definition_files, java_output_dir):
                 run_method = 'public native void run();',
                 purge = True))}
 
-
     out_c.flush()
     out_c.close()
+
+    for benchmark in all_benchmarks['J']['benchmarks']:
+        pass
 
 #    for benchmark in all_benchmarks['J']:
 #        pass # todo

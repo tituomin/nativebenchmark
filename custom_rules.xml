@@ -14,8 +14,8 @@
     <delete file="cache.properties"/>
   </target>
 
-  <fileset dir="${codegen_script.dir}" id="python-codegen" includes="**/*.py">
-    <modified /> <!-- todo include jni_interface_benchmarks.c -->
+  <fileset dir="${codegen_script.dir}" id="python-codegen" includes="**/*.py,**/*.c,**/*.java">
+    <modified />
   </fileset>
   <pathconvert
       refid="python-codegen"
@@ -42,8 +42,10 @@
           <arg value="${codegen_script.dir}/make_benchmarks.py" />
           <arg value="${jni_src.dir}/nativebenchmark.c" />
           <arg value="${jni_src.dir}/nativerunners.c" />
+          <arg value="${jni_src.dir}/custom_benchmarks.c" />
           <arg value="${gen_src.dir}" />
-          <arg value="${jni_src.dir}/jni_interface_benchmarks.c" />
+          <arg value="${codegen_script.dir}/templates/jni_interface_benchmarks.c" />
+          <arg value="${codegen_script.dir}/templates/CustomBenchmarks.java" />
     </exec>
     <property name="code.generated" value="true" />
   </target>
