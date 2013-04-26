@@ -8,6 +8,7 @@ public abstract class Benchmark implements Runnable {
     public abstract String from();
     public abstract String to();
     public abstract String description();
+    public abstract String id();
     public abstract int sequenceNo();
     public abstract long maxRepetitions();
     public abstract boolean dynamicParameters();

@@ -225,7 +225,7 @@ def write_custom_benchmarks(definition_files, c_custom_output_name, java_output_
                 dyn_par = 'false'
             if 'alloc' in benchmark:
                 # large heap 128/2 = 64 Mb, 128 el 8 byte array...
-                max_repetitions = 1024
+                max_repetitions = 8192
             else:
                 max_repetitions = -1
 
@@ -248,6 +248,7 @@ def write_custom_benchmarks(definition_files, c_custom_output_name, java_output_
                     'filename':classname + '.java',
                     'code': (put(
                         java_benchmark.t,
+                        _id = benchmark['id'],
                         packagename = '.'.join(packagename),
                         classname  = classname,
                         description = benchmark.get('description', ''),
@@ -266,6 +267,7 @@ def write_custom_benchmarks(definition_files, c_custom_output_name, java_output_
                         'code': (
                             put(
                                 java_benchmark.t,
+                                _id = benchmark['id'],
                                 packagename = '.'.join(packagename),
                                 imports = "\n".join(
                                     ['import android.content.pm.PermissionInfo;',

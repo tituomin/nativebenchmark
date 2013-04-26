@@ -31,6 +31,10 @@ public class <% classname %> <% class_relations %> extends Benchmark {
         return <% seq_no %>;
     }
 
+    public String id() {
+        return "<% _id %>";
+    }
+
     public boolean dynamicParameters() {
         return <% has_dynamic_parameters %>;
     }

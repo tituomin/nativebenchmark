@@ -219,6 +219,7 @@ def generate_benchmarks():
                                     imports                      = '',
                                     has_dynamic_parameters       = 'false', # todo
                                     max_repetitions              = -1,
+                                    _id                          = benchmark_classname("", sequence_no),
                                     description                  = spec['description'],
                                     seq_no                       = class_counter,
                                     from_language                = from_lang,
