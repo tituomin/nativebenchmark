@@ -14,6 +14,7 @@ public abstract class Benchmark implements Runnable {
     public abstract boolean dynamicParameters();
 
     public long repetitionsLeft;
+    public int persistentValue;
 
     protected BenchmarkParameter benchmarkParameter;
     protected long repetitions;

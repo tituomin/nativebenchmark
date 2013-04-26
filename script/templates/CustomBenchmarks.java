@@ -19,7 +19,7 @@ public class CustomBenchmarks {
     String stringIn = benchmarkParameter.retrieveString();
     Object[] objectArrayValue = benchmarkParameter.retrieveObjectArray();
     ByteBuffer directByteBufferValue = benchmarkParameter.retrieveDirectByteBuffer();
-    int size = benchmarkParameter.getSize();
+    int current_size = benchmarkParameter.getSize();
     int __a = 2, __b = 3;
     WeakReference<Object> weakReferenceIn;
     // @inits-end
@@ -34,12 +34,12 @@ public class CustomBenchmarks {
         // @ReadObjectArrayElement vary=size direction=jj
 
         // todo loop, params
-        if (size > 0) {
+        if (current_size > 0) {
             objectIn = objectArrayValue[0];
         }
 
         // @WriteObjectArrayElement direction=jj
-        if (size > 0) {
+        if (current_size > 0) {
             objectArrayValue[0] = objectValue;
         }
 
@@ -71,12 +71,12 @@ public class CustomBenchmarks {
 
         // @NewObjectArray vary=size direction=jj
 
-        objectArrayIn = new PermissionInfo[size];
+        objectArrayIn = new PermissionInfo[current_size];
         // todo initialelement (not in java ... explains O(n))
 
         // @NewDirectBuffer vary=size direction=jj
 
-        byteBufferIn = ByteBuffer.allocateDirect(size);
+        byteBufferIn = ByteBuffer.allocateDirect(current_size);
 
         // @WeakGlobalRef direction=jj
 

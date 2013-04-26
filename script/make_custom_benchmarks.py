@@ -5,6 +5,8 @@ from sys import argv
 import sys
 
 from templating import put
+
+from templates import arrays
 from templates import loop_code
 from templates import c_nativemethod
 from templates import java_benchmark
@@ -132,6 +134,7 @@ def make_id(template, _type):
 
 def add_field_and_array_benchmarks(benchmarks):
     bmc = benchmarks['C']['benchmarks']
+    bmj = benchmarks['J']['benchmarks']
 
     for _type in jni_types.primitive_types.values() + [jni_types.object_types['O']]:
         bmc.append({
@@ -141,12 +144,16 @@ def add_field_and_array_benchmarks(benchmarks):
                     'GET_STATIC_TYPE_FIELD({_type}, {java_type_name});',
                     _type)})
 
+        # java
+
         bmc.append({
                 'direction' : 'cj',
                 'id' : make_id('SetStatic{_type}Field', _type),
                 'code' : macro_call(
                     'SET_STATIC_TYPE_FIELD({_type}, {java_type_name});',
                     _type)})
+
+        # java
 
         bmc.append({
                 'id' : make_id('Get{_type}Field', _type),
@@ -155,12 +162,16 @@ def add_field_and_array_benchmarks(benchmarks):
                     'GET_TYPE_FIELD({_type}, {java_type_name});',
                     _type)})
 
+        # java
+
         bmc.append({
                 'id' : make_id('Set{_type}Field', _type),
                 'direction' : 'cj',
                 'code' : macro_call(
                     'SET_TYPE_FIELD({_type}, {java_type_name});',
                     _type)})
+
+        # java
 
     for _type in jni_types.primitive_types.values():
         bmc.append({
@@ -172,6 +183,8 @@ def add_field_and_array_benchmarks(benchmarks):
                     'NEW_PRIMITIVE_ARRAY({_type}, {java_type_name});',
                     _type)
                 })
+
+        # java
 
         bmc.append({
                 'id' : make_id('Get{_type}ArrayElements', _type),
@@ -197,6 +210,63 @@ def add_field_and_array_benchmarks(benchmarks):
                 'code' : macro_call(
                     'SET_PRIMITIVE_ARRAY_REGION({_type}, {java_type_name});',
                     _type)})
+
+        bmc.append({
+                'vary' : 'size',
+                'direction' : 'cc',
+                'id' : make_id('ReadComplete{_type}Array', _type),
+                'code' : put(
+                    arrays.t_read,
+                    purge = True,
+                    declare_idx = 'jint idx;',
+                    variable_in = '%s__IN' % _type['c'],
+                    array_variable = '%s_buf__IN' % _type['c'],
+                    element_literal = _type['c-literal']
+                    )})
+
+        java_declarations = '{0} {0}In;\n{0} [] {0}Arr = benchmarkParameter.retrieve{1}Array();'.format(
+            _type['java'], _type['java'].capitalize())
+
+
+        bmj.append({
+                'vary' : 'size',
+                'direction' : 'jj',
+                'id' : make_id('ReadComplete{_type}Array', _type),
+                'code' : put(
+                    arrays.t_read,
+                    declare_idx = 'int idx;',
+                    declare_variables = java_declarations,
+                    variable_in = '%sIn' % _type['java'],
+                    array_variable = '%sArr' % _type['java'],
+                    element_literal = _type['java-literal']
+                    )})
+
+        bmc.append({
+                'vary' : 'size',
+                'direction' : 'cc',
+                'id' : make_id('WriteComplete{_type}Array', _type),
+                'code' : put(
+                    arrays.t_write,
+                    purge = True,
+                    declare_idx = 'jint idx;',
+                    # todo: writing affects other tests?
+                    array_variable = '%s_buf__IN' % _type['c'],
+                    element_literal = _type['c-literal']
+                    )})
+
+        bmj.append({
+                'vary' : 'size',
+                'direction' : 'jj',
+                'id' : make_id('WriteComplete{_type}Array', _type),
+                'code' : put(
+                    arrays.t_write,
+                    declare_variables = java_declarations,
+                    declare_idx = 'int idx;',
+                    # todo: writing affects other tests?
+                    array_variable = '%sArr' % _type['java'],
+                    element_literal = _type['java-literal'])
+                })
+
 
             
 def write_custom_benchmarks(definition_files, c_custom_output_name, java_output_dir):
