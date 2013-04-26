@@ -1,5 +1,5 @@
 
-LOCAL_PATH := $(call my-dir)
+LOCAL_PATH := $(abspath $(call my-dir))
 
 include $(CLEAR_VARS)
 
