@@ -13,6 +13,10 @@ public class MockCommandlineTool extends CommandlineTool {
         return null;
     }
 
+    public void ignore() {
+        return true;
+    }
+
     protected String command() { 
         return "cat /dev/null";
     }
