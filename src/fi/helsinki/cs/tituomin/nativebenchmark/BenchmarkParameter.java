@@ -25,7 +25,7 @@ public class BenchmarkParameter implements Iterable<Integer> {
         freeReturnvalues();
     }
     
-    public static int DEFAULTSIZE = 16;
+    public static int DEFAULTSIZE = 8;
     private static int RANGE = 8;
     private static int MAXSIZE = DEFAULTSIZE * RANGE;
 

@@ -76,6 +76,9 @@ public class BenchmarkSelector extends Activity implements ApplicationState {
 
         this.retry = false;
         onCheckboxClicked(findViewById(R.id.checkbox_long));
+
+        // pre-enlarges the heap
+        allocationArray = new byte[1024 * 1024 * 100];
     }
 
     public void onCheckboxClicked(View view) {
@@ -209,6 +212,7 @@ public class BenchmarkSelector extends Activity implements ApplicationState {
 
 
     public void startMeasuring(View view) {
+        allocationArray = null;
         measuringThread = new Thread(
             new Runnable () {
                 public void run() {
@@ -269,6 +273,7 @@ public class BenchmarkSelector extends Activity implements ApplicationState {
     private static final String TAG = "BenchmarkSelector";
     private PowerManager.WakeLock wakeLock;
     private Thread measuringThread;
+    private byte[] allocationArray;
 
     static {
         System.loadLibrary("nativebenchmark");

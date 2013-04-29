@@ -69,14 +69,13 @@ public class BenchmarkRunner {
 
         CommandlineTool.execute(p.initScript()); // todo cleaner api
 
-
-        //        measuringTools.add(new MockCommandlineTool(1, repetitions));
-
         measuringTools.add(p); // warmup round
 
+        measuringTools.add(new MockCommandlineTool(1, repetitions));
 
         // measuringTools.add(new ResponseTimeRecorder(1)); // total response time
-        measuringTools.add(new ResponseTimeRecorder(2, repetitions)); // total response time
+        measuringTools.add(new ResponseTimeRecorder(1, repetitions)); // total response time
+
         measuringTools.add(new LinuxPerfRecordTool(1, repetitions) // call profile
                            .set(BasicOption.OUTPUT_FILEPATH, perfDir.getPath())
                            .set(BasicOption.MEASURE_LENGTH, "0.1")); // todo: proper val

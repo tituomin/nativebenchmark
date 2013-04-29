@@ -78,8 +78,6 @@ t_java = partial(
     t,
     test_interrupted = 'Thread.currentThread().isInterrupted()',
     extra_debug = '',#,'Log.v("Benchmark", division + " " + interval);',
-    debug = 'Log.v("Benchmark", "interval division remainder " + interval + " " + division + " "+ remainder);',
-    debug_interrupted = 'Log.v("Benchmark", "Is interrupted.");',
     declare_counters = 'long interval, division, remainder;',
     init_counters = 'interval = BenchmarkRegistry.CHECK_INTERRUPTED_INTERVAL;',
     removal_prevention = 'repetitionsLeft = division * interval + remainder;',

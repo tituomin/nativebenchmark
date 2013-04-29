@@ -58,39 +58,45 @@ public abstract class MeasuringTool implements Runnable {
         return false;
     }
 
-    public void startMeasuring(Benchmark benchmark) throws InterruptedException, IOException, RunnerException {
-        clearMeasurements();
-
-        // default: user defined amount of repetitions
-        benchmark.setRepetitions(this.userRepetitions);
-
-        RunningWrapper wrapper;
+    public RunningWrapper wrap(Benchmark benchmark) {
         if (benchmark.maxRepetitions() == -1) {
-            long toolOverrideReps = repetitions();
-            if (toolOverrideReps != -1) {
-                // the tool measurement logic requires
-                // overriding the repetition amount
-                benchmark.setRepetitions(toolOverrideReps);
-            }
             // Default running algorithm
-            wrapper = new RunningWrapper(benchmark);
+            return new RunningWrapper(benchmark);
         }
         else if (benchmark.maxRepetitions() > 0) {
             // the benchmark does allocations, we have
             // to limit the amount of loops -> try to compensate
             // by repeating the loop many times
             if (isLongRunning()) {
-                wrapper = new AllocatingBenchmarkLongRunningWrapper(benchmark);
+                return new AllocatingBenchmarkLongRunningWrapper(benchmark);
             }
             else {
-                wrapper = new AllocatingBenchmarkShortRunningWrapper(benchmark);
+                return new AllocatingBenchmarkShortRunningWrapper(benchmark);
             }
         }
         else {
             Log.e("MeasuringTool", "Invalid repetition amount");
             throw new IllegalArgumentException("Invalid repetition amount.");
         }
+    }
+
+    public void startMeasuring(Benchmark benchmark) throws InterruptedException, IOException, RunnerException {
+        clearMeasurements();
+
+        long toolOverrideReps = repetitions();
+        if (toolOverrideReps == -1) {
+            // default: user defined amount of repetitions
+            benchmark.setRepetitions(this.userRepetitions);
+        }
+        else {
+            // the tool measurement logic requires
+            // overriding the repetition amount
+            benchmark.setRepetitions(toolOverrideReps);
+        }
+
+        RunningWrapper wrapper = wrap(benchmark);
         wrapper.begin(this);
+
         if (wrapper.wasInterrupted() && userInterrupted()) {
             throw new InterruptedException("Interrupted by user");
         }

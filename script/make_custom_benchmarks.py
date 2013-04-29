@@ -311,7 +311,7 @@ def write_custom_benchmarks(definition_files, c_custom_output_name, java_output_
                 dyn_par = 'false'
             if 'alloc' in benchmark:
                 # large heap 128/2 = 64 Mb, 128 el 8 byte array...
-                max_repetitions = 4096
+                max_repetitions = 1000
             else:
                 max_repetitions = -1
 
