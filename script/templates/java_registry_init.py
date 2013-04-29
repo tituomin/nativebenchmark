@@ -23,5 +23,4 @@ public class BenchmarkInitialiser {
 """
 
 def inits(classname):
-    return put("""
-    benchmarks.add(new <% classname %> (bp));""", classname=classname)
+    return 'benchmarks.add(new {0} (bp));'.format(classname)

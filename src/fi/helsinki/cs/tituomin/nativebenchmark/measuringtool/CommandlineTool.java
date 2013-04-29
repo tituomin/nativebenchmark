@@ -185,7 +185,6 @@ public abstract class CommandlineTool extends MeasuringTool {
         Random r = new Random();
         int delay = r.nextInt(20);
 
-        Log.v("Commandlinetool", "Command line going to start().");
         benchmarkThread.start();
         //Thread.sleep(delay);
 
@@ -196,11 +195,8 @@ public abstract class CommandlineTool extends MeasuringTool {
             throw e;
         }
         finally {
-            Log.v("Commandlinetool", "Command line going to interrupt().");
             benchmarkThread.interrupt();
-            Log.v("Commandlinetool", "Command line going to join().");
             benchmarkThread.join();
-            Log.v("Commandlinetool", "Command line did join.");
         }
     }
 

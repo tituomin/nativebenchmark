@@ -19,11 +19,11 @@ import fi.helsinki.cs.tituomin.nativebenchmark.Benchmark;
 import fi.helsinki.cs.tituomin.nativebenchmark.BenchmarkResult;
 import fi.helsinki.cs.tituomin.nativebenchmark.BenchmarkRegistry;
 
-public abstract class MeasuringTool implements Runnable {
+import fi.helsinki.cs.tituomin.nativebenchmark.measuringtool.RunningWrapper;
+import fi.helsinki.cs.tituomin.nativebenchmark.measuringtool.AllocatingBenchmarkLongRunningWrapper;
+import fi.helsinki.cs.tituomin.nativebenchmark.measuringtool.AllocatingBenchmarkShortRunningWrapper;
 
-    // public MeasuringTool()  throws IOException, InterruptedException {
-    //     this(1, 1000);
-    // }
+public abstract class MeasuringTool implements Runnable {
 
     public MeasuringTool(int rounds, long userRepetitions) throws IOException, InterruptedException {
         specifyOptions();
@@ -64,41 +64,40 @@ public abstract class MeasuringTool implements Runnable {
         // default: user defined amount of repetitions
         benchmark.setRepetitions(this.userRepetitions);
 
+        RunningWrapper wrapper;
         if (benchmark.maxRepetitions() == -1) {
             long toolOverrideReps = repetitions();
             if (toolOverrideReps != -1) {
                 // the tool measurement logic requires
                 // overriding the repetition amount
-                Log.v("Tool", "override " + benchmark.getClass().getName());
                 benchmark.setRepetitions(toolOverrideReps);
             }
-            Log.v("Tool", "normal " + benchmark.getClass().getName());
-            start(benchmark);
+            // Default running algorithm
+            wrapper = new RunningWrapper(benchmark);
         }
         else if (benchmark.maxRepetitions() > 0) {
             // the benchmark does allocations, we have
             // to limit the amount of loops -> try to compensate
             // by repeating the loop many times
-            RepetitiveRunner runner = new RepetitiveRunner(benchmark);
             if (isLongRunning()) {
-                Log.v("Tool", "long running " + benchmark.getClass().getName());
-                start(runner);
+                wrapper = new AllocatingBenchmarkLongRunningWrapper(benchmark);
             }
             else {
-                Log.v("Tool", "not long running " + benchmark.getClass().getName());
-                runner.run();
-            }
-            if (runner.wasInterrupted() && userInterrupted()) {
-                throw new InterruptedException("Interrupted by user");
-            }
-            if (runner.exceptionWasThrown()) {
-                throw new RunnerException(runner.getException());
+                wrapper = new AllocatingBenchmarkShortRunningWrapper(benchmark);
             }
         }
         else {
             Log.e("MeasuringTool", "Invalid repetition amount");
             throw new IllegalArgumentException("Invalid repetition amount.");
         }
+        wrapper.begin(this);
+        if (wrapper.wasInterrupted() && userInterrupted()) {
+            throw new InterruptedException("Interrupted by user");
+        }
+        if (wrapper.exceptionWasThrown()) {
+            throw new RunnerException(wrapper.getException());
+        }
+
     }
 
     public class RunnerException extends Exception { 
@@ -107,112 +106,6 @@ public abstract class MeasuringTool implements Runnable {
         }
     }
 
-    private class RepetitiveRunner implements Runnable {
-        private Benchmark benchmark;
-        private Exception exceptionThrown;
-        private boolean interrupted;
-
-        public RepetitiveRunner(Benchmark b) {
-            benchmark = b;
-            exceptionThrown = null;
-            interrupted = false;
-        }
-
-        public boolean exceptionWasThrown() {
-            return exceptionThrown != null;
-        }
-
-        public boolean wasInterrupted() {
-            return interrupted;
-        }
-
-        public Exception getException() {
-            return exceptionThrown;
-        }
-
-        public void run() {
-            interrupted = false;
-            exceptionThrown = null;
-            long totalReps = userRepetitions;
-            long benchmarkReps = benchmark.maxRepetitions();
-            long toolReps = 20; // todo good value?
-            int sleepAfterGC = 200;
-
-            benchmark.setRepetitions(benchmarkReps);
-            if (isLongRunning()) {
-                putMeasurement("repetitions", benchmarkReps + "");
-                long interval = BenchmarkRegistry.CHECK_INTERRUPTED_INTERVAL;
-                long division, remainder;
-                long repetitions = toolReps;
-
-                division  = repetitions / interval + 1;
-                remainder = repetitions % interval + 1;
-
-                while (--division != 0) { 
-                    interval = BenchmarkRegistry.CHECK_INTERRUPTED_INTERVAL + 1;
-                    while (--interval != 0) { 
-                        try {
-                            benchmark.run();
-                            System.gc();
-                            Thread.sleep(sleepAfterGC);
-                        }
-                        catch (InterruptedException e) {
-                            interrupted = true;
-                            return;
-                        }
-                        catch (Exception e) {
-                            exceptionThrown = e;
-                            return;
-                        }
-                    }
-                    if (Thread.currentThread().isInterrupted()) {
-                        interrupted = true;
-                        return;
-                    }
-                }
-
-                while (--remainder != 0) { 
-                    try {
-                        benchmark.run();
-                        System.gc();
-                        Thread.sleep(sleepAfterGC);
-                    }
-                    catch (InterruptedException e) {
-                        interrupted = true;
-                        return;
-                    }
-                    catch (Exception e) {
-                        exceptionThrown = e;
-                        return;
-                    }
-                }
-                finishMeasurement();
-
-            }
-            else { // not long running
-                long totalMultiplier = toolReps;
-                toolReps += 1;
-                while (--toolReps != 0) {
-                    putMeasurement("repetitions", benchmarkReps + "");
-                    putMeasurement("multiplier", totalMultiplier + "");
-                    try {
-                        start(benchmark);
-                        finishMeasurement();
-                        System.gc();
-                        Thread.sleep(sleepAfterGC);
-                    }
-                    catch (InterruptedException e) {
-                        interrupted = true;
-                        return;
-                    }
-                    catch (Exception e) {
-                        exceptionThrown = e;
-                        return;
-                    }
-                }
-            }
-        }
-    }
 
     public void run() {
         try {

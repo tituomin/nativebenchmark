@@ -25,12 +25,14 @@ def unescape(string):
     string = string.replace('__END__', '}')
     return string
 
-def put(template, remove = None, purge = False, **kwargs):
+def put(template, remove = None, purge = True, **kwargs):
     try:
         template = escape(template)
         for k, v in kwargs.iteritems():
             if type(v) == str:
                 kwargs[k] = escape(v)
+            if v == None:
+                kwargs[k] = ''
 
         if remove:
             for k in remove:
@@ -49,3 +51,5 @@ def put(template, remove = None, purge = False, **kwargs):
         raise e
     return None
 
+def partial(template, remove = None, **kwargs):
+    return put(template, remove=remove, purge=False, **kwargs)

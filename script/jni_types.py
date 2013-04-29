@@ -7,6 +7,8 @@ other_types = None
 types = None
 return_types = None
 
+representative_types = None
+
 array_types = None
 
 primitive_type_definitions = [
@@ -53,7 +55,8 @@ primitive_type_definitions = [
         'c'            : 'jint',
         'c-literal'    : '102',
         'java-literal' : '102',
-        'jvm-desc'     : 'I'
+        'jvm-desc'     : 'I',
+        'representative' : True
         },
 
     {
@@ -62,7 +65,8 @@ primitive_type_definitions = [
         'c'            : 'jlong',
         'c-literal'    : '103',
         'java-literal' : '103',
-        'jvm-desc'     : 'J'
+        'jvm-desc'     : 'J',
+        'representative' : True
         },
 
     {
@@ -71,7 +75,8 @@ primitive_type_definitions = [
         'c'            : 'jfloat',
         'c-literal'    : '104.1',
         'java-literal' : '104.1f',
-        'jvm-desc'     : 'F'
+        'jvm-desc'     : 'F',
+        'representative' : True
         },
 
     {
@@ -80,7 +85,8 @@ primitive_type_definitions = [
         'c'            : 'jdouble',
         'c-literal'    : '105.1',
         'java-literal' : '105.1',
-        'jvm-desc'     : 'D'
+        'jvm-desc'     : 'D',
+        'representative' : True
         },
 ]
 
@@ -93,6 +99,7 @@ object_type_definitions = [
         'c-literal'    : None,
         'java-literal' : None,
         'is-object'    : True,
+        'representative' : True,
         'jvm-desc'     : 'Ljava/lang/Object;'
         },
 
@@ -136,6 +143,7 @@ other_type_definitions = [
         'c'            : 'void',
         'c-literal'    : None,
         'java-literal' : None,
+        'representative' : True,        
         'jvm-desc'     : 'V'
         }
 ]
@@ -169,7 +177,7 @@ def method_descriptor(return_type, parameter_types):
     
 
 def init_types():
-    global primitive_types, object_types, other_types, types, return_types, array_types
+    global primitive_types, object_types, other_types, types, return_types, array_types, representative_types
     primitive_types = dict([(typedef['symbol'], typedef) for typedef in primitive_type_definitions])
     object_types = dict([(typedef['symbol'], typedef) for typedef in object_type_definitions])
     other_types = dict([(typedef['symbol'], typedef) for typedef in other_type_definitions])
@@ -179,11 +187,21 @@ def init_types():
     array_element_types['O'] = object_types['O']
 
     # todo here
-    array_types = dict([
-            ('A' + key, {'symbol': 'A' + key, 'java': tipe['java'] + '[]', 'c' : tipe['c'] + 'Array',
-                         'c-literal': None, 'java-literal': None, 'is-array': True, 'java-element-type': tipe['java'], 'c-element-type': tipe['c'], 'jvm-desc': '[' + tipe['jvm-desc']})
-            for key, tipe
-            in array_element_types.iteritems()])
+    array_types = dict(
+        [
+            ('A' + key,
+             {'symbol'            : 'A' + key,
+              'java'              : tipe['java'] + '[]',
+              'c'                 : tipe['c'] + 'Array',
+              'c-literal'         : None,
+              'java-literal'      : None,
+              'is-array'          : True,
+              'representative'    : tipe.get('representative', False),
+              'java-element-type' : tipe['java'],
+              'c-element-type'    : tipe['c'],
+              'jvm-desc'          : '[' + tipe['jvm-desc']
+              })
+            for key, tipe in array_element_types.iteritems()])
 
     types = dict()
     types.update(primitive_types)

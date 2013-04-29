@@ -1,5 +1,5 @@
 
-from templating import put
+from templating import partial
 
 t_loop = """
 <% declare_idx %>
@@ -12,18 +12,18 @@ while (idx != 0) {
 """
 
 
-t_read = put(
+t_read = partial(
     t_loop,
     body = """
     <% variable_in %> = <% array_variable %>[idx];
     if (<% variable_in %> == <% element_literal %>) {
-        persistentValue = 1;
+        localPersistentValue = 1;
     }
     else {
-        persistentValue = 0;
+        localPersistentValue = 0;
     } """)
 
-t_write = put(
+t_write = partial(
     t_loop,
     body = """
     <% array_variable %>[idx] = <% element_literal %>; """)

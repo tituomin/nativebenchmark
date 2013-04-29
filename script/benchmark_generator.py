@@ -79,21 +79,27 @@ def specify_combinations():
     all_combinations = []
 
     all_combinations.append({
+            'representative' : True,
             'description' : 'no arguments or return types',
             'return_types': [return_types['v']],
             'native_modifiers' : modifier_combinations(),
             'types' : []})
 
-    for symbol in types.keys():
+    for symbol, _type in types.iteritems():
+        representative = _type.get('representative', False)
+        
         all_combinations.append({
-            'description' : 'varying count {s}'.format(s=symbol),
+            'representative' : representative,
+            'description' : 'varying count {0}'.format(symbol),
             'return_types' : [return_types['v']],
             'native_modifiers' : [('private', '')],
             'types' : jni_types.type_combinations(
-                size=20, typeset=[types[symbol]])})
+                size = 20,
+                typeset = [types[symbol]])})
 
     # ! start from 1 to avoid duplicates!
     all_combinations.append({
+            'representative' : True,
             'skip' : 1,
             'description' : 'vary number of types',
             'return_types' : [return_types['v']],
@@ -104,6 +110,7 @@ def specify_combinations():
             })
 
     all_combinations.append({
+            'representative' : True,
             'description' : 'modifier combinations',
             'return_types' : [return_types['l']],
             'native_modifiers' : modifier_combinations(),
@@ -135,6 +142,15 @@ def generate_benchmarks():
     for spec in all_combinations:
         for native_modifier in spec['native_modifiers']:
             for return_type in spec['return_types']:
+                if 'representative' not in spec:
+                    representative = return_type.get('representative', False)
+                else:
+                    representative = spec['representative']
+                if representative:
+                    representative = "true"
+                else:
+                    representative = "false"
+
                 type_combination = spec['types']
 
                 native_method_modifiers = " ".join(native_modifier)
@@ -190,23 +206,25 @@ def generate_benchmarks():
                                 counterpart_method_name = 'benchmark{number}'.format(number=sequence_no)
 
                         if from_lang == 'C':
-                            run_method = java_benchmark.native_run_method()
+                            run_method = java_benchmark.native_run_method_t
                             native_method = ''
 
                         elif from_lang == 'J':
 
-                            run_method = java_benchmark.java_run_method(
-                                    parameter_declarations       = "; ".join(parameter_declarations[0:i+1]),
-                                    parameter_initialisations    = "; ".join(parameter_initialisations[0:i+1]),
-                                    counterpart_method_name      = counterpart_method_name,
-                                    counterpart_method_arguments = ", ".join(parameter_names[0:i+1]))
+                            run_method = put(
+                                java_benchmark.java_run_method_t,
+                                parameter_declarations       = "; ".join(parameter_declarations[0:i+1]),
+                                parameter_initialisations    = "; ".join(parameter_initialisations[0:i+1]),
+                                counterpart_method_name      = counterpart_method_name,
+                                counterpart_method_arguments = ", ".join(parameter_names[0:i+1]))
 
                             if to_lang == 'C':
-                                native_method = java_benchmark.native_method(
-                                            modifiers                = native_method_modifiers,
-                                            return_type              = return_type['java'],
-                                            name                     = native_method_name,
-                                            parameters               = ", ".join(parameter_declarations[0:i+1]))
+                                native_method = put(
+                                    java_benchmark.native_method_t,
+                                    modifiers                = native_method_modifiers,
+                                    return_type              = return_type['java'],
+                                    name                     = native_method_name,
+                                    parameters               = ", ".join(parameter_declarations[0:i+1]))
                             else:
                                 counterpart_method_name = 'benchmark' + sequence_no
                                 native_method = ''
@@ -215,7 +233,9 @@ def generate_benchmarks():
                                 'filename' : classname + ".java",
                                 'class'    : '.'.join(packagename) + "." + classname,
                                 'path'     : '/'.join(packagename),
-                                'code'     : put(java_benchmark.t,
+                                'code'     : put(
+                                    java_benchmark.t,
+                                    representative               = representative,
                                     imports                      = '',
                                     has_dynamic_parameters       = 'false', # todo
                                     max_repetitions              = -1,
@@ -240,11 +260,13 @@ def generate_benchmarks():
 
                         if (from_lang, to_lang) == ('J', 'J'):
                             java_callees.append(
-                                java_counterparts.counterpart_method(
+                                put(
+                                    java_counterparts.counterpart_t,
                                     return_type       = return_type['java'],
                                     methodname        = counterpart_method_name,
                                     parameters        = ", ".join(parameter_declarations[0:i+1]),
-                                    return_expression = ret_expression))
+                                    return_expression = ret_expression
+                                    ))
 
                             # todo append return expressions !! (performance optimisation)
                             # to counterpart class (at the end or beginning) ?

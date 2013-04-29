@@ -40,16 +40,3 @@ return_value_t = """
 private static <% actualtype %> = benchmarkParameter.retrieve<% typename %>(<% typespecs %>);
 
 """
-
-def counterpart_method(return_type=None, methodname=None, parameters=None, return_expression=None):
-    return put(counterpart_t,
-        return_type=return_type,
-        methodname=methodname,
-        parameters=parameters,
-        return_expression=return_expression)
-
-def return_value(actualtype=None, typename=None, typespecs=''):
-    return put(return_value_t,
-        actualtype=actualtype,
-        typename=typename,
-        typespecs=typespecs)

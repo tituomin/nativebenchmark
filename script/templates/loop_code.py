@@ -1,5 +1,5 @@
 
-from templating import put
+from templating import put, partial
 
 t = """
     <% declare_counters %>
@@ -35,6 +35,7 @@ t = """
     }
 
     <% removal_prevention %>
+    <% finished %>
 
 """
 
@@ -55,13 +56,13 @@ if (--refs == 0) {
 """
 
 
-t_c_base = put(
+t_c_base = partial(
     t,
     declare_counters = 'jlong interval, division, remainder;',
     init_counters    = 'interval = CHECK_INTERRUPTED_INTERVAL;',#;\n__android_log_print(ANDROID_LOG_DEBUG, "nativebenchmark", "interval is %lld", interval);',
     test_interrupted = 'check_interrupted(env)')
 
-t_c_jni_call = put(
+t_c_jni_call = partial(
     t_c_base,
     additional_declaration = 'jlong refs;',
     additional_init        = 'refs = 0;',
@@ -69,11 +70,11 @@ t_c_jni_call = put(
     pre_body               = jni_push_frame,
     post_body              = jni_pop_frame)
 
-t_c = put(
+t_c = partial(
     t_c_base,
     remove = ['extra_debug', 'debug', 'debug_interrupted', 'additional_declaration', 'additional_init', 'pre_body', 'post_body', 'removal_prevention'])
 
-t_java = put(
+t_java = partial(
     t,
     test_interrupted = 'Thread.currentThread().isInterrupted()',
     extra_debug = '',#,'Log.v("Benchmark", division + " " + interval);',

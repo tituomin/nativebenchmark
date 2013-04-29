@@ -19,6 +19,7 @@ import java.io.File;
 import android.os.Environment;
 import android.content.res.Resources;
 import android.widget.NumberPicker;
+import android.widget.CheckBox;
 import android.view.WindowManager;
 import android.os.PowerManager;
 import android.content.Context;
@@ -64,16 +65,21 @@ public class BenchmarkSelector extends Activity implements ApplicationState {
             this.resultView.setText(R.string.warning_changed);
         }
 
-        Log.v("Selector", "Memory size " + Runtime.getRuntime().maxMemory());
 
         ActivityManager am = (ActivityManager) getSystemService(ACTIVITY_SERVICE);
         int memoryClass = am.getLargeMemoryClass();
+        Log.v("Selector", "Memory size " + Runtime.getRuntime().maxMemory());
         Log.v("onCreate", "memoryClass:" + Integer.toString(memoryClass));
 
         this.appChecksum = resources.getText(R.string.app_checksum);
         this.appRevision = resources.getText(R.string.app_revision);
 
         this.retry = false;
+        onCheckboxClicked(findViewById(R.id.checkbox_long));
+    }
+
+    public void onCheckboxClicked(View view) {
+        runAllBenchmarks = ((CheckBox) view).isChecked();
     }
 
     public void setMessage(int id) {
@@ -206,7 +212,7 @@ public class BenchmarkSelector extends Activity implements ApplicationState {
         measuringThread = new Thread(
             new Runnable () {
                 public void run() {
-                    BenchmarkRunner.runBenchmarks(BenchmarkSelector.this, repetitions, appRevision, appChecksum, getCacheDir());
+                    BenchmarkRunner.runBenchmarks(BenchmarkSelector.this, repetitions, appRevision, appChecksum, getCacheDir(), runAllBenchmarks);
                 }
             });
         this.updateState(ApplicationState.State.MEASURING);
@@ -258,6 +264,7 @@ public class BenchmarkSelector extends Activity implements ApplicationState {
     private CharSequence appRevision, appChecksum;
     private Button button;
     private long repetitions;
+    private boolean runAllBenchmarks;
     //    private int rounds;
     private static final String TAG = "BenchmarkSelector";
     private PowerManager.WakeLock wakeLock;

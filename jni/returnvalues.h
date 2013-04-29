@@ -15,7 +15,7 @@ jclass java_counterparts_class;
 jmethodID current_thread_mid;
 jmethodID is_interrupted_mid;
 
-jint persistentValue;
+jint localPersistentValue;
 
 #define LOCAL_FRAME_SIZE 256
 

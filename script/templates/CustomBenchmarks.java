@@ -21,6 +21,7 @@ public class CustomBenchmarks {
     ByteBuffer directByteBufferValue = benchmarkParameter.retrieveDirectByteBuffer();
     int current_size = benchmarkParameter.getSize();
     int __a = 2, __b = 3;
+    int localPersistentValue = 0;
     WeakReference<Object> weakReferenceIn;
     // @inits-end
 

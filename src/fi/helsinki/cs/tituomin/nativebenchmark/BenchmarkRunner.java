@@ -86,7 +86,7 @@ public class BenchmarkRunner {
 
     public static void runBenchmarks(
         ApplicationState mainUI, long repetitions,
-        CharSequence appRevision, CharSequence appChecksum, File cacheDir) {
+        CharSequence appRevision, CharSequence appChecksum, File cacheDir, boolean runAllBenchmarks) {
 
         File sd = Environment.getExternalStorageDirectory();
         File dataDir = new File(sd, "results");
@@ -105,7 +105,21 @@ public class BenchmarkRunner {
         benchmarkParameter = getBenchmarkParameter();
         BenchmarkInitialiser.init(benchmarkParameter);
 
-        List<Benchmark> benchmarks = BenchmarkRegistry.getBenchmarks();
+        List<Benchmark> benchmarks;
+        List<Benchmark> allBenchmarks = BenchmarkRegistry.getBenchmarks();
+
+        if (runAllBenchmarks) {
+            benchmarks = allBenchmarks;
+        }
+        else {
+            benchmarks = new ArrayList<Benchmark> ();
+            for (Benchmark b : allBenchmarks) {
+                if (b.representative()) {
+                    benchmarks.add(b);
+                }
+            }
+        }
+
         //Collections.shuffle(benchmarks);
         final ApplicationState.State state = ApplicationState.State.MILESTONE;
 
@@ -403,12 +417,10 @@ public class BenchmarkRunner {
 
             try {
                 tool.startMeasuring(benchmark);
-                Log.i("BenchmarkRunner", "Repetitions left " + benchmark.repetitionsLeft);
             }
             catch (IOException e) {
                 logE("Measuring caused IO exception", e);
                 if (mainUI.userWantsToRetry(e)) {
-                    Log.v("BenchmarkRunner", "yes he wants to retry");
                     continue; // without incrementing i
                 }
                 else {
@@ -505,6 +517,7 @@ public class BenchmarkRunner {
         bdata.put("no", "" + benchmark.sequenceNo());
         bdata.put("description", benchmark.description());
         bdata.put("direction", from + " > " + to);
+        bdata.put("representative", benchmark.representative() ? "1" : "0");
 
         if (seqNo == -1) {
             bdata.put("custom", "1");

@@ -3,8 +3,10 @@ package fi.helsinki.cs.tituomin.nativebenchmark;
 import fi.helsinki.cs.tituomin.nativebenchmark.measuringtool.BasicOption;
 import fi.helsinki.cs.tituomin.nativebenchmark.BenchmarkRegistry;
 
+import android.os.Process;
+
 public abstract class Benchmark implements Runnable {
-    public abstract void run();
+    protected abstract void runInternal();
     public abstract String from();
     public abstract String to();
     public abstract String description();
@@ -12,9 +14,15 @@ public abstract class Benchmark implements Runnable {
     public abstract int sequenceNo();
     public abstract long maxRepetitions();
     public abstract boolean dynamicParameters();
+    public abstract boolean representative();
 
     public long repetitionsLeft;
     public int persistentValue;
+
+    public void run() {
+        Process.setThreadPriority(-5);
+        runInternal();
+    }
 
     protected BenchmarkParameter benchmarkParameter;
     protected long repetitions;

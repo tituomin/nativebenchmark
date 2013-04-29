@@ -133,12 +133,15 @@ def make_id(template, _type):
         _type = _type['java'].capitalize())
 
 def add_field_and_array_benchmarks(benchmarks):
-    bmc = benchmarks['C']['benchmarks']
-    bmj = benchmarks['J']['benchmarks']
+    c = benchmarks['C']['benchmarks']
+    java = benchmarks['J']['benchmarks']
 
     for _type in jni_types.primitive_types.values() + [jni_types.object_types['O']]:
-        bmc.append({
+        representative = _type.get('representative', False)
+
+        c.append({
                 'id' : make_id('GetStatic{_type}Field', _type),
+                'representative' : representative,
                 'direction' : 'cj',
                 'code' : macro_call(
                     'GET_STATIC_TYPE_FIELD({_type}, {java_type_name});',
@@ -146,8 +149,9 @@ def add_field_and_array_benchmarks(benchmarks):
 
         # java
 
-        bmc.append({
+        c.append({
                 'direction' : 'cj',
+                'representative' : representative,
                 'id' : make_id('SetStatic{_type}Field', _type),
                 'code' : macro_call(
                     'SET_STATIC_TYPE_FIELD({_type}, {java_type_name});',
@@ -155,18 +159,20 @@ def add_field_and_array_benchmarks(benchmarks):
 
         # java
 
-        bmc.append({
+        c.append({
                 'id' : make_id('Get{_type}Field', _type),
                 'direction' : 'cj',
+                'representative' : representative,
                 'code' : macro_call(
                     'GET_TYPE_FIELD({_type}, {java_type_name});',
                     _type)})
 
         # java
 
-        bmc.append({
+        c.append({
                 'id' : make_id('Set{_type}Field', _type),
                 'direction' : 'cj',
+                'representative' : representative,
                 'code' : macro_call(
                     'SET_TYPE_FIELD({_type}, {java_type_name});',
                     _type)})
@@ -174,8 +180,10 @@ def add_field_and_array_benchmarks(benchmarks):
         # java
 
     for _type in jni_types.primitive_types.values():
-        bmc.append({
+        representative = _type.get('representative', False)
+        c.append({
                 'id' : make_id('New{_type}Array', _type),
+                'representative' : representative,
                 'direction' : 'cj',
                 'vary' : 'size',
                 'alloc' : 'true',
@@ -186,8 +194,9 @@ def add_field_and_array_benchmarks(benchmarks):
 
         # java
 
-        bmc.append({
+        c.append({
                 'id' : make_id('Get{_type}ArrayElements', _type),
+                'representative' : representative,
                 'direction' : 'cj',
                 'vary' : 'size',
                 'code' : macro_call(
@@ -195,29 +204,31 @@ def add_field_and_array_benchmarks(benchmarks):
                     'RELEASE_PRIMITIVE_ARRAY_ELEMENTS({_type}, {java_type_name});',
                     _type)})
 
-        bmc.append({
+        c.append({
                 'vary' : 'size',
                 'direction' : 'cj',
+                'representative' : representative,
                 'id' : make_id('Get{_type}ArrayRegion', _type),
                 'code' : macro_call(
                     'GET_PRIMITIVE_ARRAY_REGION({_type}, {java_type_name});',
                     _type)})
         
-        bmc.append({
+        c.append({
                 'vary' : 'size',
+                'representative' : representative,
                 'direction' : 'cj',
                 'id' : make_id('Set{_type}ArrayRegion', _type),
                 'code' : macro_call(
                     'SET_PRIMITIVE_ARRAY_REGION({_type}, {java_type_name});',
                     _type)})
 
-        bmc.append({
+        c.append({
                 'vary' : 'size',
+                'representative' : representative,
                 'direction' : 'cc',
                 'id' : make_id('ReadComplete{_type}Array', _type),
                 'code' : put(
                     arrays.t_read,
-                    purge = True,
                     declare_idx = 'jint idx;',
                     variable_in = '%s__IN' % _type['c'],
                     array_variable = '%s_buf__IN' % _type['c'],
@@ -228,9 +239,10 @@ def add_field_and_array_benchmarks(benchmarks):
             _type['java'], _type['java'].capitalize())
 
 
-        bmj.append({
+        java.append({
                 'vary' : 'size',
                 'direction' : 'jj',
+                'representative' : representative,
                 'id' : make_id('ReadComplete{_type}Array', _type),
                 'code' : put(
                     arrays.t_read,
@@ -239,24 +251,27 @@ def add_field_and_array_benchmarks(benchmarks):
                     variable_in = '%sIn' % _type['java'],
                     array_variable = '%sArr' % _type['java'],
                     element_literal = _type['java-literal']
-                    )})
+                    ),
+                'finished' : 'persistentValue = localPersistentValue;'
+                })
 
-        bmc.append({
+        c.append({
                 'vary' : 'size',
                 'direction' : 'cc',
+                'representative' : representative,
                 'id' : make_id('WriteComplete{_type}Array', _type),
                 'code' : put(
                     arrays.t_write,
-                    purge = True,
                     declare_idx = 'jint idx;',
                     # todo: writing affects other tests?
                     array_variable = '%s_buf__IN' % _type['c'],
                     element_literal = _type['c-literal']
                     )})
 
-        bmj.append({
+        java.append({
                 'vary' : 'size',
                 'direction' : 'jj',
+                'representative' : representative,
                 'id' : make_id('WriteComplete{_type}Array', _type),
                 'code' : put(
                     arrays.t_write,
@@ -264,7 +279,8 @@ def add_field_and_array_benchmarks(benchmarks):
                     declare_idx = 'int idx;',
                     # todo: writing affects other tests?
                     array_variable = '%sArr' % _type['java'],
-                    element_literal = _type['java-literal'])
+                    element_literal = _type['java-literal']),
+                'finished' : 'persistentValue = localPersistentValue;'
                 })
 
 
@@ -295,19 +311,25 @@ def write_custom_benchmarks(definition_files, c_custom_output_name, java_output_
                 dyn_par = 'false'
             if 'alloc' in benchmark:
                 # large heap 128/2 = 64 Mb, 128 el 8 byte array...
-                max_repetitions = 8192
+                max_repetitions = 4096
             else:
                 max_repetitions = -1
 
+            representative = benchmark.get('representative', True)
+
+            if representative == True:
+                representative = "true"
+            else:
+                representative = "false"
+            
             if from_lang == 'C':
                 out_c.write(put(
                         c_nativemethod.t_run_method,
                         return_type = 'void',
                         parameters = 'jobject instance',
-                        function = 'run',
+                        function = 'runInternal',
                         packagename = '_'.join(packagename),
                         classname = classname,
-                        purge = True,
                         body = put(
                             loop_code.t_c_jni_call,
                             debug = classname,
@@ -318,6 +340,7 @@ def write_custom_benchmarks(definition_files, c_custom_output_name, java_output_
                     'filename':classname + '.java',
                     'code': (put(
                         java_benchmark.t,
+                        representative = representative,
                         _id = benchmark['id'],
                         packagename = '.'.join(packagename),
                         classname  = classname,
@@ -327,8 +350,8 @@ def write_custom_benchmarks(definition_files, c_custom_output_name, java_output_
                         to_language = to_lang,
                         seq_no = '-1',
                         has_dynamic_parameters = dyn_par,
-                        run_method = 'public native void run();',
-                        purge = True))}
+                        run_method = 'public native void runInternal();',
+                        ))}
 
             elif from_lang == 'J':
                 if to_lang == 'J':
@@ -337,14 +360,14 @@ def write_custom_benchmarks(definition_files, c_custom_output_name, java_output_
                         'code': (
                             put(
                                 java_benchmark.t,
+                                representative = representative,
                                 _id = benchmark['id'],
                                 packagename = '.'.join(packagename),
                                 imports = "\n".join(
                                     ['import android.content.pm.PermissionInfo;',
                                      'import java.nio.ByteBuffer;'
                                      'import java.lang.ref.WeakReference;'
-                                     ]
-                                    ),
+                                     ]),
                                 classname = classname,
                                 description = benchmark.get('description' ''),
                                 max_repetitions = max_repetitions,
@@ -352,13 +375,12 @@ def write_custom_benchmarks(definition_files, c_custom_output_name, java_output_
                                 to_language = to_lang,
                                 seq_no = '-1',
                                 has_dynamic_parameters = dyn_par,
-                                purge = True,
                                 run_method = put(
                                     java_benchmark.java_run_method_inline_t,
-                                    purge = True,
                                     init = data['inits'],
                                     loop = put(
                                         loop_code.t_java,
+                                        finished = benchmark.get('finished'),
                                         benchmark_body = benchmark['code']))))}
 
     out_c.flush()

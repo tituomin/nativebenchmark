@@ -18,4 +18,5 @@
     <string name="rounds">rounds</string>
     <string name="repetitions">repetitions</string>
     <string name="warning_changed">Warning: app version contains uncommitted changes. Commit hash will be out of sync.</string>
+    <string name="run_all">Run redundant benchmarks</string>
 </resources>

@@ -1,5 +1,5 @@
 
-from templating import put
+from templating import partial
 import loop_code
 import logging
 
@@ -35,6 +35,10 @@ public class <% classname %> <% class_relations %> extends Benchmark {
         return "<% _id %>";
     }
 
+    public boolean representative() {
+        return <% representative %>;
+    }
+
     public boolean dynamicParameters() {
         return <% has_dynamic_parameters %>;
     }
@@ -57,14 +61,14 @@ public class <% classname %> <% class_relations %> extends Benchmark {
 
 native_method_t     = '<% modifiers %> native <% return_type %> <% name %> (<% parameters %>);'
 dynamic_parameter_t = 'new BasicOption(BasicOption.VARIABLE, "<% variable %>")'.strip()
-native_run_method_t = 'public native void run();'
+native_run_method_t = 'public native void runInternal();'
 
-loop = put(loop_code.t_java,
-    benchmark_body = '<% counterpart_method_name %> (<% counterpart_method_arguments %>);')
+loop = partial(loop_code.t_java,
+           benchmark_body = '<% counterpart_method_name %> (<% counterpart_method_arguments %>);')
 
-java_run_method_t   = put("""
+java_run_method_t   = partial("""
 
-    public void run() {
+    public void runInternal() {
         <% parameter_declarations %>;
         <% parameter_initialisations %>;
 
@@ -75,35 +79,9 @@ java_run_method_t   = put("""
 
 java_run_method_inline_t = """
 
-    public void run() {
+    public void runInternal() {
         <% init %>
         <% loop %>
     }
 
 """
-
-
-
-def native_method(modifiers=None, return_type=None, name=None, parameters=None):
-    return put(native_method_t,
-        modifiers=modifiers, return_type=return_type,
-        name=name, parameters=parameters)
-
-def native_run_method():
-    return native_run_method_t
-
-def java_run_method(parameter_declarations=None, parameter_initialisations=None,
-                    counterpart_method_name=None, counterpart_method_arguments=None):
-
-    return put(java_run_method_t,
-        parameter_declarations        = parameter_declarations,
-        parameter_initialisations     = parameter_initialisations,
-        counterpart_method_name       = counterpart_method_name,
-        counterpart_method_arguments  = counterpart_method_arguments)
-        
-
-
-
-
-
-    

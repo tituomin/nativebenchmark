@@ -67,6 +67,12 @@
 
   </LinearLayout>
 
+  <CheckBox android:id="@+id/checkbox_long"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/run_all"
+            android:checked="false"
+            android:onClick="onCheckboxClicked"/>
 
   <TextView
       android:id="@+id/repetitions"
