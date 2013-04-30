@@ -12,6 +12,9 @@ import fi.helsinki.cs.tituomin.nativebenchmark.measuringtool.MockCommandlineTool
 import fi.helsinki.cs.tituomin.nativebenchmark.BenchmarkRegistry;
 import fi.helsinki.cs.tituomin.nativebenchmark.BenchmarkResult;
 import fi.helsinki.cs.tituomin.nativebenchmark.Utils;
+import fi.helsinki.cs.tituomin.nativebenchmark.ShellEnvironment;
+import fi.helsinki.cs.tituomin.nativebenchmark.Init;
+
 
 import java.util.Date;
 import java.util.List;
@@ -47,7 +50,6 @@ public class BenchmarkRunner {
     private static final String SEPARATOR     = ",";
     private static final String MISSING_VALUE = "-";
     private static final long WARMUP_REPS = 2000;
-    private static final String CPUFREQ = "400000";
     private static BenchmarkParameter benchmarkParameter;
     private static List<MeasuringTool> measuringTools;
 
@@ -64,22 +66,25 @@ public class BenchmarkRunner {
 
         measuringTools = new ArrayList<MeasuringTool> ();
 
-        PlainRunner p = (PlainRunner) new PlainRunner(1, repetitions)
-            .set(BasicOption.CPUFREQ, CPUFREQ);
+        // warmup round
+        measuringTools.add(
+            new PlainRunner(1, repetitions));
 
-        CommandlineTool.execute(p.initScript()); // todo cleaner api
+        measuringTools.add(
+            new MockCommandlineTool(1, repetitions));
 
-        measuringTools.add(p); // warmup round
+        // total response time
+        measuringTools.add(
+            new ResponseTimeRecorder(1, repetitions));
 
-        measuringTools.add(new MockCommandlineTool(1, repetitions));
+        // call profile
+        measuringTools.add(
+            new LinuxPerfRecordTool(1, repetitions)
+            .set(BasicOption.OUTPUT_FILEPATH, perfDir.getPath())
+            .set(BasicOption.MEASURE_LENGTH, "10"));
 
-        // measuringTools.add(new ResponseTimeRecorder(1)); // total response time
-        measuringTools.add(new ResponseTimeRecorder(1, repetitions)); // total response time
-
-        measuringTools.add(new LinuxPerfRecordTool(1, repetitions) // call profile
-                           .set(BasicOption.OUTPUT_FILEPATH, perfDir.getPath())
-                           .set(BasicOption.MEASURE_LENGTH, "0.1")); // todo: proper val
-        measuringTools.add(new ResponseTimeRecorder(1000, repetitions)); // total response time
+        // total response time
+        measuringTools.add(new ResponseTimeRecorder(1000, repetitions));
 
     }
 
@@ -123,6 +128,18 @@ public class BenchmarkRunner {
         final ApplicationState.State state = ApplicationState.State.MILESTONE;
 
         for (MeasuringTool tool : measuringTools) {
+            
+            if (!tool.ignore()) {
+                // set the slower CPU frequency etc. after the warmup
+                // round(s), taking less time
+                try {
+                    Init.initEnvironment();
+                }
+                catch (IOException e) {
+                    handleException(e, mainUI);
+                    return;
+                }
+            }
 
             int max_rounds = tool.getRounds();
             for (int series = 0; series < max_rounds; series++) {
@@ -133,9 +150,7 @@ public class BenchmarkRunner {
                     tempWriter = makeWriter(tempFile, false);
                 }
                 catch (FileNotFoundException e) {
-                    logE(e);
-                    mainUI.updateState(
-                        ApplicationState.State.ERROR);
+                    handleException(e, mainUI);
                     return;
                 }
 
@@ -264,7 +279,7 @@ public class BenchmarkRunner {
                     catalogWriter = makeWriter(dataDir, "measurements.txt", true);
                     catalogWriter.println("");
                     catalogWriter.println("id: "               + measurementID);
-                    catalogWriter.println("cpu-freq: "         + CPUFREQ);
+                    catalogWriter.println("cpu-freq: "         + Init.CPUFREQ);
                     catalogWriter.println("repetitions: "      + repetitions);
                     catalogWriter.println("start: "            + start);
                     catalogWriter.println("end: "              + end);
@@ -332,6 +347,12 @@ public class BenchmarkRunner {
                 logE("Error deleting file " + filename);
             }
         }
+    }
+
+    private static void handleException(Exception e, ApplicationState UI) {
+        logE(e);
+        UI.updateState(ApplicationState.State.ERROR);
+        return;
     }
 
     private static void

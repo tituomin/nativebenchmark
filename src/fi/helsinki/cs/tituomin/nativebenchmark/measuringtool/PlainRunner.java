@@ -37,16 +37,6 @@ public class PlainRunner extends MeasuringTool {
         return true;
     }
 
-    
-
-    public List<String> initScript() {
-        List<String> commands = new LinkedList<String>();
-        String frequency = getOption(BasicOption.CPUFREQ);
-        commands.add("echo \"userspace\" > /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor");
-        commands.add("echo \"" + frequency +  "\" > /sys/devices/system/cpu/cpu0/cpufreq/scaling_setspeed");
-        return commands;
-    }
-
     public long repetitions() {
         return 3000;
     }

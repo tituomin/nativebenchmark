@@ -23,15 +23,15 @@ public class LinuxPerfRecordTool extends CommandlineTool {
         return options;
     }
 
-    protected String command() { 
-        return "perf record -a -g";
-    }
-
     protected List<String> initScript() {
         List<String> commands = new LinkedList<String>();
         commands.add("echo \"0\" > /proc/sys/kernel/kptr_restrict");
         commands.add("echo \"-1\" > /proc/sys/kernel/perf_event_paranoid");
         return commands;
+    }
+
+    protected String command() { 
+        return "perf record -a -g";
     }
 
     private String generateFilename (String uuid) {
@@ -52,5 +52,4 @@ public class LinuxPerfRecordTool extends CommandlineTool {
         }
         return super.formatParameter(option);
     }
-
 }

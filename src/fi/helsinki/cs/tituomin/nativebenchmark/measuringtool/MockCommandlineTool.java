@@ -13,7 +13,7 @@ public class MockCommandlineTool extends CommandlineTool {
         return null;
     }
 
-    public void ignore() {
+    public boolean ignore() {
         return true;
     }
 
