@@ -59,26 +59,26 @@ public class BasicOption implements MeasuringOption {
         COMMAND_STRING
             .name     ("Command run")
             .required (true)
-            .id       ("COMMAND_STRING");
+            .id       ("command_string");
 
         OUTPUT_FILEPATH 
             .name     ("Output path")
-            .id       ("OUTPUT_FILEPATH")
+            .id       ("output_filepath")
             .required (true);
 
         MEASURE_LENGTH
             .name    ("Measuring time (sec)")
-            .id      ("MEASURE_LENGTH")
+            .id      ("measure_length")
             .required (true);
 
         VARIABLE
             .name    ("Variable parameter in benchmark")
-            .id      ("VARIABLE")
+            .id      ("variable")
             .required (false);
 
         CPUFREQ
             .name    ("Fixed CPU frequency")
-            .id      ("CPUFREQ")
+            .id      ("cpu_freq")
             .required (true);
 
     }

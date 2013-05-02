@@ -458,6 +458,7 @@ public class BenchmarkRunner {
                     if (dynamicParameters) {
                         measurement.put("dynamic_size", "" + i);
                     }
+                    measurement.put("id", benchmark.id());
                     measurement.put("class", benchmark.getClass().getName());
                     measurement.putAll(introspected);
                     compiledMetadata.add(measurement);
