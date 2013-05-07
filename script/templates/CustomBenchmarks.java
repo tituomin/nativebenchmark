@@ -28,7 +28,7 @@ public class CustomBenchmarks {
     private void methodWrapper() {
 
 
-        // @CreateObject direction=jj
+        // @CreateObject direction=jj alloc=true
 
         objectIn = new PermissionInfo();
 
@@ -62,20 +62,20 @@ public class CustomBenchmarks {
             
         }
 
-        // @NewStringUtf direction=jj
+        // @NewStringUtf direction=jj alloc=true
 
         stringIn = new String();
 
-        // @NewString vary=size direction=jj
+        // @NewString vary=size direction=jj alloc=true
 
         stringIn = new String();
 
-        // @NewObjectArray vary=size direction=jj
+        // @NewObjectArray vary=size direction=jj alloc=true
 
         objectArrayIn = new PermissionInfo[current_size];
         // todo initialelement (not in java ... explains O(n))
 
-        // @NewDirectBuffer vary=size direction=jj
+        // @NewDirectBuffer vary=size direction=jj alloc=true
 
         byteBufferIn = ByteBuffer.allocateDirect(current_size);
 
