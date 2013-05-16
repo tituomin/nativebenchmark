@@ -17,6 +17,7 @@ import jni_types
 # Log everything, and send it to stderr.
 logging.basicConfig(level=logging.DEBUG)
 
+MAX_ALLOC_REPETITIONS = 1000
 
 i = re.IGNORECASE
 begin_re = re.compile('\s*//\s*@begin\s*', flags=i)
@@ -110,17 +111,24 @@ def add_overhead_benchmarks(benchmarks):
         for j in range(0, i):
             overhead_code.append(OVERHEAD_CODE_STATEMENT)
 
-        benchmark = {
-            'code':  ''.join(overhead_code),
-            'description' : i,
-            'id'  : 'Overhead' + str(i).zfill(5) }
+        for prefix, alloc in [('Alloc', True), ('Normal', False)]:
+            benchmark = {
+                'code':  ''.join(overhead_code),
+                'description' : i,
+                'id'  : prefix + 'Overhead' + str(i).zfill(5) }
 
-        c_b = benchmark.copy()
-        j_b = benchmark.copy()
-        c_b['direction']  = 'cj'
-        j_b['direction']  = 'jj'
-        benchmarks['C']['benchmarks'].append(c_b)
-        benchmarks['J']['benchmarks'].append(j_b)
+            if alloc:
+                benchmark['alloc'] = True
+
+            c_b = benchmark.copy()
+            double_benchmark = benchmark.copy()
+            # double the amount of work for java (uses optimizations unlike c)
+            double_benchmark['code'] = ''.join(overhead_code + overhead_code)
+            j_b = double_benchmark
+            c_b['direction']  = 'cj'
+            j_b['direction']  = 'jj'
+            benchmarks['C']['benchmarks'].append(c_b)
+            benchmarks['J']['benchmarks'].append(j_b)
 
 
 def macro_call(template, _type):
@@ -311,7 +319,7 @@ def write_custom_benchmarks(definition_files, c_custom_output_name, java_output_
                 dyn_par = 'false'
             if 'alloc' in benchmark:
                 # large heap 128/2 = 64 Mb, 128 el 8 byte array...
-                max_repetitions = 1000
+                max_repetitions = MAX_ALLOC_REPETITIONS
             else:
                 max_repetitions = -1
 
