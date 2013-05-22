@@ -38,7 +38,7 @@ public class PlainRunner extends MeasuringTool {
     }
 
     public long repetitions() {
-        return 3000;
+        return 10000;
     }
 
     public void start(Runnable benchmark)
