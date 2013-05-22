@@ -70,12 +70,12 @@ public class BenchmarkRunner {
         measuringTools.add(
             new PlainRunner(1, repetitions));
 
-        measuringTools.add(
-            new MockCommandlineTool(1, repetitions));
+        //measuringTools.add(
+        //    new MockCommandlineTool(1, repetitions));
 
         // total response time
         measuringTools.add(
-            new ResponseTimeRecorder(1, repetitions));
+            new ResponseTimeRecorder(1000, repetitions));
 
         // call profile
         measuringTools.add(
@@ -84,7 +84,7 @@ public class BenchmarkRunner {
             .set(BasicOption.MEASURE_LENGTH, "10"));
 
         // total response time
-        measuringTools.add(new ResponseTimeRecorder(1000, repetitions));
+        //measuringTools.add(new ResponseTimeRecorder(1000, repetitions));
 
     }
 
