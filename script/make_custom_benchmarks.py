@@ -113,9 +113,10 @@ def add_overhead_benchmarks(benchmarks):
 
         for prefix, alloc in [('Alloc', True), ('Normal', False)]:
             benchmark = {
-                'code':  ''.join(overhead_code),
-                'description' : i,
-                'id'  : prefix + 'Overhead' + str(i).zfill(5) }
+                'code'        : ''.join(overhead_code),
+                'id'          : prefix + 'Overhead' + str(i).zfill(5),
+                'description' : i
+                }
 
             if alloc:
                 benchmark['alloc'] = True
