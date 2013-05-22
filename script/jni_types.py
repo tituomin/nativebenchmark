@@ -95,6 +95,7 @@ object_type_definitions = [
     {
         'symbol'       : 'O',
         'java'         : 'Object',
+        'package'      : 'java.lang',
         'c'            : 'jobject',
         'c-literal'    : None,
         'java-literal' : None,
@@ -106,6 +107,7 @@ object_type_definitions = [
     {
         'symbol'       : 'C',
         'java'         : 'Class',
+        'package'      : 'java.lang',
         'c'            : 'jclass',
         'c-literal'    : None,
         'java-literal' : None,
@@ -116,6 +118,7 @@ object_type_definitions = [
     {
         'symbol'       : 'S',
         'java'         : 'String',
+        'package'      : 'java.lang',
         'c'            : 'jstring',
         'c-literal'    : None,
         'java-literal' : '"a string"',
@@ -126,6 +129,7 @@ object_type_definitions = [
     {
         'symbol'       : 'T',
         'java'         : 'Throwable',
+        'package'      : 'java.lang',
         'c'            : 'jthrowable',
         'c-literal'    : None,
         'java-literal' : None,
@@ -178,6 +182,7 @@ def method_descriptor(return_type, parameter_types):
 
 def init_types():
     global primitive_types, object_types, other_types, types, return_types, array_types, representative_types
+
     primitive_types = dict([(typedef['symbol'], typedef) for typedef in primitive_type_definitions])
     object_types = dict([(typedef['symbol'], typedef) for typedef in object_type_definitions])
     other_types = dict([(typedef['symbol'], typedef) for typedef in other_type_definitions])
@@ -192,6 +197,7 @@ def init_types():
             ('A' + key,
              {'symbol'            : 'A' + key,
               'java'              : tipe['java'] + '[]',
+              'package'           : tipe.get('package', None),
               'c'                 : tipe['c'] + 'Array',
               'c-literal'         : None,
               'java-literal'      : None,
