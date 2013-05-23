@@ -138,7 +138,8 @@ public class BenchmarkRunner {
         }
 
         for (MeasuringTool tool : measuringTools) {
-            
+
+            benchmarkCount = 0;
             if (!tool.ignore()) {
                 // set the slower CPU frequency etc. after the warmup
                 // round(s), taking less time
@@ -284,7 +285,7 @@ public class BenchmarkRunner {
                     catalogWriter = makeWriter(dataDir, "measurements.txt", true);
                     catalogWriter.println("");
                     catalogWriter.println("id: "               + measurementID);
-                    catalogWriter.println("cpu-freq: "         + Init.CPUFREQ);
+                    catalogWriter.println("cpu-freq: "         + maxSpeed ? Init.CPUFREQ_MAX : Init.CPUFREQ);
                     catalogWriter.println("repetitions: "      + repetitions);
                     catalogWriter.println("start: "            + start);
                     catalogWriter.println("end: "              + end);
@@ -440,6 +441,8 @@ public class BenchmarkRunner {
             if (Thread.interrupted()) {
                 throw new InterruptedException();
             }
+            Log.v(TAG, "Benchmark " + benchmark.getClass().getSimpleName());
+
             bPar.setUp(); // (I) needs tearDown (see II)
 
             try {
@@ -464,7 +467,6 @@ public class BenchmarkRunner {
             }
 
             mainUI.updateState(state, tool.getClass().getSimpleName() + " benchmark " + benchmarkCount);
-            Log.v(TAG, "Benchmark " + benchmark.getClass().getSimpleName());
 
             List<BenchmarkResult> measurements = tool.getMeasurements();
             for (BenchmarkResult measurement : measurements) {

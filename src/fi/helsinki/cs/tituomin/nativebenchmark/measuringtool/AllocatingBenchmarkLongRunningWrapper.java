@@ -12,12 +12,11 @@ public class AllocatingBenchmarkLongRunningWrapper extends AllocatingBenchmarkWr
         super(b, r);
     }
 
-    private long toolRepetitions;
+    private static final long MAX_REPS = Long.MAX_VALUE;
 
     public void begin(MeasuringTool tool)  throws InterruptedException, IOException {
         Benchmark benchmark = getBenchmark();
         init(benchmark);
-        toolRepetitions  = tool.repetitions();
         tool.putMeasurement("repetitions", this.repetitions + "");
         tool.start(this);
         tool.finishMeasurement();
@@ -31,7 +30,7 @@ public class AllocatingBenchmarkLongRunningWrapper extends AllocatingBenchmarkWr
         Benchmark benchmark = getBenchmark();
         long interval = BenchmarkRegistry.CHECK_INTERRUPTED_INTERVAL;
         long division, remainder;
-        long repetitions = toolRepetitions;
+        long repetitions = MAX_REPS;
 
         division  = repetitions / interval + 1;
         remainder = repetitions % interval + 1;

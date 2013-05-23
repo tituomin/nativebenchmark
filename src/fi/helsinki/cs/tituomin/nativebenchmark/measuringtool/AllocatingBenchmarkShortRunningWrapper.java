@@ -11,7 +11,7 @@ public class AllocatingBenchmarkShortRunningWrapper extends AllocatingBenchmarkW
         super(b, r);
     }
 
-    private static final long MULTIPLIER = 20;
+    private static final long MULTIPLIER = 25;
 
     public void begin(MeasuringTool tool) throws InterruptedException, IOException {
         Benchmark benchmark = getBenchmark();
