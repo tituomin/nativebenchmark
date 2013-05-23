@@ -32,7 +32,7 @@ public class CustomBenchmarks {
 
         objectIn = new PermissionInfo();
 
-        // @ReadObjectArrayElement vary=size direction=jj
+        // @ReadObjectArrayElement direction=jj
 
         // todo loop, params
         if (current_size > 0) {
@@ -82,6 +82,7 @@ public class CustomBenchmarks {
         // @WeakGlobalRef direction=jj
 
         weakReferenceIn = new WeakReference(objectValue);
+        weakReferenceIn = null;
 
         // @END
 

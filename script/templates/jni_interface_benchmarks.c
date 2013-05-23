@@ -60,6 +60,9 @@ void function_wrapper() {
     // @CopyUnicode vary=size direction=cj
 
     jsize__IN = (*env)->GetStringLength(env, jstringValue);
+    __android_log_print(
+        ANDROID_LOG_DEBUG,
+        "custom-c", "size %d", jsize__IN);
 
     if (jsize__IN > 0) {
         (*env)->GetStringRegion(
@@ -83,7 +86,7 @@ void function_wrapper() {
         void_ptr__IN,
         0);
 
-    // @ReadObjectArrayElement vary=size direction=cj
+    // @ReadObjectArrayElement direction=cj
 
     if (current_size > 0) {
         jobject__IN = (*env)->GetObjectArrayElement(
