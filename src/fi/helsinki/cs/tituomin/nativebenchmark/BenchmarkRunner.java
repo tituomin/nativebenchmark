@@ -458,7 +458,7 @@ public class BenchmarkRunner {
             finally {
                 bPar.tearDown(); // (II) needs setUp (see I)
             }
-            if (tool.explicitGC() && benchmarkCount % 50 == 0) {
+            if (tool.explicitGC() && benchmarkCount % 25 == 0) {
                 System.gc();
                 Thread.sleep(350);
             }
