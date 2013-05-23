@@ -91,7 +91,7 @@ public class BenchmarkRunner {
 
     public static void runBenchmarks(
         ApplicationState mainUI, long repetitions,
-        CharSequence appRevision, CharSequence appChecksum, File cacheDir, boolean runAllBenchmarks, boolean runAtMaxSpeed, BenchmarkSelector.BenchmarkSet benchmarkSet, long allocatingRepetitions) {
+        CharSequence appRevision, CharSequence appChecksum, File cacheDir, boolean runAllBenchmarks, boolean runAtMaxSpeed, BenchmarkSelector.BenchmarkSet benchmarkSet, long allocatingRepetitions, String benchmarkSubstring) {
 
         File sd = Environment.getExternalStorageDirectory();
         File dataDir = new File(sd, "results");
@@ -113,12 +113,19 @@ public class BenchmarkRunner {
         List<Benchmark> allBenchmarks = BenchmarkRegistry.getBenchmarks();
         List<Benchmark> benchmarks = new ArrayList<Benchmark> ();;
 
+        boolean substringSearch = !benchmarkSubstring.equals("");
         for (Benchmark b : allBenchmarks) {
-            boolean add = (
-                ((!b.isAllocating()) && benchmarkSet == BenchmarkSelector.BenchmarkSet.NON_ALLOC) ||
-                (b.isAllocating() && benchmarkSet == BenchmarkSelector.BenchmarkSet.ALLOC));
-            if (!runAllBenchmarks && !b.representative()) {
-                add = false;
+            boolean add;
+            if (substringSearch) {
+                add = (b.getClass().getSimpleName().toLowerCase().indexOf(benchmarkSubstring) != -1);
+            }
+            else {
+                add = (
+                    ((!b.isAllocating()) && benchmarkSet == BenchmarkSelector.BenchmarkSet.NON_ALLOC) ||
+                    (b.isAllocating() && benchmarkSet == BenchmarkSelector.BenchmarkSet.ALLOC));
+                if (!runAllBenchmarks && !b.representative()) {
+                    add = false;
+                }
             }
             if (add) {
                 benchmarks.add(b);
@@ -139,7 +146,6 @@ public class BenchmarkRunner {
 
         for (MeasuringTool tool : measuringTools) {
 
-            benchmarkCount = 0;
             if (!tool.ignore()) {
                 // set the slower CPU frequency etc. after the warmup
                 // round(s), taking less time
@@ -154,6 +160,7 @@ public class BenchmarkRunner {
 
             int max_rounds = tool.getRounds();
             for (int series = 0; series < max_rounds; series++) {
+                benchmarkCount = 0;
                 String measurementID = Utils.getUUID();
                 PrintWriter tempWriter = null;
                 File tempFile = new File(cacheDir, "benchmarks-temp.csv");
@@ -285,7 +292,7 @@ public class BenchmarkRunner {
                     catalogWriter = makeWriter(dataDir, "measurements.txt", true);
                     catalogWriter.println("");
                     catalogWriter.println("id: "               + measurementID);
-                    catalogWriter.println("cpu-freq: "         + maxSpeed ? Init.CPUFREQ_MAX : Init.CPUFREQ);
+                    catalogWriter.println("cpu-freq: "         + (runAtMaxSpeed ? Init.CPUFREQ_MAX : Init.CPUFREQ));
                     catalogWriter.println("repetitions: "      + repetitions);
                     catalogWriter.println("start: "            + start);
                     catalogWriter.println("end: "              + end);
@@ -295,6 +302,9 @@ public class BenchmarkRunner {
                     catalogWriter.println("code-revision: "    + appRevision);
                     catalogWriter.println("code-checksum: "    + appChecksum);
                     catalogWriter.println("benchmark-set: "    + benchmarkSet);
+                    if (substringSearch) {
+                        catalogWriter.println("substring-filter: "    + benchmarkSubstring);
+                    }
                     catalogWriter.println("");
                 }
                 catch (IOException e ) {

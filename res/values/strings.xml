@@ -23,4 +23,5 @@
     <string name="max_speed">Run at maximum frequency</string>
     <string name="run_alloc">Allocating</string>
     <string name="run_nonalloc">Non-allocating</string>
+    <string name="benchmark_substring">Benchmark substring</string>
 </resources>

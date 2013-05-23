@@ -246,10 +246,11 @@ public class BenchmarkSelector extends Activity implements ApplicationState {
             new Runnable () {
                 public void run() {
                     long allocatingRepetitions = Long.parseLong(((TextView)findViewById(R.id.alloc_reps)).getText().toString());
+                    String benchmarkSubstring = ((TextView)findViewById(R.id.benchmark_substring)).getText().toString().toLowerCase();
                     BenchmarkRunner.runBenchmarks(
                         BenchmarkSelector.this, repetitions, appRevision, appChecksum,
                         getCacheDir(), runAllBenchmarks, runAtMaxSpeed, selectedBenchmarks,
-                        allocatingRepetitions);
+                        allocatingRepetitions, benchmarkSubstring);
                 }
             });
         this.updateState(ApplicationState.State.MEASURING);

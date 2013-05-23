@@ -71,23 +71,23 @@
       android:layout_height="wrap_content"
       android:weightSum="1.0" >
 
-  <TextView
-      android:id="@+id/repetitions"
-      android:layout_gravity="center_horizontal"
-      android:layout_height="wrap_content"
-      android:layout_weight="0.6"
-      android:layout_width="0dp"
-      />
+    <TextView
+        android:id="@+id/repetitions"
+        android:layout_gravity="center_horizontal"
+        android:layout_height="wrap_content"
+        android:layout_weight="0.6"
+        android:layout_width="0dp"
+        />
 
-  <EditText
-      android:id="@+id/alloc_reps"
-      android:layout_weight="0.4"
-      android:layout_height="wrap_content"
-      android:hint="@string/alloc_reps"
-      android:cursorVisible="false"
-      android:text="400"
-      android:layout_width="0dp"
-      android:inputType="number" />
+    <EditText
+        android:id="@+id/alloc_reps"
+        android:layout_weight="0.4"
+        android:layout_height="wrap_content"
+        android:hint="@string/alloc_reps"
+        android:cursorVisible="false"
+        android:text="400"
+        android:layout_width="0dp"
+        android:inputType="number" />
 
   </LinearLayout>
 
@@ -131,6 +131,15 @@
       android:layout_gravity="center"
       android:layout_weight="2"
       />
+
+  <EditText
+      android:id="@+id/benchmark_substring"
+      android:layout_weight="0"
+      android:layout_height="wrap_content"
+      android:hint="@string/benchmark_substring"
+      android:cursorVisible="true"
+      android:layout_width="match_parent"
+      android:inputType="text" />
 
   <Button
       android:id="@+id/mybutton"
