@@ -10,7 +10,6 @@
     <application android:label="@string/app_name" android:icon="@drawable/color_icon"
                  android:largeHeap="true">
         <activity android:name="BenchmarkSelector"
-                  android:theme="@style/MyTheme"
                   android:label="@string/app_name"
                   android:screenOrientation="portrait">
             <intent-filter>
