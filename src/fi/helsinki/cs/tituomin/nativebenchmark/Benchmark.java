@@ -12,7 +12,7 @@ public abstract class Benchmark implements Runnable {
     public abstract String description();
     public abstract String id();
     public abstract int sequenceNo();
-    public abstract long maxRepetitions();
+    public abstract boolean isAllocating();
     public abstract boolean dynamicParameters();
     public abstract boolean representative();
 

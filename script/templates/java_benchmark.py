@@ -47,8 +47,8 @@ public class <% classname %> <% class_relations %> extends Benchmark {
         return "<% description %>";
     }
 
-    public long maxRepetitions() {
-        return <% max_repetitions %>;
+    public boolean isAllocating() {
+        return <% is_allocating %>;
     }
 
     <% native_method %>

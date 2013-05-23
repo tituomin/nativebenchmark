@@ -238,7 +238,7 @@ def generate_benchmarks():
                                     representative               = representative,
                                     imports                      = '',
                                     has_dynamic_parameters       = 'false', # todo
-                                    max_repetitions              = -1,
+                                    is_allocating                = 'false',
                                     _id                          = benchmark_classname("", sequence_no),
                                     description                  = spec['description'],
                                     seq_no                       = class_counter,

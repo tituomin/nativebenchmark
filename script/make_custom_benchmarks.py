@@ -17,7 +17,7 @@ import jni_types
 # Log everything, and send it to stderr.
 logging.basicConfig(level=logging.DEBUG)
 
-MAX_ALLOC_REPETITIONS = 1000
+MAX_ALLOC_REPETITIONS = 500
 
 i = re.IGNORECASE
 begin_re = re.compile('\s*//\s*@begin\s*', flags=i)
@@ -320,9 +320,9 @@ def write_custom_benchmarks(definition_files, c_custom_output_name, java_output_
                 dyn_par = 'false'
             if 'alloc' in benchmark:
                 # large heap 128/2 = 64 Mb, 128 el 8 byte array...
-                max_repetitions = MAX_ALLOC_REPETITIONS
+                is_allocating = 'true'
             else:
-                max_repetitions = -1
+                is_allocating = 'false'
 
             representative = benchmark.get('representative', True)
 
@@ -354,7 +354,7 @@ def write_custom_benchmarks(definition_files, c_custom_output_name, java_output_
                         packagename = '.'.join(packagename),
                         classname  = classname,
                         description = benchmark.get('description', ''),
-                        max_repetitions = max_repetitions, # todo: measure
+                        is_allocating = is_allocating, # todo: measure
                         from_language = from_lang,
                         to_language = to_lang,
                         seq_no = '-1',
@@ -362,35 +362,34 @@ def write_custom_benchmarks(definition_files, c_custom_output_name, java_output_
                         run_method = 'public native void runInternal();',
                         ))}
 
-            elif from_lang == 'J':
-                if to_lang == 'J':
-                    java_classes[classname] = {
-                        'filename': classname + '.java',
-                        'code': (
-                            put(
-                                java_benchmark.t,
-                                representative = representative,
-                                _id = benchmark['id'],
-                                packagename = '.'.join(packagename),
-                                imports = "\n".join(
-                                    ['import android.content.pm.PermissionInfo;',
-                                     'import java.nio.ByteBuffer;'
-                                     'import java.lang.ref.WeakReference;'
-                                     ]),
-                                classname = classname,
-                                description = benchmark.get('description' ''),
-                                max_repetitions = max_repetitions,
-                                from_language = from_lang,
-                                to_language = to_lang,
-                                seq_no = '-1',
-                                has_dynamic_parameters = dyn_par,
-                                run_method = put(
-                                    java_benchmark.java_run_method_inline_t,
-                                    init = data['inits'],
-                                    loop = put(
-                                        loop_code.t_java,
-                                        finished = benchmark.get('finished'),
-                                        benchmark_body = benchmark['code']))))}
+            elif from_lang == 'J' and to_lang == 'J':
+                java_classes[classname] = {
+                    'filename': classname + '.java',
+                    'code': (
+                        put(
+                            java_benchmark.t,
+                            representative = representative,
+                            _id = benchmark['id'],
+                            packagename = '.'.join(packagename),
+                            imports = "\n".join(
+                                ['import android.content.pm.PermissionInfo;',
+                                 'import java.nio.ByteBuffer;'
+                                 'import java.lang.ref.WeakReference;'
+                                 ]),
+                            classname = classname,
+                            description = benchmark.get('description' ''),
+                            is_allocating = is_allocating,
+                            from_language = from_lang,
+                            to_language = to_lang,
+                            seq_no = '-1',
+                            has_dynamic_parameters = dyn_par,
+                            run_method = put(
+                                java_benchmark.java_run_method_inline_t,
+                                init = data['inits'],
+                                loop = put(
+                                    loop_code.t_java,
+                                    finished = benchmark.get('finished'),
+                                    benchmark_body = benchmark['code']))))}
 
     out_c.flush()
     out_c.close()

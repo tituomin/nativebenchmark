@@ -24,10 +24,15 @@ import java.util.ArrayList;
 
 public abstract class CommandlineTool extends MeasuringTool {
 
-    public CommandlineTool(int i, long reps) throws IOException, InterruptedException {
-        super(i, reps);
-    }
+    // public CommandlineTool(int i, long reps, long allocreps) throws IOException, InterruptedException {
+    //     super(i, reps, allocreps);
+    // }
 
+    private static final long REPETITIONS = Long.MAX_VALUE;
+
+    public CommandlineTool(int i, long allocreps) throws IOException, InterruptedException {
+        super(i, REPETITIONS, allocreps);
+    }
 
     protected abstract String command();
     protected String formatParameter(MeasuringOption option) {
@@ -109,10 +114,6 @@ public abstract class CommandlineTool extends MeasuringTool {
 
     public boolean isLongRunning() {
         return true;
-    }
-
-    public long repetitions() {
-        return Long.MAX_VALUE;
     }
 
     public void start(Runnable benchmark)

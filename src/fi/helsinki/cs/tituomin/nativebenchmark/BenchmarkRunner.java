@@ -49,9 +49,10 @@ import android.os.SystemClock;
 public class BenchmarkRunner {
     private static final String SEPARATOR     = ",";
     private static final String MISSING_VALUE = "-";
-    private static final long WARMUP_REPS = 2000;
+    private static final long WARMUP_REPS = 10000;
     private static BenchmarkParameter benchmarkParameter;
     private static List<MeasuringTool> measuringTools;
+    private static int benchmarkCount = 0;
 
     public static BenchmarkParameter getBenchmarkParameter() {
         if (benchmarkParameter == null) {
@@ -60,7 +61,7 @@ public class BenchmarkRunner {
         return benchmarkParameter;
     }
 
-    public static void initTools(File dataDir, long repetitions) throws IOException, InterruptedException {
+    public static void initTools(File dataDir, long repetitions, long allocRepetitions) throws IOException, InterruptedException {
         File perfDir = new File(dataDir, "perf");
         perfDir.mkdir();
 
@@ -68,18 +69,18 @@ public class BenchmarkRunner {
 
         // warmup round
         measuringTools.add(
-            new PlainRunner(1, repetitions));
+            new PlainRunner(1, WARMUP_REPS, allocRepetitions));
 
         //measuringTools.add(
         //    new MockCommandlineTool(1, repetitions));
 
         // total response time
         measuringTools.add(
-            new ResponseTimeRecorder(1000, repetitions));
+            new ResponseTimeRecorder(1000, repetitions, allocRepetitions));
 
         // call profile
         measuringTools.add(
-            new LinuxPerfRecordTool(1, repetitions)
+            new LinuxPerfRecordTool(1, allocRepetitions)
             .set(BasicOption.OUTPUT_FILEPATH, perfDir.getPath())
             .set(BasicOption.MEASURE_LENGTH, "10"));
 
@@ -90,7 +91,7 @@ public class BenchmarkRunner {
 
     public static void runBenchmarks(
         ApplicationState mainUI, long repetitions,
-        CharSequence appRevision, CharSequence appChecksum, File cacheDir, boolean runAllBenchmarks) {
+        CharSequence appRevision, CharSequence appChecksum, File cacheDir, boolean runAllBenchmarks, boolean runAtMaxSpeed, BenchmarkSelector.BenchmarkSet benchmarkSet, long allocatingRepetitions) {
 
         File sd = Environment.getExternalStorageDirectory();
         File dataDir = new File(sd, "results");
@@ -98,7 +99,7 @@ public class BenchmarkRunner {
         dataDir.mkdir();
         try {
             BenchmarkRegistry.init(repetitions);
-            initTools(dataDir, repetitions);
+            initTools(dataDir, repetitions, allocatingRepetitions);
         }
         catch (Exception e) {
             mainUI.updateState(ApplicationState.State.ERROR);
@@ -109,23 +110,32 @@ public class BenchmarkRunner {
         benchmarkParameter = getBenchmarkParameter();
         BenchmarkInitialiser.init(benchmarkParameter);
 
-        List<Benchmark> benchmarks;
         List<Benchmark> allBenchmarks = BenchmarkRegistry.getBenchmarks();
+        List<Benchmark> benchmarks = new ArrayList<Benchmark> ();;
 
-        if (runAllBenchmarks) {
-            benchmarks = allBenchmarks;
-        }
-        else {
-            benchmarks = new ArrayList<Benchmark> ();
-            for (Benchmark b : allBenchmarks) {
-                if (b.representative()) {
-                    benchmarks.add(b);
-                }
+        for (Benchmark b : allBenchmarks) {
+            boolean add = (
+                ((!b.isAllocating()) && benchmarkSet == BenchmarkSelector.BenchmarkSet.NON_ALLOC) ||
+                (b.isAllocating() && benchmarkSet == BenchmarkSelector.BenchmarkSet.ALLOC));
+            if (!runAllBenchmarks && !b.representative()) {
+                add = false;
+            }
+            if (add) {
+                benchmarks.add(b);
             }
         }
 
         //Collections.shuffle(benchmarks);
-        final ApplicationState.State state = ApplicationState.State.MILESTONE;
+        if (runAtMaxSpeed) {
+            Log.v(TAG, "maxed");
+            try {
+                Init.initEnvironment(runAtMaxSpeed);
+            }
+            catch (IOException e) {
+                handleException(e, mainUI);
+                return;
+            }
+        }
 
         for (MeasuringTool tool : measuringTools) {
             
@@ -133,7 +143,7 @@ public class BenchmarkRunner {
                 // set the slower CPU frequency etc. after the warmup
                 // round(s), taking less time
                 try {
-                    Init.initEnvironment();
+                    Init.initEnvironment(runAtMaxSpeed);
                 }
                 catch (IOException e) {
                     handleException(e, mainUI);
@@ -174,11 +184,7 @@ public class BenchmarkRunner {
                 int j = 0;
                 for (Benchmark benchmark : benchmarks) {
                     try {
-                        collectedData = runSeries(benchmark, mainUI, tool);                    
-                        if (tool.explicitGC() && j % 50 == 0) {
-                            System.gc();
-                            Thread.sleep(350);
-                        }
+                        collectedData = runSeries(benchmark, mainUI, tool);
                     }
                     catch (RunnerException e) {
                         logE("Exception was thrown", e.getCause());
@@ -194,7 +200,6 @@ public class BenchmarkRunner {
                     }
                     // todo: remove UI overhead?
                     //                    Log.v(TAG, benchmark.getClass().getName());
-                    mainUI.updateState(state, "tool " + tool.getClass().getName() + " benchmark " + ++j);
 
                     if (collectedData.isEmpty() || tool.ignore()) {
                         continue;
@@ -284,10 +289,11 @@ public class BenchmarkRunner {
                     catalogWriter.println("start: "            + start);
                     catalogWriter.println("end: "              + end);
                     catalogWriter.println("duration: "         + humanTime(endTime - startTime));
-                    catalogWriter.println("tool: "             + tool.getClass().getName());
+                    catalogWriter.println("tool: "             + tool.getClass().getSimpleName());
                     catalogWriter.println("benchmarks: "       + benchmarks.size());
                     catalogWriter.println("code-revision: "    + appRevision);
                     catalogWriter.println("code-checksum: "    + appChecksum);
+                    catalogWriter.println("benchmark-set: "    + benchmarkSet);
                     catalogWriter.println("");
                 }
                 catch (IOException e ) {
@@ -397,6 +403,7 @@ public class BenchmarkRunner {
         throws InterruptedException, RunnerException {
 
         List<BenchmarkResult> compiledMetadata = new ArrayList<BenchmarkResult> ();
+        final ApplicationState.State state = ApplicationState.State.MILESTONE;
 
         if (Thread.interrupted()) {
             throw new InterruptedException();
@@ -437,6 +444,7 @@ public class BenchmarkRunner {
 
             try {
                 tool.startMeasuring(benchmark);
+                benchmarkCount++;
             }
             catch (IOException e) {
                 logE("Measuring caused IO exception", e);
@@ -450,6 +458,13 @@ public class BenchmarkRunner {
             finally {
                 bPar.tearDown(); // (II) needs setUp (see I)
             }
+            if (tool.explicitGC() && benchmarkCount % 50 == 0) {
+                System.gc();
+                Thread.sleep(350);
+            }
+
+            mainUI.updateState(state, tool.getClass().getSimpleName() + " benchmark " + benchmarkCount);
+            Log.v(TAG, "Benchmark " + benchmark.getClass().getSimpleName());
 
             List<BenchmarkResult> measurements = tool.getMeasurements();
             for (BenchmarkResult measurement : measurements) {
@@ -458,8 +473,11 @@ public class BenchmarkRunner {
                     if (dynamicParameters) {
                         measurement.put("dynamic_size", "" + i);
                     }
+                    else {
+                        measurement.put("dynamic_size", MISSING_VALUE);
+                    }
                     measurement.put("id", benchmark.id());
-                    measurement.put("class", benchmark.getClass().getName());
+                    measurement.put("class", benchmark.getClass().getSimpleName());
                     measurement.putAll(introspected);
                     compiledMetadata.add(measurement);
                 }

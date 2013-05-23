@@ -11,8 +11,8 @@ import android.util.Log;
 
 public class ResponseTimeRecorder extends MeasuringTool {
 
-    public ResponseTimeRecorder(int i, long reps) throws IOException, InterruptedException {
-        super(i, reps);
+    public ResponseTimeRecorder(int i, long reps, long allocreps) throws IOException, InterruptedException {
+        super(i, reps, allocreps);
     }
 
     protected List<MeasuringOption> defaultOptions(List<MeasuringOption> options) {

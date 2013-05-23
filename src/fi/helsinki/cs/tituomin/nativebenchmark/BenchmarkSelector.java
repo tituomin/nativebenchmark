@@ -20,6 +20,7 @@ import android.os.Environment;
 import android.content.res.Resources;
 import android.widget.NumberPicker;
 import android.widget.CheckBox;
+import android.widget.RadioButton;
 import android.view.WindowManager;
 import android.os.PowerManager;
 import android.content.Context;
@@ -35,7 +36,7 @@ public class BenchmarkSelector extends Activity implements ApplicationState {
     public void onCreate(Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);
-
+        this.requestWindowFeature(getWindow().FEATURE_NO_TITLE);
         setContentView(R.layout.main);
 
         this.resultView = (TextView)     findViewById(R.id.resultview);
@@ -76,13 +77,41 @@ public class BenchmarkSelector extends Activity implements ApplicationState {
 
         this.retry = false;
         onCheckboxClicked(findViewById(R.id.checkbox_long));
+        onRadioButtonClicked(findViewById(R.id.run_nonalloc));
 
         // pre-enlarges the heap
         allocationArray = new byte[1024 * 1024 * 100];
     }
 
     public void onCheckboxClicked(View view) {
-        runAllBenchmarks = ((CheckBox) view).isChecked();
+        boolean checked = ((CheckBox) view).isChecked();
+        switch(view.getId()) {
+        case R.id.checkbox_long:
+            runAllBenchmarks = checked;
+            break;
+        case R.id.checkbox_max:
+            runAtMaxSpeed = checked;
+            break;
+        }
+    }
+
+    public void onRadioButtonClicked(View view) {
+        // Is the button now checked?
+        boolean checked = ((RadioButton) view).isChecked();
+    
+        // Check which radio button was clicked
+        switch(view.getId()) {
+        case R.id.run_alloc:
+            if (checked)
+                // Pirates are the best
+                selectedBenchmarks = BenchmarkSet.ALLOC;
+                break;
+        case R.id.run_nonalloc:
+            if (checked)
+                selectedBenchmarks = BenchmarkSet.NON_ALLOC;
+                // Ninjas rule
+                break;
+        }
     }
 
     public void setMessage(int id) {
@@ -216,7 +245,11 @@ public class BenchmarkSelector extends Activity implements ApplicationState {
         measuringThread = new Thread(
             new Runnable () {
                 public void run() {
-                    BenchmarkRunner.runBenchmarks(BenchmarkSelector.this, repetitions, appRevision, appChecksum, getCacheDir(), runAllBenchmarks);
+                    long allocatingRepetitions = Long.parseLong(((TextView)findViewById(R.id.alloc_reps)).getText().toString());
+                    BenchmarkRunner.runBenchmarks(
+                        BenchmarkSelector.this, repetitions, appRevision, appChecksum,
+                        getCacheDir(), runAllBenchmarks, runAtMaxSpeed, selectedBenchmarks,
+                        allocatingRepetitions);
                 }
             });
         this.updateState(ApplicationState.State.MEASURING);
@@ -269,6 +302,9 @@ public class BenchmarkSelector extends Activity implements ApplicationState {
     private Button button;
     private long repetitions;
     private boolean runAllBenchmarks;
+    private boolean runAtMaxSpeed;
+    public enum BenchmarkSet { ALLOC, NON_ALLOC };
+    public BenchmarkSet selectedBenchmarks;
     //    private int rounds;
     private static final String TAG = "BenchmarkSelector";
     private PowerManager.WakeLock wakeLock;

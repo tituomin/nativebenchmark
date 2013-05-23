@@ -47,7 +47,6 @@
         android:layout_height="wrap_content"
         android:layout_below="@id/label_num"
         android:layout_weight=".45"
-
         />
 
     <View
@@ -62,8 +61,33 @@
         android:layout_height="wrap_content"
         android:layout_below="@id/label_exp"
         android:layout_weight=".45"
-
         />
+
+  </LinearLayout>
+
+  <LinearLayout
+      android:orientation="horizontal"
+      android:layout_width="fill_parent" 
+      android:layout_height="wrap_content"
+      android:weightSum="1.0" >
+
+  <TextView
+      android:id="@+id/repetitions"
+      android:layout_gravity="center_horizontal"
+      android:layout_height="wrap_content"
+      android:layout_weight="0.6"
+      android:layout_width="0dp"
+      />
+
+  <EditText
+      android:id="@+id/alloc_reps"
+      android:layout_weight="0.4"
+      android:layout_height="wrap_content"
+      android:hint="@string/alloc_reps"
+      android:cursorVisible="false"
+      android:text="400"
+      android:layout_width="0dp"
+      android:inputType="number" />
 
   </LinearLayout>
 
@@ -74,13 +98,30 @@
             android:checked="false"
             android:onClick="onCheckboxClicked"/>
 
-  <TextView
-      android:id="@+id/repetitions"
-      android:layout_gravity="center_horizontal"
-      android:layout_width="wrap_content"
-      android:layout_height="wrap_content"
-      android:layout_weight="0"
-      />
+  <CheckBox android:id="@+id/checkbox_max"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/max_speed"
+            android:checked="false"
+            android:onClick="onCheckboxClicked"/>
+
+  <RadioGroup xmlns:android="http://schemas.android.com/apk/res/android"
+              android:layout_width="fill_parent"
+              android:layout_height="wrap_content"
+              android:orientation="horizontal">
+    <RadioButton android:id="@+id/run_alloc"
+                 android:layout_width="wrap_content"
+                 android:layout_height="wrap_content"
+                 android:text="@string/run_alloc"
+                 android:onClick="onRadioButtonClicked"/>
+    <RadioButton android:id="@+id/run_nonalloc"
+                 android:layout_width="wrap_content"
+                 android:layout_height="wrap_content"
+                 android:text="@string/run_nonalloc"
+                 android:checked="true"
+                 android:onClick="onRadioButtonClicked"/>
+  </RadioGroup>
+
 
 
   <TextView
@@ -98,7 +139,6 @@
       android:text="@string/start_task"
       android:onClick="startMeasuring"
       android:layout_weight="0"
-      android:padding="30dp"
       />
 
 </LinearLayout>

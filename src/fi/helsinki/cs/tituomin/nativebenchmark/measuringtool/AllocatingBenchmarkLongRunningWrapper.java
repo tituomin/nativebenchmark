@@ -8,8 +8,8 @@ import java.io.IOException;
 
 public class AllocatingBenchmarkLongRunningWrapper extends AllocatingBenchmarkWrapper {
 
-    public AllocatingBenchmarkLongRunningWrapper(Benchmark b) {
-        super(b);
+    public AllocatingBenchmarkLongRunningWrapper(Benchmark b, long r) {
+        super(b, r);
     }
 
     private long toolRepetitions;
@@ -18,7 +18,7 @@ public class AllocatingBenchmarkLongRunningWrapper extends AllocatingBenchmarkWr
         Benchmark benchmark = getBenchmark();
         init(benchmark);
         toolRepetitions  = tool.repetitions();
-        tool.putMeasurement("repetitions", benchmark.maxRepetitions() + "");
+        tool.putMeasurement("repetitions", this.repetitions + "");
         tool.start(this);
         tool.finishMeasurement();
     }

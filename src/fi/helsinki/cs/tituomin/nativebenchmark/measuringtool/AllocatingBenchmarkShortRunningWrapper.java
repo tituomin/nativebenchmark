@@ -7,8 +7,8 @@ import java.io.IOException;
 
 public class AllocatingBenchmarkShortRunningWrapper extends AllocatingBenchmarkWrapper {
 
-    public AllocatingBenchmarkShortRunningWrapper(Benchmark b) {
-        super(b);
+    public AllocatingBenchmarkShortRunningWrapper(Benchmark b, long r) {
+        super(b, r);
     }
 
     private static final long MULTIPLIER = 20;
@@ -19,7 +19,7 @@ public class AllocatingBenchmarkShortRunningWrapper extends AllocatingBenchmarkW
         long reps = MULTIPLIER;
         reps += 1;
         while (--reps != 0) {
-            tool.putMeasurement("repetitions", benchmark.maxRepetitions() + "");
+            tool.putMeasurement("repetitions", this.repetitions + "");
             tool.putMeasurement("multiplier", MULTIPLIER + "");
             try {
                 tool.start(getBenchmark());

@@ -31,7 +31,13 @@ public class BenchmarkResult {
     }
 
     public String get(String label) {
-        return values[labelIndexes.get(label)];
+        Integer index = labelIndexes.get(label);
+        if (index != null) {
+            return values[index];
+        }
+        else {
+            return null;
+        }
     }
 
     public String get(int i) {

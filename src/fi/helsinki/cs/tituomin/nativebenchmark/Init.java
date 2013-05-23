@@ -7,24 +7,24 @@ import java.io.IOException;
 
 public class Init {
 
-    public static final String CPUFREQ = "400000";
-    public final static List<String> INIT_ENVIRONMENT;
+    public static final int CPUFREQ     =  400000;
+    public static final int CPUFREQ_MAX = 1000000;
 
-    static {
-        INIT_ENVIRONMENT = new ArrayList<String> ();
-        INIT_ENVIRONMENT.add(
+    public static List<String> initScript(int cpufreq) {
+        List <String> script = new ArrayList<String> ();
+        script.add(
             "echo \"userspace\" > /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor");
-        INIT_ENVIRONMENT.add(
-            "echo \"" + CPUFREQ +  "\" > /sys/devices/system/cpu/cpu0/cpufreq/scaling_setspeed");
-    }
+        script.add(
+            "echo \"" + cpufreq +  "\" > /sys/devices/system/cpu/cpu0/cpufreq/scaling_setspeed");
+        return script;
 
-    public static void initEnvironment() throws IOException {
-        if (!initDone) {
-            ShellEnvironment.execute(INIT_ENVIRONMENT);
-            initDone = true;
-        }
     }
 
     private static boolean initDone = false;
-
+    public static void initEnvironment(boolean maxSpeed) throws IOException {
+        if (!initDone) {
+            ShellEnvironment.execute(initScript(maxSpeed ? CPUFREQ_MAX : CPUFREQ));
+            initDone = true;
+        }
+    }
 }

@@ -18,5 +18,10 @@
     <string name="rounds">rounds</string>
     <string name="repetitions">repetitions</string>
     <string name="warning_changed">Warning: app version contains uncommitted changes. Commit hash will be out of sync.</string>
+    <string name="alloc_reps">Max reps for allocations.</string>
     <string name="run_all">Run redundant benchmarks</string>
+    <string name="max_speed">Run at maximum frequency.</string>
+    <string name="benchmark_set">Allocating.</string>
+    <string name="run_alloc">Allocating.</string>
+    <string name="run_nonalloc">Non-allocating.</string>
 </resources>

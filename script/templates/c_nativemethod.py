@@ -30,7 +30,7 @@ t_caller_native = partial(
     parameters = 'jobject instance',
     prebody = '',
     body = partial(
-        loop_code.t_c,
+        loop_code.t_c_jni_call,
         benchmark_body = (
             '<% counterpart_method_name %>' +
             '(<% counterpart_method_arguments %>);')))

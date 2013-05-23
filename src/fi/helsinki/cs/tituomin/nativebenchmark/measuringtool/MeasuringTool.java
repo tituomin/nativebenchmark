@@ -25,10 +25,11 @@ import fi.helsinki.cs.tituomin.nativebenchmark.measuringtool.AllocatingBenchmark
 
 public abstract class MeasuringTool implements Runnable {
 
-    public MeasuringTool(int rounds, long userRepetitions) throws IOException, InterruptedException {
+    public MeasuringTool(int rounds, long defaultRepetitions, long allocRepetitions) throws IOException, InterruptedException {
         specifyOptions();
         this.rounds = rounds;
-        this.userRepetitions = userRepetitions;
+        this.defaultRepetitions = defaultRepetitions;
+        this.allocRepetitions = allocRepetitions;
         clearMeasurements();
         init();
     }
@@ -50,50 +51,31 @@ public abstract class MeasuringTool implements Runnable {
     protected abstract void start(Runnable benchmark)
         throws InterruptedException, IOException;
 
-    public long repetitions() {
-        return -1;
-    }
-
     public boolean isLongRunning() {
         return false;
     }
 
     public RunningWrapper wrap(Benchmark benchmark) {
-        if (benchmark.maxRepetitions() == -1) {
+        if (!benchmark.isAllocating()) {
             // Default running algorithm
             return new RunningWrapper(benchmark);
         }
-        else if (benchmark.maxRepetitions() > 0) {
+        else {
             // the benchmark does allocations, we have
-            // to limit the amount of loops -> try to compensate
+            // to limit the amount of loops -> compensate
             // by repeating the loop many times
             if (isLongRunning()) {
-                return new AllocatingBenchmarkLongRunningWrapper(benchmark);
+                return new AllocatingBenchmarkLongRunningWrapper(benchmark, allocRepetitions);
             }
             else {
-                return new AllocatingBenchmarkShortRunningWrapper(benchmark);
+                return new AllocatingBenchmarkShortRunningWrapper(benchmark, allocRepetitions);
             }
-        }
-        else {
-            Log.e("MeasuringTool", "Invalid repetition amount");
-            throw new IllegalArgumentException("Invalid repetition amount.");
         }
     }
 
     public void startMeasuring(Benchmark benchmark) throws InterruptedException, IOException, RunnerException {
         clearMeasurements();
-
-        long toolOverrideReps = repetitions();
-        if (toolOverrideReps == -1) {
-            // default: user defined amount of repetitions
-            benchmark.setRepetitions(this.userRepetitions);
-        }
-        else {
-            // the tool measurement logic requires
-            // overriding the repetition amount
-            benchmark.setRepetitions(toolOverrideReps);
-        }
-
+        benchmark.setRepetitions(this.defaultRepetitions);
         RunningWrapper wrapper = wrap(benchmark);
         wrapper.begin(this);
 
@@ -220,7 +202,7 @@ public abstract class MeasuringTool implements Runnable {
     private BenchmarkResult currentMeasurement;
     private List<BenchmarkResult> measurements;
 
-    private long userRepetitions;
+    private long defaultRepetitions;
 
     protected void putMeasurement(String key, String value) {
         currentMeasurement.put(key, value);
@@ -261,6 +243,7 @@ public abstract class MeasuringTool implements Runnable {
 
     private Benchmark benchmark;
     private int rounds;
+    private long allocRepetitions;
     private static boolean userInterrupted = false;
 
     public static class UnsupportedOptionException extends RuntimeException {}
