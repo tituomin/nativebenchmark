@@ -192,7 +192,7 @@ public class BenchmarkRunner {
                 int j = 0;
                 for (Benchmark benchmark : benchmarks) {
                     try {
-                        collectedData = runSeries(benchmark, mainUI, tool);
+                        collectedData = runSeries(benchmark, mainUI, tool, series);
                     }
                     catch (RunnerException e) {
                         logE("Exception was thrown", e.getCause());
@@ -410,7 +410,7 @@ public class BenchmarkRunner {
     }
 
     private static List<BenchmarkResult> runSeries(
-        Benchmark benchmark, ApplicationState mainUI, MeasuringTool tool)
+        Benchmark benchmark, ApplicationState mainUI, MeasuringTool tool, int roundNo)
         throws InterruptedException, RunnerException {
 
         List<BenchmarkResult> compiledMetadata = new ArrayList<BenchmarkResult> ();
@@ -476,7 +476,7 @@ public class BenchmarkRunner {
                 Thread.sleep(350);
             }
 
-            mainUI.updateState(state, tool.getClass().getSimpleName() + " benchmark " + benchmarkCount);
+            mainUI.updateState(state, tool.getClass().getSimpleName() + " round " + roundNo  + " benchmark " + benchmarkCount);
 
             List<BenchmarkResult> measurements = tool.getMeasurements();
             for (BenchmarkResult measurement : measurements) {
@@ -567,7 +567,8 @@ public class BenchmarkRunner {
         String to   = benchmark.to();
         bdata.put("no", "" + benchmark.sequenceNo());
         bdata.put("description", benchmark.description());
-        bdata.put("direction", from + " > " + to);
+        bdata.put("from", from);
+        bdata.put("to", to);
         bdata.put("representative", benchmark.representative() ? "1" : "0");
 
         if (seqNo == -1) {
@@ -591,7 +592,7 @@ public class BenchmarkRunner {
                 Map<String,Integer> parameterTypes = new HashMap<String,Integer> ();
                 for (Class param : parameterList) {
                     Integer previousValue = null;
-                    String param_typename = param.getCanonicalName();
+                    String param_typename = param.getSimpleName();
                     previousValue = parameterTypes.get(param_typename);
                     parameterTypes.put(
                         param_typename,

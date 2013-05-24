@@ -157,7 +157,9 @@ public class BenchmarkParameter implements Iterable<Integer> {
         return OBJECTS[index].getClass();
     }
     public String retrieveString() {
-        return STRINGS[index];
+        String ret = STRINGS[index];
+        Log.v("Parameter", "String length " + ret.length());
+        return ret;
     }
     public Throwable retrieveThrowable() {
         return THROWABLES[index];

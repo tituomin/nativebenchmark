@@ -64,8 +64,10 @@ void set_up_custom_context(JNIEnv* env, jobject bPar, jint size, jobject mockObj
     field_signature__OUT = "I";
     static_field_name__OUT = "PROTECTION_NORMAL"; // todo: is final...
     static_field_signature__OUT = "I";
-    method_name__OUT = "loadDescription";
-    method_signature__OUT = "(Landroid/content/pm/PackageManager;)Ljava/lang/CharSequence;";
+    /* method_name__OUT = "loadDescription"; */
+    /* method_signature__OUT = "(Landroid/content/pm/PackageManager;)Ljava/lang/CharSequence;"; */
+    method_name__OUT = "toString";
+    method_signature__OUT = "()Ljava/lang/String;";
     static_method_name__OUT = "protectionToString";
     static_method_signature__OUT = "(I)Ljava/lang/String;";
 
