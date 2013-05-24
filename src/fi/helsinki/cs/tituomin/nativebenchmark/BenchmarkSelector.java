@@ -20,6 +20,7 @@ import android.os.Environment;
 import android.content.res.Resources;
 import android.widget.NumberPicker;
 import android.widget.CheckBox;
+import android.widget.Checkable;
 import android.widget.RadioButton;
 import android.view.WindowManager;
 import android.os.PowerManager;
@@ -39,79 +40,37 @@ public class BenchmarkSelector extends Activity implements ApplicationState {
         this.requestWindowFeature(getWindow().FEATURE_NO_TITLE);
         setContentView(R.layout.main);
 
+        this.retry = false;
+
         this.resultView = (TextView)     findViewById(R.id.resultview);
         this.button     = (Button)       findViewById(R.id.mybutton);
         this.repView    = (TextView)     findViewById(R.id.repetitions);
-
         this.numPick    = (NumberPicker) findViewById(R.id.picker_num);
         this.expPick    = (NumberPicker) findViewById(R.id.picker_exp);
-        //        this.roundPick    = (NumberPicker) findViewById(R.id.picker_rounds);
 
         NumberPicker.OnValueChangeListener listener = new RepsListener();
 
         numPick.setMinValue(1); numPick.setMaxValue(9); numPick.setValue(1);
         expPick.setMinValue(0); expPick.setMaxValue(9); expPick.setValue(6);
-        //        roundPick.setMinValue(1); roundPick.setMaxValue(20); roundPick.setValue(5);
-
         numPick.setOnValueChangedListener(listener);
         expPick.setOnValueChangedListener(listener);
-        //        roundPick.setOnValueChangedListener(listener);
+
         listener.onValueChange(numPick, 0, 0);
 
-        Resources resources  = getResources();
         PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
         wakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "Benchmarking");
 
-        if (resources.getString(R.string.app_dirty).equals("1")) {
+        if (getResources().getString(R.string.app_dirty).equals("1")) {
             this.resultView.setText(R.string.warning_changed);
         }
-
 
         ActivityManager am = (ActivityManager) getSystemService(ACTIVITY_SERVICE);
         int memoryClass = am.getLargeMemoryClass();
         Log.v("Selector", "Memory size " + Runtime.getRuntime().maxMemory());
         Log.v("onCreate", "memoryClass:" + Integer.toString(memoryClass));
 
-        this.appChecksum = resources.getText(R.string.app_checksum);
-        this.appRevision = resources.getText(R.string.app_revision);
-
-        this.retry = false;
-        onCheckboxClicked(findViewById(R.id.checkbox_long));
-        onRadioButtonClicked(findViewById(R.id.run_nonalloc));
-
         // pre-enlarges the heap
-        allocationArray = new byte[1024 * 1024 * 100];
-    }
-
-    public void onCheckboxClicked(View view) {
-        boolean checked = ((CheckBox) view).isChecked();
-        switch(view.getId()) {
-        case R.id.checkbox_long:
-            runAllBenchmarks = checked;
-            break;
-        case R.id.checkbox_max:
-            runAtMaxSpeed = checked;
-            break;
-        }
-    }
-
-    public void onRadioButtonClicked(View view) {
-        // Is the button now checked?
-        boolean checked = ((RadioButton) view).isChecked();
-    
-        // Check which radio button was clicked
-        switch(view.getId()) {
-        case R.id.run_alloc:
-            if (checked)
-                // Pirates are the best
-                selectedBenchmarks = BenchmarkSet.ALLOC;
-                break;
-        case R.id.run_nonalloc:
-            if (checked)
-                selectedBenchmarks = BenchmarkSet.NON_ALLOC;
-                // Ninjas rule
-                break;
-        }
+        this.allocationArray = new byte[1024 * 1024 * 100];
     }
 
     public void setMessage(int id) {
@@ -239,18 +198,34 @@ public class BenchmarkSelector extends Activity implements ApplicationState {
     }
 
 
+    private boolean isChecked(int id) {
+        return ((Checkable) findViewById(id)).isChecked();
+    }
+
+    private String textValue(int id) {
+        return ((TextView) findViewById(id)).getText().toString();
+    }
 
     public void startMeasuring(View view) {
         allocationArray = null;
         measuringThread = new Thread(
             new Runnable () {
                 public void run() {
-                    long allocatingRepetitions = Long.parseLong(((TextView)findViewById(R.id.alloc_reps)).getText().toString());
-                    String benchmarkSubstring = ((TextView)findViewById(R.id.benchmark_substring)).getText().toString().toLowerCase();
-                    BenchmarkRunner.runBenchmarks(
-                        BenchmarkSelector.this, repetitions, appRevision, appChecksum,
-                        getCacheDir(), runAllBenchmarks, runAtMaxSpeed, selectedBenchmarks,
-                        allocatingRepetitions, benchmarkSubstring);
+                    Resources resources = getResources();
+                    BenchmarkRunner.Attributes attr = new BenchmarkRunner.Attributes();
+                    attr.appChecksum           = resources.getText(R.string.app_checksum);
+                    attr.appRevision           = resources.getText(R.string.app_revision);
+                    attr.cacheDir              = getCacheDir();
+                    attr.repetitions           = repetitions;
+                    attr.allocatingRepetitions = Long.parseLong(textValue(R.id.alloc_reps));
+                    attr.benchmarkSubstring    = textValue(R.id.benchmark_substring).toLowerCase();
+                    attr.runAllBenchmarks      = isChecked(R.id.checkbox_long);
+                    attr.runAtMaxSpeed         = isChecked(R.id.checkbox_max);
+                    attr.benchmarkSet          = isChecked(R.id.run_alloc) ?
+                                                     BenchmarkSet.ALLOC :
+                                                     BenchmarkSet.NON_ALLOC;
+                    
+                    BenchmarkRunner.runBenchmarks(BenchmarkSelector.this, attr);
                 }
             });
         this.updateState(ApplicationState.State.MEASURING);
@@ -295,22 +270,18 @@ public class BenchmarkSelector extends Activity implements ApplicationState {
         }
     }
 
-    private boolean retry;
-    private MeasuringTool tool;
-    private TextView textView, resultView, repView;
-    private NumberPicker numPick, expPick;//, roundPick;
-    private CharSequence appRevision, appChecksum;
-    private Button button;
-    private long repetitions;
-    private boolean runAllBenchmarks;
-    private boolean runAtMaxSpeed;
     public enum BenchmarkSet { ALLOC, NON_ALLOC };
-    public BenchmarkSet selectedBenchmarks;
-    //    private int rounds;
-    private static final String TAG = "BenchmarkSelector";
+
+    private long repetitions;
+    private boolean retry;
+    private TextView textView, resultView, repView;
+    private NumberPicker numPick, expPick;
+    private Button button;
     private PowerManager.WakeLock wakeLock;
     private Thread measuringThread;
     private byte[] allocationArray;
+
+    private static final String TAG = "BenchmarkSelector";
 
     static {
         System.loadLibrary("nativebenchmark");

@@ -25,9 +25,9 @@ public class BenchmarkParameter implements Iterable<Integer> {
         freeReturnvalues();
     }
     
-    public static int DEFAULTSIZE = 8;
-    private static int RANGE = 8;
-    private static int MAXSIZE = DEFAULTSIZE * RANGE;
+    public static final int DEFAULTSIZE = 64;
+    private static final int RANGE = 8;
+    public static final int MAXSIZE = DEFAULTSIZE * RANGE;
 
     public BenchmarkParameter() {
         index = 1;
@@ -158,7 +158,6 @@ public class BenchmarkParameter implements Iterable<Integer> {
     }
     public String retrieveString() {
         String ret = STRINGS[index];
-        Log.v("Parameter", "String length " + ret.length());
         return ret;
     }
     public Throwable retrieveThrowable() {

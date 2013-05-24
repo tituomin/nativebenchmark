@@ -2,7 +2,6 @@
 #include <android/log.h>
 #include <stdio.h>
 #include "returnvalues.h"
-#include "natives.h"
 
 JNIEXPORT jint JNICALL
 Java_fi_helsinki_cs_tituomin_nativebenchmark_BenchmarkParameter_initReturnvalues
@@ -10,6 +9,8 @@ Java_fi_helsinki_cs_tituomin_nativebenchmark_BenchmarkParameter_initReturnvalues
 {
     jclass cls = (*env)->GetObjectClass(env, benchmarkParameter);
     jobject local_reference;
+
+    
 
     CHECK_AND_CALL(jbooleanArray, BooleanArray, "()[Z");
     CHECK_AND_CALL(jbyteArray,    ByteArray,    "()[B");
@@ -103,14 +104,14 @@ void set_up_custom_context(JNIEnv* env, jobject bPar, jint size, jobject mockObj
     }  
 
     MOCK_FIELD_ID_DEF(jboolean, "Z");
-    MOCK_FIELD_ID_DEF(jbyte, "B");
-    MOCK_FIELD_ID_DEF(jchar, "C");
-    MOCK_FIELD_ID_DEF(jshort, "S");
-    MOCK_FIELD_ID_DEF(jint, "I");
-    MOCK_FIELD_ID_DEF(jlong, "J");
-    MOCK_FIELD_ID_DEF(jfloat, "F");
-    MOCK_FIELD_ID_DEF(jdouble, "D");
-    MOCK_FIELD_ID_DEF(jobject, "Ljava/lang/Object;");
+    MOCK_FIELD_ID_DEF(jbyte,    "B");
+    MOCK_FIELD_ID_DEF(jchar,    "C");
+    MOCK_FIELD_ID_DEF(jshort,   "S");
+    MOCK_FIELD_ID_DEF(jint,     "I");
+    MOCK_FIELD_ID_DEF(jlong,    "J");
+    MOCK_FIELD_ID_DEF(jfloat,   "F");
+    MOCK_FIELD_ID_DEF(jdouble,  "D");
+    MOCK_FIELD_ID_DEF(jobject,  "Ljava/lang/Object;");
 
     objectConstructorID = (*env)->GetMethodID(env, jclassValue, "<init>", "()V");
     if (objectConstructorID == 0) {

@@ -60,18 +60,13 @@ void function_wrapper() {
     // @CopyUnicode vary=size direction=cj
 
     jsize__IN = (*env)->GetStringLength(env, jstringValue);
-    __android_log_print(
-        ANDROID_LOG_DEBUG,
-        "custom-c", "size %d", jsize__IN);
 
-    if (jsize__IN > 0) {
-        (*env)->GetStringRegion(
-            env,
-            jstringValue,
-            0,
-            jsize__IN,
-            jchar_buf__IN);
-    }
+    (*env)->GetStringRegion(
+        env,
+        jstringValue,
+        0,
+        jsize__IN,
+        jchar_buf__IN);
 
     // @ReadPrimitiveArrayCritical vary=size direction=cj
 

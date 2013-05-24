@@ -4,11 +4,14 @@ import java.util.List;
 import java.io.IOException;
 import java.io.DataOutputStream;
 import android.util.Log;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.BufferedReader;
 
 public class ShellEnvironment {
 
     // thanks http://muzikant-android.blogspot.fi/2011/02/how-to-get-root-access-and-execute.html
-    public static boolean execute(List<String> commands) throws IOException {
+    public static boolean runAsRoot(List<String> commands) throws IOException {
         if (commands == null) {
             return true;
         }
@@ -65,6 +68,42 @@ public class ShellEnvironment {
         }
 
         return retval;
+    }
+
+    public static void run(String command)
+        throws IOException, InterruptedException {
+
+        Process process = null;
+        InputStream err = null;
+        try {
+            process = Runtime.getRuntime().exec(command);
+            err = process.getErrorStream();
+            process.waitFor();
+        
+            if (process.exitValue() != 0) {
+                String line;
+                BufferedReader br = new BufferedReader(new InputStreamReader(err));
+                StringBuilder sb = new StringBuilder("Command failed.\n");
+                while ((line = br.readLine()) != null) {
+                    Log.e("tm", line);
+                    sb.append(line);
+                    sb.append("\n");
+                }
+                process.destroy();
+                br.close();
+                throw new IOException(sb.toString());
+            }
+        }
+        catch (IOException e) {
+            throw e;
+        }
+        catch (InterruptedException e) {
+            throw e;
+        }
+        finally {
+            if (err != null) err.close();
+            if (process != null) process.destroy();
+        }
     }
 
 }

@@ -7,7 +7,6 @@ import fi.helsinki.cs.tituomin.nativebenchmark.ShellEnvironment;
 import java.util.List;
 import java.util.LinkedList;
 import java.util.Date;
-import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -16,8 +15,6 @@ import android.os.SystemClock;
 import android.util.Log;
 import java.io.File;
 import android.os.Environment;
-import java.io.InputStreamReader;
-import java.io.BufferedReader;
 import java.util.Random;
 import java.util.ArrayList;
 
@@ -68,44 +65,8 @@ public abstract class CommandlineTool extends MeasuringTool {
         return options;
     }
 
-    private void runAsCommand(String command)
-        throws IOException, InterruptedException {
-
-        Process process = null;
-        InputStream err = null;
-        try {
-            process = Runtime.getRuntime().exec(command);
-            err = process.getErrorStream();
-            process.waitFor();
-        
-            if (process.exitValue() != 0) {
-                String line;
-                BufferedReader br = new BufferedReader(new InputStreamReader(err));
-                StringBuilder sb = new StringBuilder("Command failed.\n");
-                while ((line = br.readLine()) != null) {
-                    Log.e("tm", line);
-                    sb.append(line);
-                    sb.append("\n");
-                }
-                process.destroy();
-                br.close();
-                throw new IOException(sb.toString());
-            }
-        }
-        catch (IOException e) {
-            throw e;
-        }
-        catch (InterruptedException e) {
-            throw e;
-        }
-        finally {
-            if (err != null) err.close();
-            if (process != null) process.destroy();
-        }
-    }
-
     protected void init() throws IOException, InterruptedException {
-        if (!ShellEnvironment.execute(initScript())) {
+        if (!ShellEnvironment.runAsRoot(initScript())) {
             throw new IOException("Error executing as root.");
         }
     }
@@ -131,7 +92,7 @@ public abstract class CommandlineTool extends MeasuringTool {
         Thread.sleep(delay);
 
         try {
-            runAsCommand(this.command);
+            ShellEnvironment.run(this.command);
         }
         catch (InterruptedException e) {
             throw e;

@@ -1,3 +1,4 @@
+#include "natives.h"
 
 #ifndef RETURNVALUES_H_
 #define RETURNVALUES_H_
@@ -73,7 +74,7 @@ jint __a, __b;
 #define MAX_SIZE 1024
 // todo set max size from par? (final static...)
 
-jvalue jvalue_buf[MAX_SIZE];
+//jvalue *jvalue_buf;
 
 #define VARIABLE(_ctype, direction)                                  \
     _ctype _ctype ## __ ## direction;
@@ -211,9 +212,13 @@ jfieldID jmethodIDValue;
 jmethodID objectConstructorID; 
 char *classNameValue;
 
-// todo par must init (utf version)
-char string_utf__OUT[MAX_SIZE + 1];
-jchar string_unicode__OUT[MAX_SIZE];
+jvalue jvalue_buf[fi_helsinki_cs_tituomin_nativebenchmark_BenchmarkParameter_MAXSIZE];
+char string_utf__OUT[fi_helsinki_cs_tituomin_nativebenchmark_BenchmarkParameter_MAXSIZE + 1];
+jchar string_unicode__OUT[fi_helsinki_cs_tituomin_nativebenchmark_BenchmarkParameter_MAXSIZE];
 
+
+// todo par must init (utf version)
+//char * string_utf__OUT;
+//jchar * string_unicode__OUT;
 
 #endif

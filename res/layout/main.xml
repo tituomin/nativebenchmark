@@ -95,15 +95,13 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/run_all"
-            android:checked="false"
-            android:onClick="onCheckboxClicked"/>
+            android:checked="false"/>
 
   <CheckBox android:id="@+id/checkbox_max"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/max_speed"
-            android:checked="false"
-            android:onClick="onCheckboxClicked"/>
+            android:checked="false"/>
 
   <RadioGroup xmlns:android="http://schemas.android.com/apk/res/android"
               android:layout_width="fill_parent"
@@ -112,14 +110,12 @@
     <RadioButton android:id="@+id/run_alloc"
                  android:layout_width="wrap_content"
                  android:layout_height="wrap_content"
-                 android:text="@string/run_alloc"
-                 android:onClick="onRadioButtonClicked"/>
+                 android:text="@string/run_alloc"/>
     <RadioButton android:id="@+id/run_nonalloc"
                  android:layout_width="wrap_content"
                  android:layout_height="wrap_content"
                  android:text="@string/run_nonalloc"
-                 android:checked="true"
-                 android:onClick="onRadioButtonClicked"/>
+                 android:checked="true"/>
   </RadioGroup>
 
 
