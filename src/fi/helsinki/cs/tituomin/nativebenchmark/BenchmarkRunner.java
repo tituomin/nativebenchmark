@@ -74,14 +74,14 @@ public enum BenchmarkRunner {
 
         // warmup round
         measuringTools.add(
-            new PlainRunner(1, WARMUP_REPS, allocRepetitions));
+            new ResponseTimeRecorder(1, WARMUP_REPS, allocRepetitions, true));
 
         //measuringTools.add(
         //    new MockCommandlineTool(1, repetitions));
 
         // total response time
         measuringTools.add(
-            new ResponseTimeRecorder(1000, repetitions, allocRepetitions));
+            new ResponseTimeRecorder(1000, repetitions, allocRepetitions, false));
 
         // call profile
         measuringTools.add(

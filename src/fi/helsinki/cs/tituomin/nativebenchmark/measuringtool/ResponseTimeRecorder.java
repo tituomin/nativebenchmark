@@ -11,13 +11,22 @@ import android.util.Log;
 
 public class ResponseTimeRecorder extends MeasuringTool {
 
-    public ResponseTimeRecorder(int i, long reps, long allocreps) throws IOException, InterruptedException {
+    public ResponseTimeRecorder(int i, long reps, long allocreps, boolean warmup) throws IOException, InterruptedException {
         super(i, reps, allocreps);
+        this.warmup = warmup;
     }
 
     protected List<MeasuringOption> defaultOptions(List<MeasuringOption> options) {
         // no options needed, time is returned as is (not in extra file)
         return options;
+    }
+
+    public boolean explicitGC() {
+        return !warmup;
+    }
+
+    public boolean ignore() {
+        return warmup;
     }
 
     public void start(Runnable benchmark)
@@ -30,4 +39,6 @@ public class ResponseTimeRecorder extends MeasuringTool {
         putMeasurement("response_time", delta);
         putMeasurement("time_unit", "milliseconds");
     }
+
+    private boolean warmup;
 }
