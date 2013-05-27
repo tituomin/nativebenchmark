@@ -208,7 +208,7 @@ public class BenchmarkSelector extends Activity implements ApplicationState {
 
     public void startMeasuring(View view) {
         allocationArray = null;
-        Resources resources = getResources();
+        final Resources resources = getResources();
         measuringThread = new Thread(
             new Runnable () {
                 public void run() {

@@ -52,7 +52,7 @@ public enum BenchmarkRunner {
 
     private static final String SEPARATOR     = ",";
     private static final String MISSING_VALUE = "-";
-    private static final long WARMUP_REPS = 10000;
+    private static final long WARMUP_REPS = 100000;
     private static BenchmarkParameter benchmarkParameter;
     private static List<MeasuringTool> measuringTools;
     private static int benchmarkCount = 0;
@@ -106,40 +106,40 @@ public enum BenchmarkRunner {
     public enum BenchmarkSet { ALLOC, NON_ALLOC };
     private BenchmarkSet benchmarkSet;
 
-    public BenchmarkRunner setRepetitions(long r) {
-        repetitions = r;
+    public BenchmarkRunner setRepetitions(long x) {
+        repetitions = x;
         return this;
     }
-    public BenchmarkRunner setAllocatingRepetitions(long r) {
-        allocatingRepetitions = r;
+    public BenchmarkRunner setAllocatingRepetitions(long x) {
+        allocatingRepetitions = x;
         return this;
     }
-    public BenchmarkRunner setAppRevision(CharSequence ar) {
-        appRevision = ar;
+    public BenchmarkRunner setAppRevision(CharSequence x) {
+        appRevision = x;
         return this;
     }
-    public BenchmarkRunner setAppChecksum(CharSequence c) {
-        appChecksum = c;
+    public BenchmarkRunner setAppChecksum(CharSequence x) {
+        appChecksum = x;
         return this;
     }
-    public BenchmarkRunner setCacheDir(File d) {
-        cacheDir = d;
+    public BenchmarkRunner setCacheDir(File x) {
+        cacheDir = x;
         return this;
     }
-    public BenchmarkRunner setRunAllBenchmarks(boolean r) {
-        runAllBenchmarks = r;
+    public BenchmarkRunner setRunAllBenchmarks(boolean x) {
+        runAllBenchmarks = x;
         return this;
     }
-    public BenchmarkRunner setRunAtMaxSpeed(boolean m) {
-        runAtMaxSpeed = m;
+    public BenchmarkRunner setRunAtMaxSpeed(boolean x) {
+        runAtMaxSpeed = x;
         return this;
     }
-    public BenchmarkRunner setBenchmarkSubstring(String s) {
-        benchmarkSubstring = s;
+    public BenchmarkRunner setBenchmarkSubstring(String x) {
+        benchmarkSubstring = x;
         return this;
     }
-    public BenchmarkRunner setBenchmarkSet(BenchmarkSet s) {
-        benchmarkSet = s;
+    public BenchmarkRunner setBenchmarkSet(BenchmarkSet x) {
+        benchmarkSet = x;
         return this;
     }
 
@@ -174,12 +174,15 @@ public enum BenchmarkRunner {
                 selected = true;
             }
             else if (substringSearch) {
-                selected = (b.getClass().getSimpleName().toLowerCase().indexOf(this.benchmarkSubstring) != -1);
+                selected = (
+                    b.getClass().getSimpleName().toLowerCase().indexOf(
+                        this.benchmarkSubstring) != -1);
             }
             else {
-                selected = (b.representative()
-                            && ((!b.isAllocating()) && this.benchmarkSet == BenchmarkRunner.BenchmarkSet.NON_ALLOC)
-                                || (b.isAllocating() && this.benchmarkSet == BenchmarkRunner.BenchmarkSet.ALLOC));
+                selected = (
+                    b.representative() &&
+                        ((!b.isAllocating()) && this.benchmarkSet == BenchmarkSet.NON_ALLOC) ||
+                          (b.isAllocating()  && this.benchmarkSet == BenchmarkSet.ALLOC));
             }
             if (selected) {
                 benchmarks.add(b);
