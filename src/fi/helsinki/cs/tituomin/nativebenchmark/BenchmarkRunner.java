@@ -46,7 +46,10 @@ import android.os.Environment;
 import android.util.Log;
 import android.os.SystemClock;
 
-public class BenchmarkRunner {
+public enum BenchmarkRunner {
+    // singleton
+    INSTANCE;
+
     private static final String SEPARATOR     = ",";
     private static final String MISSING_VALUE = "-";
     private static final long WARMUP_REPS = 10000;
@@ -91,32 +94,66 @@ public class BenchmarkRunner {
 
     }
 
-    public static class Attributes {
-        public long repetitions;
-        public long allocatingRepetitions;
-        public CharSequence appRevision;
-        public CharSequence appChecksum;
-        public File cacheDir;
-        public boolean runAllBenchmarks;
-        public boolean runAtMaxSpeed;
-        public String benchmarkSubstring;
-        public BenchmarkSelector.BenchmarkSet benchmarkSet;
+    private long repetitions;
+    private long allocatingRepetitions;
+    private CharSequence appRevision;
+    private CharSequence appChecksum;
+    private File cacheDir;
+    private boolean runAllBenchmarks;
+    private boolean runAtMaxSpeed;
+    private String benchmarkSubstring;
+
+    public enum BenchmarkSet { ALLOC, NON_ALLOC };
+    private BenchmarkSet benchmarkSet;
+
+    public BenchmarkRunner setRepetitions(long r) {
+        repetitions = r;
+        return this;
+    }
+    public BenchmarkRunner setAllocatingRepetitions(long r) {
+        allocatingRepetitions = r;
+        return this;
+    }
+    public BenchmarkRunner setAppRevision(CharSequence ar) {
+        appRevision = ar;
+        return this;
+    }
+    public BenchmarkRunner setAppChecksum(CharSequence c) {
+        appChecksum = c;
+        return this;
+    }
+    public BenchmarkRunner setCacheDir(File d) {
+        cacheDir = d;
+        return this;
+    }
+    public BenchmarkRunner setRunAllBenchmarks(boolean r) {
+        runAllBenchmarks = r;
+        return this;
+    }
+    public BenchmarkRunner setRunAtMaxSpeed(boolean m) {
+        runAtMaxSpeed = m;
+        return this;
+    }
+    public BenchmarkRunner setBenchmarkSubstring(String s) {
+        benchmarkSubstring = s;
+        return this;
+    }
+    public BenchmarkRunner setBenchmarkSet(BenchmarkSet s) {
+        benchmarkSet = s;
+        return this;
     }
 
-    private static Attributes attributes = null;
-    public static void runBenchmarks(ApplicationState mainUI,
-                                     Attributes requestedAttributes) {
+    public void runBenchmarks(ApplicationState mainUI) {
 
         interrupted = false;
-        attributes = requestedAttributes;
 
         byte[] buffer = new byte[128 * 1024];
         File sd = Environment.getExternalStorageDirectory();
         File dataDir = new File(sd, "results");
         dataDir.mkdir();
         try {
-            BenchmarkRegistry.init(attributes.repetitions);
-            initTools(dataDir, attributes.repetitions, attributes.allocatingRepetitions);
+            BenchmarkRegistry.init(this.repetitions);
+            initTools(dataDir, this.repetitions, this.allocatingRepetitions);
         }
         catch (Exception e) {
             mainUI.updateState(ApplicationState.State.ERROR);
@@ -130,19 +167,19 @@ public class BenchmarkRunner {
         List<Benchmark> allBenchmarks = BenchmarkRegistry.getBenchmarks();
         List<Benchmark> benchmarks = new ArrayList<Benchmark> ();;
 
-        boolean substringSearch = !attributes.benchmarkSubstring.equals("");
+        boolean substringSearch = !this.benchmarkSubstring.equals("");
         for (Benchmark b : allBenchmarks) {
             boolean selected;
-            if (attributes.runAllBenchmarks) {
+            if (this.runAllBenchmarks) {
                 selected = true;
             }
             else if (substringSearch) {
-                selected = (b.getClass().getSimpleName().toLowerCase().indexOf(attributes.benchmarkSubstring) != -1);
+                selected = (b.getClass().getSimpleName().toLowerCase().indexOf(this.benchmarkSubstring) != -1);
             }
             else {
                 selected = (b.representative()
-                            && ((!b.isAllocating()) && attributes.benchmarkSet == BenchmarkSelector.BenchmarkSet.NON_ALLOC)
-                                || (b.isAllocating() && attributes.benchmarkSet == BenchmarkSelector.BenchmarkSet.ALLOC));
+                            && ((!b.isAllocating()) && this.benchmarkSet == BenchmarkRunner.BenchmarkSet.NON_ALLOC)
+                                || (b.isAllocating() && this.benchmarkSet == BenchmarkRunner.BenchmarkSet.ALLOC));
             }
             if (selected) {
                 benchmarks.add(b);
@@ -152,7 +189,7 @@ public class BenchmarkRunner {
         int numOfBenchmarks = benchmarks.size();
 
         //Collections.shuffle(benchmarks);
-        if (attributes.runAtMaxSpeed) {
+        if (this.runAtMaxSpeed) {
             Log.v(TAG, "maxed");
             try {
                 Init.initEnvironment(true);
@@ -171,7 +208,7 @@ public class BenchmarkRunner {
                 // set the slower CPU frequency etc. after the warmup
                 // round(s), taking less time
                 try {
-                    Init.initEnvironment(attributes.runAtMaxSpeed);
+                    Init.initEnvironment(this.runAtMaxSpeed);
                 }
                 catch (IOException e) {
                     handleException(e, mainUI);
@@ -187,10 +224,11 @@ public class BenchmarkRunner {
             long endTime = 0;
 
             int round = -1;
+            boolean labelsWritten = false;
             while (++round < max_rounds) {
                 benchmarkCount = 0;
                 PrintWriter tempWriter = null;
-                File tempFile = new File(attributes.cacheDir, "benchmarks-temp.csv");
+                File tempFile = new File(this.cacheDir, "benchmarks-temp.csv");
                 try {
                     tempWriter = makeWriter(tempFile, false);
                 }
@@ -269,13 +307,17 @@ public class BenchmarkRunner {
                 PrintWriter resultWriter = null;
                 try {
                     resultWriter = makeWriter(resultFile, true);
-
-                    String[] labels = BenchmarkResult.labels();
-                    for (int i = 0; i < BenchmarkResult.size(); i++) {
-                        resultWriter.print(labels[i] + SEPARATOR);
+                    // note: labels should be written last, after
+                    // all possible keys have been created
+                    if (!labelsWritten) {
+                        String[] labels = BenchmarkResult.labels();
+                        for (int i = 0; i < BenchmarkResult.size(); i++) {
+                            resultWriter.print(labels[i] + SEPARATOR);
+                        }
+                        resultWriter.println("");
+                        resultWriter.close();
+                        labelsWritten = true;
                     }
-                    resultWriter.println("");
-                    resultWriter.close();
 
                     in = new FileInputStream(tempFile);
                     out = makeOutputStream(resultFile, true);
@@ -314,12 +356,12 @@ public class BenchmarkRunner {
                 }
             } // for round
 
-            if (round > 0) {
+            if (round > 0 && !tool.ignore()) {
                 // there has been at least one succesful round
                 writeMeasurementMetadata(
                     new File(dataDir, "measurements.txt"),
                     measurementID,
-                    (attributes.runAtMaxSpeed ? Init.CPUFREQ_MAX : Init.CPUFREQ),
+                    (this.runAtMaxSpeed ? Init.CPUFREQ_MAX : Init.CPUFREQ),
                     startTime, endTime, start, tool, numOfBenchmarks, round);
 
                 List<String> filenames = tool.getFilenames();
@@ -360,10 +402,10 @@ public class BenchmarkRunner {
             ApplicationState.State.MEASURING_FINISHED);
     }
 
-    private static void writeMeasurementMetadata (
+    private void writeMeasurementMetadata (
         File catalogFile, String measurementID, int cpuFreq,
-        long startTime, long endTime, Date start, MeasuringTool tool, int numOfBenchmarks,
-        int rounds) {
+        long startTime, long endTime, Date start, MeasuringTool tool,
+        int numOfBenchmarks, int rounds) {
 
         Date end = new Date();
         PrintWriter catalogWriter = null;
@@ -374,17 +416,17 @@ public class BenchmarkRunner {
 
             catalogWriter.println(String.format(f, "id", measurementID));
             catalogWriter.println(String.format(f, "cpu-freq", cpuFreq));
-            catalogWriter.println(String.format(f, "repetitions", attributes.repetitions));
+            catalogWriter.println(String.format(f, "repetitions", this.repetitions));
             catalogWriter.println(String.format(f, "rounds", rounds));
             catalogWriter.println(String.format(f, "start", start));
             catalogWriter.println(String.format(f, "end", end));
             catalogWriter.println(String.format(f, "duration", Utils.humanTime(endTime - startTime)));
             catalogWriter.println(String.format(f, "tool", tool.getClass().getSimpleName()));
             catalogWriter.println(String.format(f, "benchmarks", numOfBenchmarks));
-            catalogWriter.println(String.format(f, "code-revision", attributes.appRevision));
-            catalogWriter.println(String.format(f, "code-checksum", attributes.appChecksum));
-            catalogWriter.println(String.format(f, "benchmark-set", attributes.benchmarkSet));
-            catalogWriter.println(String.format(f, "substring-filter", attributes.benchmarkSubstring));
+            catalogWriter.println(String.format(f, "code-revision", this.appRevision));
+            catalogWriter.println(String.format(f, "code-checksum", this.appChecksum));
+            catalogWriter.println(String.format(f, "benchmark-set", this.benchmarkSet));
+            catalogWriter.println(String.format(f, "substring-filter", this.benchmarkSubstring));
             catalogWriter.println("");
         }
         catch (IOException e ) {

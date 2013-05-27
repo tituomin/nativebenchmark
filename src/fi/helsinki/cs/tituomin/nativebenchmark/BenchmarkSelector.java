@@ -208,24 +208,24 @@ public class BenchmarkSelector extends Activity implements ApplicationState {
 
     public void startMeasuring(View view) {
         allocationArray = null;
+        Resources resources = getResources();
         measuringThread = new Thread(
             new Runnable () {
                 public void run() {
-                    Resources resources = getResources();
-                    BenchmarkRunner.Attributes attr = new BenchmarkRunner.Attributes();
-                    attr.appChecksum           = resources.getText(R.string.app_checksum);
-                    attr.appRevision           = resources.getText(R.string.app_revision);
-                    attr.cacheDir              = getCacheDir();
-                    attr.repetitions           = repetitions;
-                    attr.allocatingRepetitions = Long.parseLong(textValue(R.id.alloc_reps));
-                    attr.benchmarkSubstring    = textValue(R.id.benchmark_substring).toLowerCase();
-                    attr.runAllBenchmarks      = isChecked(R.id.checkbox_long);
-                    attr.runAtMaxSpeed         = isChecked(R.id.checkbox_max);
-                    attr.benchmarkSet          = isChecked(R.id.run_alloc) ?
-                                                     BenchmarkSet.ALLOC :
-                                                     BenchmarkSet.NON_ALLOC;
+                    BenchmarkRunner runner = BenchmarkRunner.INSTANCE 
+                        .setAppChecksum           (resources.getText(R.string.app_checksum))
+                        .setAppRevision           (resources.getText(R.string.app_revision))
+                        .setCacheDir              (getCacheDir())
+                        .setRepetitions           (repetitions)
+                        .setAllocatingRepetitions (Long.parseLong(textValue(R.id.alloc_reps)))
+                        .setBenchmarkSubstring    (textValue(R.id.benchmark_substring).toLowerCase())
+                        .setRunAllBenchmarks      (isChecked(R.id.checkbox_long))
+                        .setRunAtMaxSpeed         (isChecked(R.id.checkbox_max))
+                        .setBenchmarkSet          (isChecked(R.id.run_alloc) ?
+                                                   BenchmarkRunner.BenchmarkSet.ALLOC :
+                                                   BenchmarkRunner.BenchmarkSet.NON_ALLOC);
                     
-                    BenchmarkRunner.runBenchmarks(BenchmarkSelector.this, attr);
+                    runner.runBenchmarks(BenchmarkSelector.this);
                 }
             });
         this.updateState(ApplicationState.State.MEASURING);
@@ -269,8 +269,6 @@ public class BenchmarkSelector extends Activity implements ApplicationState {
             return builder.create();
         }
     }
-
-    public enum BenchmarkSet { ALLOC, NON_ALLOC };
 
     private long repetitions;
     private boolean retry;
