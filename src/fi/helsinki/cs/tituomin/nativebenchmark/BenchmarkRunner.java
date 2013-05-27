@@ -6,6 +6,7 @@ import fi.helsinki.cs.tituomin.nativebenchmark.measuringtool.MeasuringTool;
 import fi.helsinki.cs.tituomin.nativebenchmark.measuringtool.MeasuringTool.RunnerException;
 import fi.helsinki.cs.tituomin.nativebenchmark.measuringtool.PlainRunner;
 import fi.helsinki.cs.tituomin.nativebenchmark.measuringtool.ResponseTimeRecorder;
+import fi.helsinki.cs.tituomin.nativebenchmark.measuringtool.JavaSystemNanoResponseTimeRecorder;
 import fi.helsinki.cs.tituomin.nativebenchmark.measuringtool.LinuxPerfRecordTool;
 import fi.helsinki.cs.tituomin.nativebenchmark.measuringtool.CommandlineTool;
 import fi.helsinki.cs.tituomin.nativebenchmark.measuringtool.MockCommandlineTool;
@@ -74,14 +75,14 @@ public enum BenchmarkRunner {
 
         // warmup round
         measuringTools.add(
-            new ResponseTimeRecorder(1, WARMUP_REPS, allocRepetitions, true));
+            new JavaSystemNanoResponseTimeRecorder(1, WARMUP_REPS, allocRepetitions, true));
 
         //measuringTools.add(
         //    new MockCommandlineTool(1, repetitions));
 
         // total response time
         measuringTools.add(
-            new ResponseTimeRecorder(1000, repetitions, allocRepetitions, false));
+            new JavaSystemNanoResponseTimeRecorder(1000, repetitions, allocRepetitions, false));
 
         // call profile
         measuringTools.add(
