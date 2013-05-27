@@ -17,12 +17,12 @@ public class JavaSystemNanoResponseTimeRecorder extends ResponseTimeRecorder {
 
     public void start(Runnable benchmark)
     throws InterruptedException, IOException {
-        long endTime = 0, startTime = System.nanoTime();
+        long endTime, startTime;
+        startTime = System.nanoTime();
         benchmark.run();
-        // todo mainitse tekstissä toteutus (ks. todo.org)
         endTime = System.nanoTime();
-        // todo: epätarkkuus, init ym. ?
         String delta = "" + (endTime - startTime);
-        putMeasurement("response_time_nanos", delta);
+        putMeasurement("response_time", delta);
+        putMeasurement("time_unit", "nanoseconds");
     }
 }

@@ -52,7 +52,7 @@ public enum BenchmarkRunner {
 
     private static final String SEPARATOR     = ",";
     private static final String MISSING_VALUE = "-";
-    private static final long WARMUP_REPS = 100000;
+    private static final long WARMUP_REPS = 1000000;
     private static BenchmarkParameter benchmarkParameter;
     private static List<MeasuringTool> measuringTools;
     private static int benchmarkCount = 0;
@@ -204,6 +204,9 @@ public enum BenchmarkRunner {
         }
 
         for (MeasuringTool tool : measuringTools) {
+            if (interrupted) {
+                return;
+            }
 
             Log.v("Runner", tool.getClass().getSimpleName());
 
@@ -228,7 +231,7 @@ public enum BenchmarkRunner {
 
             int round = -1;
             boolean labelsWritten = false;
-            while (++round < max_rounds) {
+            while (!interrupted && ++round < max_rounds) {
                 benchmarkCount = 0;
                 PrintWriter tempWriter = null;
                 File tempFile = new File(this.cacheDir, "benchmarks-temp.csv");
@@ -395,9 +398,6 @@ public enum BenchmarkRunner {
                     }
                 }        
 
-            }
-            if (interrupted) {
-                return;
             }
 
         } // for tool

@@ -22,12 +22,12 @@ public class ResponseTimeRecorder extends MeasuringTool {
 
     public void start(Runnable benchmark)
     throws InterruptedException, IOException {
-        long endTime = 0, startTime = SystemClock.uptimeMillis();
+        long endTime, startTime;
+        startTime = SystemClock.uptimeMillis();
         benchmark.run();
-        // todo mainitse tekstissä toteutus (ks. todo.org)
         endTime = SystemClock.uptimeMillis();
-        // todo: epätarkkuus, init ym. ?
         String delta = "" + (endTime - startTime);
-        putMeasurement("response_time_millis", delta);
+        putMeasurement("response_time", delta);
+        putMeasurement("time_unit", "milliseconds");
     }
 }
