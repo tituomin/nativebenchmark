@@ -10,8 +10,6 @@ Java_fi_helsinki_cs_tituomin_nativebenchmark_BenchmarkParameter_initReturnvalues
     jclass cls = (*env)->GetObjectClass(env, benchmarkParameter);
     jobject local_reference;
 
-    
-
     CHECK_AND_CALL(jbooleanArray, BooleanArray, "()[Z");
     CHECK_AND_CALL(jbyteArray,    ByteArray,    "()[B");
     CHECK_AND_CALL(jcharArray,    CharArray,    "()[C");
