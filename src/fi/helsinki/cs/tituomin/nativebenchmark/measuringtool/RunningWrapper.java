@@ -59,6 +59,9 @@ public class RunningWrapper implements Runnable {
     public void begin(MeasuringTool tool)  throws InterruptedException, IOException {
         init(benchmark);
         tool.start(this);
+        if (Thread.currentThread().isInterrupted()) {
+            setInterrupted();
+        }
     }
 
 }
