@@ -73,22 +73,38 @@ public enum BenchmarkRunner {
 
         measuringTools = new ArrayList<MeasuringTool> ();
 
-        // warmup round
+        // warmup round I
+        // measuringTools.add(
+        //     new JavaSystemNanoResponseTimeRecorder((int)WARMUP_REPS, 1, allocRepetitions, true));
+
+        // warmup round II
         measuringTools.add(
             new JavaSystemNanoResponseTimeRecorder(1, WARMUP_REPS, allocRepetitions, true));
-
-        //measuringTools.add(
-        //    new MockCommandlineTool(1, repetitions));
 
         // total response time
         measuringTools.add(
             new JavaSystemNanoResponseTimeRecorder(1000, repetitions, allocRepetitions, false));
 
-        // call profile
+        //measuringTools.add(
+        //    new MockCommandlineTool(1, repetitions));
+
+        // warmup round I
+        // measuringTools.add(
+        //     new ResponseTimeRecorder((int)WARMUP_REPS, 1, allocRepetitions, true));
+
+        // warmup round II
         measuringTools.add(
-            new LinuxPerfRecordTool(1, allocRepetitions)
-            .set(BasicOption.OUTPUT_FILEPATH, perfDir.getPath())
-            .set(BasicOption.MEASURE_LENGTH, "10"));
+            new ResponseTimeRecorder(1, WARMUP_REPS, allocRepetitions, true));
+
+        // total response time
+        measuringTools.add(
+            new ResponseTimeRecorder(1000, repetitions, allocRepetitions, false));
+
+        // call profile
+        // measuringTools.add(
+        //     new LinuxPerfRecordTool(1, allocRepetitions)
+        //     .set(BasicOption.OUTPUT_FILEPATH, perfDir.getPath())
+        //     .set(BasicOption.MEASURE_LENGTH, "10"));
 
         // total response time
         //measuringTools.add(new ResponseTimeRecorder(1000, repetitions));
@@ -232,7 +248,9 @@ public enum BenchmarkRunner {
 
             int round = -1;
             boolean labelsWritten = false;
-            while (!interrupted && ++round < max_rounds) {
+
+        roundloop:
+            while (++round < max_rounds) {
                 benchmarkCount = 0;
                 PrintWriter tempWriter = null;
                 File tempFile = new File(this.cacheDir, "benchmarks-temp.csv");
@@ -248,15 +266,17 @@ public enum BenchmarkRunner {
                 List<BenchmarkResult> collectedData;
 
                 try {
-                    System.gc();
-                    Thread.sleep(500);
+                    if (tool.explicitGC()) {
+                        System.gc();
+                        Thread.sleep(500);
+                    }
                 }
                 catch (InterruptedException e) {
                     logE("Measuring thread was interrupted", e);
                     mainUI.updateState(
                         ApplicationState.State.INTERRUPTED);
                     interrupted = true;
-                    break;
+                    break roundloop;
                 }
 
                 int j = 0;
@@ -269,14 +289,15 @@ public enum BenchmarkRunner {
                         mainUI.updateState(
                             ApplicationState.State.ERROR);
                         interrupted = true;
-                        break;
+                        break roundloop;
                     }
                     catch (InterruptedException e) {
                         logE("Measuring thread was interrupted", e);
                         mainUI.updateState(
                             ApplicationState.State.INTERRUPTED);
+
                         interrupted = true;
-                        break;
+                        break roundloop;
                     }
                     // todo: remove UI overhead?
                     //                    Log.v(TAG, benchmark.getClass().getName());
@@ -300,8 +321,7 @@ public enum BenchmarkRunner {
                         tempWriter.println("");
                         tempWriter.flush();
                     }
-
-                } // benchmark loop
+                }
                 endTime = SystemClock.uptimeMillis();
                 tempWriter.close();
 
@@ -339,7 +359,7 @@ public enum BenchmarkRunner {
                     mainUI.updateState(ApplicationState.State.ERROR);
                     Log.e("BenchmarkRunner", "Error writing results", e);
                     interrupted = true;
-                    break;
+                    break roundloop;
                 }
                 finally {
                     try {
@@ -358,10 +378,10 @@ public enum BenchmarkRunner {
                         mainUI.updateState(ApplicationState.State.ERROR);
                         Log.e("BenchmarkRunner", "Error closing files", e);
                         interrupted = true;
-                        break;
+                        break roundloop;
                     }
                 }
-            } // for round
+            }
 
             if (round > 0 && !tool.ignore()) {
                 // there has been at least one succesful round
@@ -398,10 +418,9 @@ public enum BenchmarkRunner {
                         logE("Error closing file.", e);
                     }
                 }        
-
             }
 
-        } // for tool
+        }
         mainUI.updateState(
             ApplicationState.State.MEASURING_FINISHED);
     }

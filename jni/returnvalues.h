@@ -8,6 +8,7 @@
 
 int check_interrupted(JNIEnv *);
 
+int interrupted;
 jlong CHECK_INTERRUPTED_INTERVAL;
 jlong repetitions;
 jlong repetitionsLeft;

@@ -52,6 +52,8 @@ JNIEXPORT void JNICALL
 Java_fi_helsinki_cs_tituomin_nativebenchmark_BenchmarkRegistry_initNative
 (JNIEnv *env, jclass cls, jlong reps, jlong interval, jclass javaCounterparts, jclass thread_cls) {
     repetitions = reps;
+    interrupted = 0;
+
     CHECK_INTERRUPTED_INTERVAL = interval;
     jclass java_counterparts_class_global_ref = NULL;
     jclass thread_class_global_ref = NULL;
@@ -87,6 +89,12 @@ JNIEXPORT void JNICALL
 Java_fi_helsinki_cs_tituomin_nativebenchmark_BenchmarkRegistry_setRepetitions
 (JNIEnv *env, jclass cls, jlong reps) {
     repetitions = reps;
+}
+
+JNIEXPORT void JNICALL
+Java_fi_helsinki_cs_tituomin_nativebenchmark_BenchmarkRegistry_interruptNative
+(JNIEnv *env, jclass cls) {
+    interrupted = 1;
 }
 
 """

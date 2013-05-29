@@ -28,5 +28,5 @@ public class BenchmarkRegistry {
 
     public static native void initNative(long repetitions, long interval, Class javaCounterparts, Class threadClass);
     public static native void setRepetitions(long repetitions);
-
+    public static native void interruptNative();
 }

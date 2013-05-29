@@ -36,6 +36,7 @@ public abstract class MeasuringTool implements Runnable {
 
     public static synchronized void userInterrupt() {
         userInterrupted = true;
+        BenchmarkRegistry.interruptNative();
     }
 
     public static synchronized boolean userInterrupted() {
@@ -85,7 +86,6 @@ public abstract class MeasuringTool implements Runnable {
         if (wrapper.exceptionWasThrown()) {
             throw new RunnerException(wrapper.getException());
         }
-
     }
 
     public class RunnerException extends Exception { 
