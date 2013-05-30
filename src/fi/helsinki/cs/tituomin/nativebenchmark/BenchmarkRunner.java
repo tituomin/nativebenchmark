@@ -53,7 +53,7 @@ public enum BenchmarkRunner {
 
     private static final String SEPARATOR     = ",";
     private static final String MISSING_VALUE = "-";
-    private static final long WARMUP_REPS = 1000000;
+    private static final long WARMUP_REPS = 50000;
     private static BenchmarkParameter benchmarkParameter;
     private static List<MeasuringTool> measuringTools;
     private static int benchmarkCount = 0;
@@ -74,8 +74,8 @@ public enum BenchmarkRunner {
         measuringTools = new ArrayList<MeasuringTool> ();
 
         // warmup round I
-        // measuringTools.add(
-        //     new JavaSystemNanoResponseTimeRecorder((int)WARMUP_REPS, 1, allocRepetitions, true));
+        measuringTools.add(
+            new JavaSystemNanoResponseTimeRecorder((int)WARMUP_REPS, 1, allocRepetitions, true));
 
         // warmup round II
         measuringTools.add(

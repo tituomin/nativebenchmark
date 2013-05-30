@@ -173,21 +173,6 @@ public abstract class MeasuringTool implements Runnable {
         return false;
     }
 
-    public void addObserver(ApplicationState o) {
-        if (this.observers == null) {
-            this.observers = new LinkedList<ApplicationState>();
-        }
-        this.observers.add(o);
-    }
-
-    public void notifyObservers(ApplicationState.State state) {
-        
-        for (ApplicationState o : this.observers) {
-            o.updateState(state);
-        }
-    }
-    public final static Observable mockObservable = new Observable();
-
     private boolean hasRequiredOptions() {
         return options.keySet().containsAll(requiredOptions);
     }

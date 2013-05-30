@@ -68,75 +68,71 @@ public class BenchmarkSelector extends Activity implements ApplicationState {
         int memoryClass = am.getLargeMemoryClass();
         Log.v("Selector", "Memory size " + Runtime.getRuntime().maxMemory());
         Log.v("onCreate", "memoryClass:" + Integer.toString(memoryClass));
+        stateChanger = new StateChanger();
 
         // pre-enlarges the heap
         this.allocationArray = new byte[1024 * 1024 * 100];
     }
 
-    public void setMessage(int id) {
+    public void displayMessage(int id) {
         this.resultView.setText(id);
     }
 
-    public void setMessage(String message) {
+    public void displayMessage(String message) {
         this.resultView.setText(message);
     }
 
-    public void setMessage(int id, String message) {
+    public void displayMessage(int id, String message) {
         this.resultView.setText(getResources().getString(id) + " " + message);
     }
 
     public void updateState(ApplicationState.State state) {
-        runOnUiThread(new StateChanger(state));
+        updateState(state, null);
     }
     public void updateState(ApplicationState.State state, String message) {
-        runOnUiThread(new StateChanger(state, message));
-    }
-
-    private class StateChanger implements Runnable {
-        private ApplicationState.State state;
-        private String message;
-
-        public StateChanger(ApplicationState.State state) {
-            this.state = state;
-        }
-        public StateChanger(ApplicationState.State state, String message) {
+        synchronized(this) {
             this.state = state;
             this.message = message;
         }
+    }
 
+    private class StateChanger implements Runnable {
         public void run() {
-            if (message == null) {
-                setMessage(state.stringId);
-            }
-            else {
-                setMessage(state.stringId, message);
-            }
+            synchronized(BenchmarkSelector.this) {
+                if (message == null) {
+                    displayMessage(state.stringId);
+                }
+                else {
+                    displayMessage(state.stringId, message);
+                }
 
-            switch (state) {
-            case MEASURING:
-                wakeLock.acquire();
-                getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-                expPick.setEnabled(false);
-                numPick.setEnabled(false);
-                switchButton(button);
-                break;
-            case MILESTONE:
-                break;
+                switch (state) {
+                case MEASURING:
+                    wakeLock.acquire();
+                    getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+                    expPick.setEnabled(false);
+                    numPick.setEnabled(false);
+                    switchButton(button);
+                    break;
+                case MILESTONE:
+                    break;
 
-                // -----------------------------
+                    // -----------------------------
 
-            case ERROR:
-            case INTERRUPTED:
-                // intended fallthrough
-            case MEASURING_FINISHED:
-                wakeLock.release();
-                getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-                // intended fallthrough
-            case INITIALISED:
-                resetButton(button);
-                numPick.setEnabled(true);
-                expPick.setEnabled(true);
-                break;
+                case ERROR:
+                case INTERRUPTED:
+                    // intended fallthrough
+                case MEASURING_FINISHED:
+                    stateThread.interrupt();
+                    wakeLock.release();
+                    getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+                    // intended fallthrough
+                case INITIALISED:
+                    resetButton(button);
+                    numPick.setEnabled(true);
+                    expPick.setEnabled(true);
+                    break;
+                }
             }
         }
     }
@@ -188,7 +184,7 @@ public class BenchmarkSelector extends Activity implements ApplicationState {
                     button.setOnClickListener(
                         new View.OnClickListener() {
                             public void onClick(View v) {
-                                setMessage(ApplicationState.State.INTERRUPTING.stringId);
+                                displayMessage(ApplicationState.State.INTERRUPTING.stringId);
                                 MeasuringTool.userInterrupt();
                                 measuringThread.interrupt();
                             }
@@ -228,7 +224,20 @@ public class BenchmarkSelector extends Activity implements ApplicationState {
                     runner.runBenchmarks(BenchmarkSelector.this);
                 }
             });
+        stateThread = new Thread(
+            new Runnable () {
+                public void run() {
+                    while (!Thread.currentThread().isInterrupted()) {
+                        runOnUiThread(stateChanger);
+                        try {
+                            Thread.sleep(5000);
+                        }
+                        catch (InterruptedException e) {
+                            break;
+                        }
+                    }}});
         this.updateState(ApplicationState.State.MEASURING);
+        stateThread.start();
         measuringThread.start();
     }
 
@@ -277,7 +286,12 @@ public class BenchmarkSelector extends Activity implements ApplicationState {
     private Button button;
     private PowerManager.WakeLock wakeLock;
     private Thread measuringThread;
+    private Thread stateThread;
     private byte[] allocationArray;
+    private StateChanger stateChanger;
+
+    private ApplicationState.State state;
+    private String message;
 
     private static final String TAG = "BenchmarkSelector";
 
