@@ -15,6 +15,7 @@ import fi.helsinki.cs.tituomin.nativebenchmark.BenchmarkResult;
 import fi.helsinki.cs.tituomin.nativebenchmark.Utils;
 import fi.helsinki.cs.tituomin.nativebenchmark.ShellEnvironment;
 import fi.helsinki.cs.tituomin.nativebenchmark.Init;
+import fi.helsinki.cs.tituomin.nativebenchmark.ToolConfig;
 
 
 import java.util.Date;

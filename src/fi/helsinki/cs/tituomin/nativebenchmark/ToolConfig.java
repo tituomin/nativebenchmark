@@ -35,7 +35,7 @@ public class ToolConfig {
         return ""; // todo
     }
 
-    public Iterator<MeasuringTool> tools() {
+    public Iterator<MeasuringTool> tools() throws JSONException {
         return new ToolIterator();
     }
 
@@ -51,22 +51,24 @@ public class ToolConfig {
             return currentToolIndex + 1 < toolArray.length();
         }
         public MeasuringTool next() {
+            MeasuringTool tool = null;
             try {
-                return createTool(toolArray.getJSONObject(++currentToolIndex));
+                tool = createTool(toolArray.getJSONObject(++currentToolIndex));
+                if (tool == null) {
+                    throw new NoSuchElementException();
+                }
             }
             catch (JSONException e) {
-                Log.e("ToolConfig", "Wrong structure in JSON tool array");
-                throw new NoSuchElementException();
+                Log.e("ToolConfig", "Error reading json config", e);
             }
+            return tool;
         }
         public void remove() {
             throw new UnsupportedOperationException();
         }
     }
 
-    private MeasuringTool createTool(JSONObject specs) throws JSONException, ClassNotFoundException, NoSuchMethodException, InstantiationException {
-        Class<?> _class = Class.forName(TOOL_PACKAGE + "." + specs.getString("class"));
-        Constructor<?> ctor = _class.getConstructor(Integer.class, Long.class, Long.class);
+    private MeasuringTool createTool(JSONObject specs) {
 
         long repetitions;
         int rounds;
@@ -75,12 +77,26 @@ public class ToolConfig {
         long defaultRepetitions = 0;
         int defaultRounds = 0;
         long allocrepetitions = 0;
+        // todo
 
-        repetitions = specs.optLong("repetitions", contents.optLong(specs.optString("repetitions"), defaultRepetitions));
-        rounds = specs.optInt("rounds", contents.optInt(specs.optString("rounds"), defaultRounds));
+        Object tool = null;
+        try {
+            repetitions = specs.optLong(
+                "repetitions", contents.optLong(
+                    specs.optString("repetitions"), defaultRepetitions));
 
-        // todo allocarepetitions
-        Object tool = ctor.newInstance(rounds, repetitions, allocrepetitions);
+            rounds = specs.optInt(
+                "rounds", contents.optInt(
+                    specs.optString("rounds"), defaultRounds));
+
+            Class<?> _class = Class.forName(TOOL_PACKAGE + "." + specs.getString("class"));
+            Constructor<?> ctor = _class.getConstructor(Integer.class, Long.class, Long.class);
+            tool = ctor.newInstance(rounds, repetitions, allocrepetitions);
+        }
+        catch (Exception e) {
+            Log.e("ToolConfig", "Error instantiating tool", e);
+            return null;
+        }
         return (MeasuringTool) tool;
     }
 
