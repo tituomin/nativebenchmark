@@ -15,7 +15,10 @@ import android.widget.Button;
 import android.util.Log;
 import android.util.Pair;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.File;
+import java.util.Map;
 import android.os.Environment;
 import android.content.res.Resources;
 import android.widget.NumberPicker;
@@ -70,8 +73,33 @@ public class BenchmarkSelector extends Activity implements ApplicationState {
         Log.v("onCreate", "memoryClass:" + Integer.toString(memoryClass));
         stateChanger = new StateChanger();
 
+        configurations = initConfig();
+
         // pre-enlarges the heap
         this.allocationArray = new byte[1024 * 1024 * 100];
+    }
+
+    private Map<String,ToolConfig> initConfig() {
+        File configFile = new File(Environment.getExternalStorageDirectory(), "nativebenchmark_setup.json");
+        String jsonContents = null;
+
+        try {
+            if (!configFile.exists()) {
+                InputStream templateStream = getResources().openRawResource(
+                    R.raw.setup);
+                OutputStream configFileStream = Utils.makeOutputStream(
+                    configFile, false);
+                Utils.copyStream(templateStream, configFileStream);
+            }
+            jsonContents = Utils.readFileToString(configFile);
+            return ToolConfig.readConfigurations(jsonContents);
+        }
+        catch (Exception e) {
+            String msg = getResources().getString(R.string.config_error);
+            updateState(ApplicationState.State.ERROR, msg);
+            Log.e(TAG, msg, e);
+            return null;
+        }
     }
 
     public void displayMessage(int id) {
@@ -221,7 +249,7 @@ public class BenchmarkSelector extends Activity implements ApplicationState {
                                                    BenchmarkRunner.BenchmarkSet.ALLOC :
                                                    BenchmarkRunner.BenchmarkSet.NON_ALLOC);
                     
-                    runner.runBenchmarks(BenchmarkSelector.this);
+                    runner.runBenchmarks(BenchmarkSelector.this, configurations.get("default")); // todo selector ui
                 }
             });
         stateThread = new Thread(
@@ -294,6 +322,8 @@ public class BenchmarkSelector extends Activity implements ApplicationState {
     private String message;
 
     private static final String TAG = "BenchmarkSelector";
+
+    private Map<String,ToolConfig> configurations;
 
     static {
         System.loadLibrary("nativebenchmark");

@@ -161,16 +161,15 @@ public enum BenchmarkRunner {
         return this;
     }
 
-    public void runBenchmarks(ApplicationState mainUI) {
-
+    public void runBenchmarks(ApplicationState mainUI, ToolConfig config) {
         interrupted = false;
 
-        byte[] buffer = new byte[128 * 1024];
         File sd = Environment.getExternalStorageDirectory();
         File dataDir = new File(sd, "results");
         dataDir.mkdir();
         try {
             BenchmarkRegistry.init(this.repetitions);
+            // todo replace with config
             initTools(dataDir, this.repetitions, this.allocatingRepetitions);
         }
         catch (Exception e) {
@@ -256,7 +255,7 @@ public enum BenchmarkRunner {
                 PrintWriter tempWriter = null;
                 File tempFile = new File(this.cacheDir, "benchmarks-temp.csv");
                 try {
-                    tempWriter = makeWriter(tempFile, false);
+                    tempWriter = Utils.makeWriter(tempFile, false);
                 }
                 catch (FileNotFoundException e) {
                     handleException(e, mainUI);
@@ -334,7 +333,7 @@ public enum BenchmarkRunner {
                 OutputStream out = null;
                 PrintWriter resultWriter = null;
                 try {
-                    resultWriter = makeWriter(resultFile, true);
+                    resultWriter = Utils.makeWriter(resultFile, true);
                     // note: labels should be written last, after
                     // all possible keys have been created
                     if (!labelsWritten) {
@@ -348,12 +347,8 @@ public enum BenchmarkRunner {
                     }
 
                     in = new FileInputStream(tempFile);
-                    out = makeOutputStream(resultFile, true);
-                    int count;
-                    while ((count = in.read(buffer, 0, 128 * 1024)) != -1) {
-                        out.write(buffer, 0, count);
-                    }
-                    out.flush();
+                    out = Utils.makeOutputStream(resultFile, true);
+                    Utils.copyStream(in, out);
                     //tempFile.delete();
                 }
                 catch (Exception e) {
@@ -398,7 +393,7 @@ public enum BenchmarkRunner {
 
                     try {
                         File zip = new File(dataDir, "perfdata-" + measurementID + ".zip");
-                        os = makeOutputStream(zip, false);
+                        os = Utils.makeOutputStream(zip, false);
                         Log.v("BenchmarkRunner", "filenames " + filenames.size());
                         filenames.add(new File(dataDir, "benchmarks-" + measurementID + ".csv").getAbsolutePath());
                         writeToZipFile(os, filenames, measurementID);
@@ -435,7 +430,7 @@ public enum BenchmarkRunner {
         PrintWriter catalogWriter = null;
         try {
             String f = "%20s: %s";
-            catalogWriter = makeWriter(catalogFile, true);
+            catalogWriter = Utils.makeWriter(catalogFile, true);
             catalogWriter.println("");
 
             catalogWriter.println(String.format(f, "id", measurementID));
@@ -497,7 +492,7 @@ public enum BenchmarkRunner {
         byte[] bytes = new byte[byteCount];
         for (String filename : filenames) {
             try {
-                InputStream is = makeInputStream(filename);
+                InputStream is = Utils.makeInputStream(filename);
                 ZipEntry entry = new ZipEntry(mID + "/" + new File(filename).getName());
                 int bytesRead = -1;
                 zos.putNextEntry(entry);
@@ -515,14 +510,6 @@ public enum BenchmarkRunner {
         catch (IOException e) {
             logE(e);
         }
-    }
-
-    private static Map<String,String> makeMap() {
-        return new HashMap<String,String> ();
-    }
-
-    private static List<String> makeList() {
-        return new ArrayList<String> (200);
     }
 
     private static List<BenchmarkResult> runSeries(
@@ -624,42 +611,6 @@ public enum BenchmarkRunner {
         return compiledMetadata;
     }
 
-    private static PrintWriter
-    makeWriter(File dir, String filename, boolean append)
-    throws FileNotFoundException
-    {
-        return new PrintWriter(makeOutputStream(dir, filename, append));
-    }
-
-    private static PrintWriter
-    makeWriter(File file, boolean append)
-    throws FileNotFoundException
-    {
-        return new PrintWriter(makeOutputStream(file, append));
-    }
-
-    private static OutputStream
-    makeOutputStream(File dir, String filename, boolean append)
-    throws FileNotFoundException
-    {
-        return makeOutputStream(new File(dir, filename), append);
-    }
-
-    private static OutputStream
-    makeOutputStream(File file, boolean append)
-    throws FileNotFoundException
-    {
-        return new BufferedOutputStream(
-            new FileOutputStream(
-                file, append));
-    }
-
-    private static InputStream
-    makeInputStream(String filename)
-    throws FileNotFoundException
-    {
-        return new BufferedInputStream(new FileInputStream(new File(filename)));
-    }
 
     private static BenchmarkResult inspectBenchmark(Benchmark benchmark) throws ClassNotFoundException {
         BenchmarkResult bdata = new BenchmarkResult();

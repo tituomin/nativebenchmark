@@ -15,9 +15,9 @@ import fi.helsinki.cs.tituomin.nativebenchmark.measuringtool.MeasuringTool;
 
 public class ToolConfig {
 
-    public static Map<String, ToolConfig> readConfigurations(File jsonFile)
+    public static Map<String, ToolConfig> readConfigurations(String jsonConfig)
     throws JSONException {
-        JSONObject cfgObject = new JSONObject(readToString(jsonFile));
+        JSONObject cfgObject = new JSONObject(jsonConfig);
         Map<String, ToolConfig> result = new HashMap<String, ToolConfig> ();
         Iterator i = cfgObject.keys();
         while (i.hasNext()) {
@@ -29,10 +29,6 @@ public class ToolConfig {
 
     public ToolConfig(JSONObject job) {
         this.contents = job;
-    }
-
-    public static String readToString(File file) {
-        return ""; // todo
     }
 
     public Iterator<MeasuringTool> tools() throws JSONException {

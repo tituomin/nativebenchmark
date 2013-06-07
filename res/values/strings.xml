@@ -24,4 +24,5 @@
     <string name="run_alloc">Allocating</string>
     <string name="run_nonalloc">Non-allocating</string>
     <string name="benchmark_substring">Benchmark substring</string>
+    <string name="config_error">Error reading config file.</string>
 </resources>
