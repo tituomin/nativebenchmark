@@ -49,8 +49,7 @@ import android.util.Log;
 import android.os.SystemClock;
 
 public enum BenchmarkRunner {
-    // singleton
-    INSTANCE;
+    INSTANCE; // singleton enum pattern
 
     private static final String SEPARATOR     = ",";
     private static final String MISSING_VALUE = "-";
