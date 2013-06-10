@@ -25,6 +25,10 @@ import android.widget.NumberPicker;
 import android.widget.CheckBox;
 import android.widget.Checkable;
 import android.widget.RadioButton;
+import android.widget.Spinner;
+import android.widget.ArrayAdapter;
+import android.widget.AdapterView.OnItemSelectedListener;
+import android.widget.AdapterView;
 import android.view.WindowManager;
 import android.os.PowerManager;
 import android.content.Context;
@@ -74,9 +78,11 @@ public class BenchmarkSelector extends Activity implements ApplicationState {
         stateChanger = new StateChanger();
 
         configurations = initConfig();
+        initSpinner(configurations);
 
         // pre-enlarges the heap
         this.allocationArray = new byte[1024 * 1024 * 100];
+
     }
 
     private Map<String,ToolConfig> initConfig() {
@@ -100,6 +106,27 @@ public class BenchmarkSelector extends Activity implements ApplicationState {
             Log.e(TAG, msg, e);
             return null;
         }
+    }
+    
+    private void initSpinner(Map<String,ToolConfig> conf) {
+        Spinner spinner = (Spinner) findViewById(R.id.config_spinner);
+        ArrayAdapter<CharSequence> adapter = new ArrayAdapter(this, android.R.layout.simple_spinner_item, conf.keySet().toArray(new String[1]));
+
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinner.setAdapter(adapter);
+        spinner.setOnItemSelectedListener(new OnItemSelectedListener() {
+                public void onItemSelected(
+                    AdapterView<?> parent, View view,
+                    int pos, long id) {
+                    // An item was selected. You can retrieve the selected item using
+                    // parent.getItemAtPosition(pos)
+                    selectedConfiguration = (String) parent.getItemAtPosition(pos);
+                }
+
+                public void onNothingSelected(AdapterView<?> parent) {
+                    // Another interface callback
+                
+                }});
     }
 
     public void displayMessage(int id) {
@@ -249,7 +276,7 @@ public class BenchmarkSelector extends Activity implements ApplicationState {
                                                    BenchmarkRunner.BenchmarkSet.ALLOC :
                                                    BenchmarkRunner.BenchmarkSet.NON_ALLOC);
                     
-                    runner.runBenchmarks(BenchmarkSelector.this, configurations.get("default")); // todo selector ui
+                    runner.runBenchmarks(BenchmarkSelector.this, configurations.get(selectedConfiguration));
                 }
             });
         stateThread = new Thread(
@@ -320,6 +347,7 @@ public class BenchmarkSelector extends Activity implements ApplicationState {
 
     private ApplicationState.State state;
     private String message;
+    private String selectedConfiguration;
 
     private static final String TAG = "BenchmarkSelector";
 

@@ -6,7 +6,7 @@ import java.util.List;
 public class MockCommandlineTool extends CommandlineTool {
 
     public MockCommandlineTool(int i, long reps) throws IOException, InterruptedException {
-        super(i, reps);
+        super(i, reps, reps, false);
     }
 
     protected List<String> initScript() {
