@@ -26,11 +26,12 @@ import fi.helsinki.cs.tituomin.nativebenchmark.measuringtool.AllocatingBenchmark
 
 public abstract class MeasuringTool implements Runnable {
 
-    public MeasuringTool(int rounds, long defaultRepetitions, long allocRepetitions) throws IOException, InterruptedException {
+    public MeasuringTool(int rounds, long defaultRepetitions, long allocRepetitions, boolean warmup) throws IOException, InterruptedException {
         specifyOptions();
         this.rounds = rounds;
         this.defaultRepetitions = defaultRepetitions;
         this.allocRepetitions = allocRepetitions;
+        this.warmup = warmup;
         clearMeasurements();
         init();
     }
@@ -245,6 +246,7 @@ public abstract class MeasuringTool implements Runnable {
     private Benchmark benchmark;
     private int rounds;
     private long allocRepetitions;
+    protected boolean warmup;
     private static boolean userInterrupted = false;
 
     public static class UnsupportedOptionException extends RuntimeException {}

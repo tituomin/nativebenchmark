@@ -27,8 +27,8 @@ public abstract class CommandlineTool extends MeasuringTool {
 
     private static final long REPETITIONS = Long.MAX_VALUE;
 
-    public CommandlineTool(int i, long allocreps) throws IOException, InterruptedException {
-        super(i, REPETITIONS, allocreps);
+    public CommandlineTool(int rounds, long repetitions, long allocreps, boolean warmup) throws IOException, InterruptedException {
+        super(rounds, REPETITIONS, allocreps, false);
     }
 
     protected abstract String command();

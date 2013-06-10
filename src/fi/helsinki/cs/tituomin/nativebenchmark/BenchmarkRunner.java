@@ -67,7 +67,10 @@ public enum BenchmarkRunner {
         return benchmarkParameter;
     }
 
-    public static void initTools(ToolConfig conf, long repetitions, long allocRepetitions) throws IOException, InterruptedException {
+    public void initTools(ToolConfig conf, long repetitions, long allocRepetitions) throws IOException, InterruptedException {
+
+        conf.setRepetitions(this.repetitions);
+        conf.setAllocRepetitions(this.allocatingRepetitions);
 
         measuringTools = new ArrayList<MeasuringTool> ();
         for (MeasuringTool tool : conf) {

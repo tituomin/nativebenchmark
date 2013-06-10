@@ -77,9 +77,7 @@ public class ToolConfig implements Iterable<MeasuringTool> {
         boolean warmup;
         
         // todo
-        long defaultRepetitions = 0;
-        int defaultRounds = 0;
-        long allocrepetitions = 0;
+        int defaultRounds = 1;
         // todo
 
         Object tool = null;
@@ -95,8 +93,11 @@ public class ToolConfig implements Iterable<MeasuringTool> {
             warmup = specs.optBoolean("warmup", false);
 
             Class<?> _class = Class.forName(TOOL_PACKAGE + "." + specs.getString("class"));
-            Constructor<?> ctor = _class.getConstructor(Integer.class, Long.class, Long.class);
-            tool = ctor.newInstance(rounds, repetitions, allocrepetitions);
+
+            Constructor<?> ctor = _class.getConstructor(
+                Integer.TYPE, Long.TYPE, Long.TYPE, Boolean.TYPE);
+
+            tool = ctor.newInstance(rounds, repetitions, allocRepetitions, warmup);
         }
         catch (Exception e) {
             Log.e("ToolConfig", "Error instantiating tool", e);
@@ -104,6 +105,18 @@ public class ToolConfig implements Iterable<MeasuringTool> {
         }
         return (MeasuringTool) tool;
     }
+
+    public ToolConfig setRepetitions(long r) {
+        defaultRepetitions = r;
+        return this;
+    }
+    public ToolConfig setAllocRepetitions(long r) {
+        allocRepetitions = r;
+        return this;
+    }
+
+    private long defaultRepetitions = 0;
+    private long allocRepetitions = 0;
 
     private JSONObject contents;
     private static final String TOOL_PACKAGE = "fi.helsinki.cs.tituomin.nativebenchmark.measuringtool";
