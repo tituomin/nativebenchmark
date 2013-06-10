@@ -9,6 +9,7 @@ import java.util.LinkedList;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.io.IOException;
+import java.io.File;
 import android.util.Log;
 import java.util.Observer;
 import java.util.Observable;
@@ -126,7 +127,7 @@ public abstract class MeasuringTool implements Runnable {
             this.requiredOptions = new HashSet<OptionSpec>();
         }
         for (OptionSpec o : this.allowedOptions) {
-            if (o.required) {
+            if (o.required()) {
                 this.requiredOptions.add(o);
             }
         }
@@ -137,6 +138,11 @@ public abstract class MeasuringTool implements Runnable {
     }
 
     // -----
+
+    public MeasuringTool set(String id, String value) {
+        setOption(new BasicOption(OptionSpec.byId(id), value));
+        return this;
+    }
 
     public MeasuringTool set(OptionSpec spec, String value) {
         // todo: not typesafe (assumes basicoption)
@@ -225,6 +231,16 @@ public abstract class MeasuringTool implements Runnable {
     public int getRounds() {
         return rounds;
     }
+
+    public static void setDataDir(File dir) {
+        dataDir = dir;
+    }
+
+    public static File getDataDir() {
+        return dataDir;
+    }
+
+    private static File dataDir;
 
     private Benchmark benchmark;
     private int rounds;

@@ -67,44 +67,45 @@ public enum BenchmarkRunner {
         return benchmarkParameter;
     }
 
-    public static void initTools(File dataDir, long repetitions, long allocRepetitions) throws IOException, InterruptedException {
-        File perfDir = new File(dataDir, "perf");
-        perfDir.mkdir();
+    public static void initTools(ToolConfig conf, long repetitions, long allocRepetitions) throws IOException, InterruptedException {
 
         measuringTools = new ArrayList<MeasuringTool> ();
+        for (MeasuringTool tool : conf) {
+            measuringTools.add(tool);
+        }
 
-        // warmup round I
-        measuringTools.add(
-            new JavaSystemNanoResponseTimeRecorder((int)WARMUP_REPS, 1, allocRepetitions, true));
-
-        // warmup round II
-        measuringTools.add(
-            new JavaSystemNanoResponseTimeRecorder(1, WARMUP_REPS, allocRepetitions, true));
-
-        // total response time
-        measuringTools.add(
-            new JavaSystemNanoResponseTimeRecorder(1000, repetitions, allocRepetitions, false));
-
-        //measuringTools.add(
-        //    new MockCommandlineTool(1, repetitions));
-
-        // warmup round I
+        // // warmup round I
         // measuringTools.add(
-        //     new ResponseTimeRecorder((int)WARMUP_REPS, 1, allocRepetitions, true));
+        //     new JavaSystemNanoResponseTimeRecorder((int)WARMUP_REPS, 1, allocRepetitions, true));
 
-        // warmup round II
-        measuringTools.add(
-            new ResponseTimeRecorder(1, WARMUP_REPS, allocRepetitions, true));
+        // // warmup round II
+        // measuringTools.add(
+        //     new JavaSystemNanoResponseTimeRecorder(1, WARMUP_REPS, allocRepetitions, true));
 
-        // total response time
-        measuringTools.add(
-            new ResponseTimeRecorder(1000, repetitions, allocRepetitions, false));
+        // // total response time
+        // measuringTools.add(
+        //     new JavaSystemNanoResponseTimeRecorder(1000, repetitions, allocRepetitions, false));
 
-        // call profile
+        // //measuringTools.add(
+        // //    new MockCommandlineTool(1, repetitions));
+
+        // // warmup round I
+        // // measuringTools.add(
+        // //     new ResponseTimeRecorder((int)WARMUP_REPS, 1, allocRepetitions, true));
+
+        // // warmup round II
+        // measuringTools.add(
+        //     new ResponseTimeRecorder(1, WARMUP_REPS, allocRepetitions, true));
+
+        // // total response time
+        // measuringTools.add(
+        //     new ResponseTimeRecorder(1000, repetitions, allocRepetitions, false));
+
+        // // call profile
         // measuringTools.add(
         //     new LinuxPerfRecordTool(1, allocRepetitions)
-        //     .set(BasicOption.OUTPUT_FILEPATH, perfDir.getPath())
-        //     .set(BasicOption.MEASURE_LENGTH, "10"));
+        //     .set("output_filepath", perfDir.getPath())
+        //     .set("measure_length", "10"));
 
         // total response time
         //measuringTools.add(new ResponseTimeRecorder(1000, repetitions));
@@ -169,7 +170,7 @@ public enum BenchmarkRunner {
         try {
             BenchmarkRegistry.init(this.repetitions);
             // todo replace with config
-            initTools(dataDir, this.repetitions, this.allocatingRepetitions);
+            initTools(config, this.repetitions, this.allocatingRepetitions);
         }
         catch (Exception e) {
             mainUI.updateState(ApplicationState.State.ERROR);

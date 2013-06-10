@@ -35,7 +35,7 @@ public class BasicOption implements MeasuringOption {
     }
 
     public Pair<String,String> toStringPair() {
-        return new Pair<String,String> (this.type.id, this.value);
+        return new Pair<String,String> (this.type.id(), this.value);
     }
 
     public String toString() {
@@ -48,39 +48,5 @@ public class BasicOption implements MeasuringOption {
     private String value;
     
     // ----
-
-    public static final OptionSpec COMMAND_STRING  = new OptionSpec();
-    public static final OptionSpec OUTPUT_FILEPATH = new OptionSpec();
-    public static final OptionSpec MEASURE_LENGTH  = new OptionSpec();
-    public static final OptionSpec VARIABLE        = new OptionSpec();
-    public static final OptionSpec CPUFREQ         = new OptionSpec();
-
-    static {
-        COMMAND_STRING
-            .name     ("Command run")
-            .required (true)
-            .id       ("command_string");
-
-        OUTPUT_FILEPATH 
-            .name     ("Output path")
-            .id       ("output_filepath")
-            .required (true);
-
-        MEASURE_LENGTH
-            .name    ("Measuring time (sec)")
-            .id      ("measure_length")
-            .required (true);
-
-        VARIABLE
-            .name    ("Variable parameter in benchmark")
-            .id      ("variable")
-            .required (false);
-
-        CPUFREQ
-            .name    ("Fixed CPU frequency")
-            .id      ("cpu_freq")
-            .required (true);
-
-    }
 
 }

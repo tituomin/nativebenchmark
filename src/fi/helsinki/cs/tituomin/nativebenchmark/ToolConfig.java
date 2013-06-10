@@ -13,7 +13,7 @@ import java.util.NoSuchElementException;
 
 import fi.helsinki.cs.tituomin.nativebenchmark.measuringtool.MeasuringTool;
 
-public class ToolConfig {
+public class ToolConfig implements Iterable<MeasuringTool> {
 
     public static Map<String, ToolConfig> readConfigurations(String jsonConfig)
     throws JSONException {
@@ -31,8 +31,14 @@ public class ToolConfig {
         this.contents = job;
     }
 
-    public Iterator<MeasuringTool> tools() throws JSONException {
-        return new ToolIterator();
+    public Iterator<MeasuringTool> iterator() {
+        try {
+            return new ToolIterator();
+        }
+        catch (JSONException e) {
+            Log.e("ToolConfig", "Error reading json config", e);
+        }
+        return null;
     }
 
     private class ToolIterator implements Iterator<MeasuringTool> {
@@ -68,7 +74,8 @@ public class ToolConfig {
 
         long repetitions;
         int rounds;
-
+        boolean warmup;
+        
         // todo
         long defaultRepetitions = 0;
         int defaultRounds = 0;
@@ -85,6 +92,8 @@ public class ToolConfig {
                 "rounds", contents.optInt(
                     specs.optString("rounds"), defaultRounds));
 
+            warmup = specs.optBoolean("warmup", false);
+
             Class<?> _class = Class.forName(TOOL_PACKAGE + "." + specs.getString("class"));
             Constructor<?> ctor = _class.getConstructor(Integer.class, Long.class, Long.class);
             tool = ctor.newInstance(rounds, repetitions, allocrepetitions);
@@ -97,6 +106,6 @@ public class ToolConfig {
     }
 
     private JSONObject contents;
-    private static final String TOOL_PACKAGE = "fi.helsinki.cs.tituomin.nativebenchmark";
+    private static final String TOOL_PACKAGE = "fi.helsinki.cs.tituomin.nativebenchmark.measuringtool";
 
 }

@@ -25,7 +25,7 @@ public class PlainRunner extends MeasuringTool {
 
     protected List<OptionSpec> specifyAllowedOptions(List<OptionSpec> options) {
         options = super.specifyAllowedOptions(options);
-        options.add(BasicOption.CPUFREQ);
+        options.add(OptionSpec.CPUFREQ);
         return options;
     }
 

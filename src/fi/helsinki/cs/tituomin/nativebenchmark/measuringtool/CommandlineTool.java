@@ -37,7 +37,7 @@ public abstract class CommandlineTool extends MeasuringTool {
     }
 
     protected String formatDefaultParameter(MeasuringOption option) {
-        if (option.type() == BasicOption.COMMAND_STRING) {
+        if (option.type() == OptionSpec.COMMAND_STRING) {
             return option.value();
         }
         else {
@@ -56,16 +56,17 @@ public abstract class CommandlineTool extends MeasuringTool {
 
     protected List<OptionSpec> specifyAllowedOptions(List<OptionSpec> options) {
         options = super.specifyAllowedOptions(options);
-        options.add(BasicOption.COMMAND_STRING);
+        options.add(OptionSpec.COMMAND_STRING);
         return options;
     }
 
     protected List<MeasuringOption> defaultOptions(List<MeasuringOption> options) {
-        options.add(new BasicOption(BasicOption.COMMAND_STRING, command()));
+        options.add(new BasicOption(OptionSpec.COMMAND_STRING, command()));
         return options;
     }
 
     protected void init() throws IOException, InterruptedException {
+        super.init();
         if (!ShellEnvironment.runAsRoot(initScript())) {
             throw new IOException("Error executing as root.");
         }
