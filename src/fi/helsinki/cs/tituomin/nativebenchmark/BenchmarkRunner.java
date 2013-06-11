@@ -17,7 +17,7 @@ import fi.helsinki.cs.tituomin.nativebenchmark.ShellEnvironment;
 import fi.helsinki.cs.tituomin.nativebenchmark.Init;
 import fi.helsinki.cs.tituomin.nativebenchmark.ToolConfig;
 
-
+import android.util.Pair;
 import java.util.Date;
 import java.util.List;
 import java.util.ArrayList;
@@ -437,13 +437,18 @@ public enum BenchmarkRunner {
             catalogWriter.println("");
 
             catalogWriter.println(String.format(f, "id", measurementID));
+
+            for (Pair<String,String> pair: tool.configuration()) {
+                catalogWriter.println(String.format(f, pair.first, pair.second));
+            }
+            //            catalogWriter.println(String.format(f, "tool", tool.getClass().getSimpleName()));
+            //            catalogWriter.println(String.format(f, "repetitions", this.repetitions));
+
             catalogWriter.println(String.format(f, "cpu-freq", cpuFreq));
-            catalogWriter.println(String.format(f, "repetitions", this.repetitions));
             catalogWriter.println(String.format(f, "rounds", rounds));
             catalogWriter.println(String.format(f, "start", start));
             catalogWriter.println(String.format(f, "end", end));
             catalogWriter.println(String.format(f, "duration", Utils.humanTime(endTime - startTime)));
-            catalogWriter.println(String.format(f, "tool", tool.getClass().getSimpleName()));
             catalogWriter.println(String.format(f, "benchmarks", numOfBenchmarks));
             catalogWriter.println(String.format(f, "code-revision", this.appRevision));
             catalogWriter.println(String.format(f, "code-checksum", this.appChecksum));
@@ -582,7 +587,7 @@ public enum BenchmarkRunner {
                 Thread.sleep(350);
             }
 
-            mainUI.updateState(state, tool.getClass().getSimpleName() + " round " + roundNo  + " benchmark " + benchmarkCount);
+            mainUI.updateState(state, tool.getClass().getSimpleName() + " warmup " + tool.isWarmupRound()  + " round " + roundNo  + " benchmark " + benchmarkCount);
 
             List<BenchmarkResult> measurements = tool.getMeasurements();
             for (BenchmarkResult measurement : measurements) {

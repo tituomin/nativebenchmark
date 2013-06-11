@@ -80,7 +80,7 @@ public class ToolConfig implements Iterable<MeasuringTool> {
         int defaultRounds = 1;
         // todo
 
-        Object tool = null;
+        MeasuringTool tool = null;
         try {
             repetitions = specs.optLong(
                 "repetitions", contents.optLong(
@@ -97,13 +97,16 @@ public class ToolConfig implements Iterable<MeasuringTool> {
             Constructor<?> ctor = _class.getConstructor(
                 Integer.TYPE, Long.TYPE, Long.TYPE, Boolean.TYPE);
 
-            tool = ctor.newInstance(rounds, repetitions, allocRepetitions, warmup);
+            Log.v("ToolConfig", "Tool instantiation " + rounds + " " + repetitions + " " + warmup);
+
+            tool = (MeasuringTool)ctor.newInstance(rounds, repetitions, allocRepetitions, warmup);
+            tool.setDescription(specs.optString("description", ""));
         }
         catch (Exception e) {
             Log.e("ToolConfig", "Error instantiating tool", e);
             return null;
         }
-        return (MeasuringTool) tool;
+        return tool;
     }
 
     public ToolConfig setRepetitions(long r) {
@@ -115,8 +118,8 @@ public class ToolConfig implements Iterable<MeasuringTool> {
         return this;
     }
 
-    private long defaultRepetitions = 0;
-    private long allocRepetitions = 0;
+    private long defaultRepetitions;
+    private long allocRepetitions;
 
     private JSONObject contents;
     private static final String TOOL_PACKAGE = "fi.helsinki.cs.tituomin.nativebenchmark.measuringtool";

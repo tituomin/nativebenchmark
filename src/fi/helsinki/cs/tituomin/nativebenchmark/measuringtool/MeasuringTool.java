@@ -7,6 +7,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.LinkedList;
 import java.util.ArrayList;
+import android.util.Pair;
 import java.util.HashMap;
 import java.io.IOException;
 import java.io.File;
@@ -155,6 +156,10 @@ public abstract class MeasuringTool implements Runnable {
         return this.options.get(id).value();
     }
 
+    public void setDescription(String d) {
+        this.description = d;
+    }
+
     public void setOption(MeasuringOption option) {
         if (this.allowedOptions == null) {
             specifyOptions();
@@ -241,11 +246,30 @@ public abstract class MeasuringTool implements Runnable {
         return dataDir;
     }
 
+    public List<Pair<String,String>> configuration() {
+        List<Pair<String,String>> pairs = new ArrayList<Pair<String,String>> ();
+        pairs.add(new Pair<String,String>("tool", this.getClass().getSimpleName()));
+        pairs.add(new Pair<String,String>("repetitions", "" + this.defaultRepetitions));
+        pairs.add(new Pair<String,String>("description", this.description));
+        pairs.add(new Pair<String,String>("warmup", "" + this.warmup));
+        if (options != null) {
+            for (MeasuringOption opt : options.values()) {
+                pairs.add(new Pair<String,String>(opt.type().id(), opt.value()));
+            }
+        }
+        return pairs;
+    }
+
+    public boolean isWarmupRound() {
+        return warmup;
+    }
+
     private static File dataDir;
 
     private Benchmark benchmark;
     private int rounds;
     private long allocRepetitions;
+    private String description;
     protected boolean warmup;
     private static boolean userInterrupted = false;
 
