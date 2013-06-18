@@ -3,9 +3,9 @@ package fi.helsinki.cs.tituomin.nativebenchmark;
 import fi.helsinki.cs.tituomin.nativebenchmark.measuringtool.MeasuringTool;
 import fi.helsinki.cs.tituomin.nativebenchmark.measuringtool.LinuxPerfRecordTool;
 import fi.helsinki.cs.tituomin.nativebenchmark.measuringtool.BasicOption;
-import fi.helsinki.cs.tituomin.nativebenchmark.BenchmarkRegistry;
-import fi.helsinki.cs.tituomin.nativebenchmark.BenchmarkInitialiser;
-import fi.helsinki.cs.tituomin.nativebenchmark.BenchmarkRunner;
+//import fi.helsinki.cs.tituomin.nativebenchmark.BenchmarkRegistry;
+//import fi.helsinki.cs.tituomin.nativebenchmark.BenchmarkInitialiser;
+//import fi.helsinki.cs.tituomin.nativebenchmark.BenchmarkRunner;
 
 import android.app.Activity;
 import android.os.Bundle;
@@ -80,6 +80,10 @@ public class BenchmarkSelector extends Activity implements ApplicationState {
         configurations = initConfig();
         initSpinner(configurations);
 
+        File sd = Environment.getExternalStorageDirectory();
+        dataDir = new File(sd, "results");
+        dataDir.mkdir();
+
         // pre-enlarges the heap
         this.allocationArray = new byte[1024 * 1024 * 100];
 
@@ -129,6 +133,10 @@ public class BenchmarkSelector extends Activity implements ApplicationState {
                 }});
     }
 
+    public void displayMessage(ApplicationState.State state, String message)  {
+        displayMessage(state.stringId, message);
+    }
+
     public void displayMessage(int id) {
         this.resultView.setText(id);
     }
@@ -168,19 +176,25 @@ public class BenchmarkSelector extends Activity implements ApplicationState {
                     expPick.setEnabled(false);
                     numPick.setEnabled(false);
                     switchButton(button);
+                    LogAccess.start();
                     break;
                 case MILESTONE:
                     break;
-
-                    // -----------------------------
 
                 case ERROR:
                 case INTERRUPTED:
                     // intended fallthrough
                 case MEASURING_FINISHED:
+                    LogAccess.end();
                     stateThread.interrupt();
                     wakeLock.release();
                     getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+                    try {
+                        LogAccess.dumpLog(dataDir);
+                    }
+                    catch (IOException e) {
+                        displayMessage(ApplicationState.State.ERROR, "Could not save log file.");
+                    }
                     // intended fallthrough
                 case INITIALISED:
                     resetButton(button);
@@ -260,10 +274,11 @@ public class BenchmarkSelector extends Activity implements ApplicationState {
     public void startMeasuring(View view) {
         allocationArray = null;
         final Resources resources = getResources();
+
         measuringThread = new Thread(
             new Runnable () {
                 public void run() {
-                    BenchmarkRunner runner = BenchmarkRunner.INSTANCE 
+                    BenchmarkRunner runner = BenchmarkRunner.INSTANCE
                         .setAppChecksum           (resources.getText(R.string.app_checksum))
                         .setAppRevision           (resources.getText(R.string.app_revision))
                         .setCacheDir              (getCacheDir())
@@ -276,9 +291,9 @@ public class BenchmarkSelector extends Activity implements ApplicationState {
                                                    BenchmarkRunner.BenchmarkSet.ALLOC :
                                                    BenchmarkRunner.BenchmarkSet.NON_ALLOC);
                     
-                    runner.runBenchmarks(BenchmarkSelector.this, configurations.get(selectedConfiguration));
-                }
-            });
+                    runner.runBenchmarks(BenchmarkSelector.this, configurations.get(selectedConfiguration), dataDir);
+                }});
+
         stateThread = new Thread(
             new Runnable () {
                 public void run() {
@@ -289,8 +304,8 @@ public class BenchmarkSelector extends Activity implements ApplicationState {
                         }
                         catch (InterruptedException e) {
                             break;
-                        }
-                    }}});
+                        }}}});
+
         this.updateState(ApplicationState.State.MEASURING);
         stateThread.start();
         measuringThread.start();
@@ -344,6 +359,7 @@ public class BenchmarkSelector extends Activity implements ApplicationState {
     private Thread stateThread;
     private byte[] allocationArray;
     private StateChanger stateChanger;
+    private File dataDir;
 
     private ApplicationState.State state;
     private String message;

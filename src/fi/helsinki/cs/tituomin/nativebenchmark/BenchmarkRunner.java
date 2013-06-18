@@ -10,12 +10,6 @@ import fi.helsinki.cs.tituomin.nativebenchmark.measuringtool.JavaSystemNanoRespo
 import fi.helsinki.cs.tituomin.nativebenchmark.measuringtool.LinuxPerfRecordTool;
 import fi.helsinki.cs.tituomin.nativebenchmark.measuringtool.CommandlineTool;
 import fi.helsinki.cs.tituomin.nativebenchmark.measuringtool.MockCommandlineTool;
-import fi.helsinki.cs.tituomin.nativebenchmark.BenchmarkRegistry;
-import fi.helsinki.cs.tituomin.nativebenchmark.BenchmarkResult;
-import fi.helsinki.cs.tituomin.nativebenchmark.Utils;
-import fi.helsinki.cs.tituomin.nativebenchmark.ShellEnvironment;
-import fi.helsinki.cs.tituomin.nativebenchmark.Init;
-import fi.helsinki.cs.tituomin.nativebenchmark.ToolConfig;
 
 import android.util.Pair;
 import java.util.Date;
@@ -164,12 +158,9 @@ public enum BenchmarkRunner {
         return this;
     }
 
-    public void runBenchmarks(ApplicationState mainUI, ToolConfig config) {
+    public void runBenchmarks(ApplicationState mainUI, ToolConfig config, File dataDir) {
         interrupted = false;
 
-        File sd = Environment.getExternalStorageDirectory();
-        File dataDir = new File(sd, "results");
-        dataDir.mkdir();
         try {
             BenchmarkRegistry.init(this.repetitions);
             // todo replace with config
@@ -445,6 +436,7 @@ public enum BenchmarkRunner {
             //            catalogWriter.println(String.format(f, "repetitions", this.repetitions));
 
             catalogWriter.println(String.format(f, "cpu-freq", cpuFreq));
+            catalogWriter.println(String.format(f, "logfile", LogAccess.filename()));
             catalogWriter.println(String.format(f, "rounds", rounds));
             catalogWriter.println(String.format(f, "start", start));
             catalogWriter.println(String.format(f, "end", end));
