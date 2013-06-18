@@ -9,7 +9,7 @@ import android.util.Log;
 
 public class LogAccess {
 
-    public Reader readLogs() throws IOException {
+    public Reader logReader() throws IOException {
         process = Runtime.getRuntime().exec("logcat -d");
         Reader bufferedReader = 
             new BufferedReader(
