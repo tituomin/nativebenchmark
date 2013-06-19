@@ -16,21 +16,18 @@ import java.util.regex.Pattern;
 public class LogAccess {
 
     public static void dumpLog(File dir) throws IOException {
-        Log.v(TAG, "starting to logcat");
         Process process = Runtime.getRuntime().exec("logcat -d -v time");
         try {
             BufferedReader bufferedReader = 
                 new BufferedReader(
                     new InputStreamReader(
                         process.getInputStream()));
-            // todo blocks here indefinitely
+            writeSegment(bufferedReader, dir);
             int returnValue = process.waitFor();
-            Log.v(TAG, "ending logcat waiting");
             if (returnValue != 0) {
                 Log.e(TAG, "Log process failed.");
                 return;
             }
-            writeSegment(bufferedReader, dir);
         }
         catch (InterruptedException e) {
             Log.e(TAG, "Was interrupted.");
@@ -38,7 +35,6 @@ public class LogAccess {
         finally {
             process.destroy();
         }
-        Log.v(TAG, "ending logcat");
     }
 
     public static void start() {
@@ -52,7 +48,7 @@ public class LogAccess {
         Log.println(LOGLEVEL, TAG, marker(type) + id);
     }
     private static String marker(String type) {
-        return "[" + type + "]";
+        return "[" + type + "] ";
     }
 
     public static String filename() {
@@ -62,23 +58,27 @@ public class LogAccess {
     private static void writeSegment(BufferedReader reader, File dir) {
         boolean include = false;
         PrintWriter writer = null;
-        Log.v(TAG, "starting to write");
+        Pattern startPattern = makeMarkerPattern(START);
+        Pattern endPattern   = makeMarkerPattern(END);
+
         try {
             writer = Utils.makeWriter(dir, filename(), false);
             String line; 
             Matcher m = null;
             while ((line = reader.readLine()) != null) {
-                if (!include) {
-                    m = startPattern.matcher(line);
-                    if (m.matches()) {
-                        include = true;
-                    }
-                }
-                else {
-                    writer.println(line);
+                if (include) {
                     m = endPattern.matcher(line);
                     if (m.matches()) {
                         include = false;
+                    }
+                    else {
+                        writer.println(line);
+                    }
+                }
+                else {
+                    m = startPattern.matcher(line);
+                    if (m.matches()) {
+                        include = true;
                     }
                 }
             }
@@ -94,18 +94,15 @@ public class LogAccess {
                 writer.close();
             }
         }
-        Log.v(TAG, "ending write");
     }
 
     private static Pattern makeMarkerPattern(String type) {
-        return Pattern.compile("I/"+ TAG + "\\([^)]+: \\[" + type +"\\].*");
+        return Pattern.compile("[-:.0-9 ]+ I/"+ TAG + "\\([^)]+\\): \\[" + type +"\\] " + currentRunId);
     }
 
     private static final int LOGLEVEL         = Log.INFO;
     private static final String TAG           = "LogAccess";
     private static final String START         = "Start";
     private static final String END           = "End";
-    private static final Pattern startPattern = makeMarkerPattern(START);
-    private static final Pattern endPattern   = makeMarkerPattern(END);
     private static String currentRunId;
 }

@@ -78,10 +78,13 @@ public abstract class MeasuringTool implements Runnable {
     }
 
     public void startMeasuring(Benchmark benchmark) throws InterruptedException, IOException, RunnerException {
+        String benchmarkName = benchmark.getClass().getSimpleName();
         clearMeasurements();
         benchmark.setRepetitions(this.defaultRepetitions);
         RunningWrapper wrapper = wrap(benchmark);
+        Log.i(TAG, "[Begin] " + benchmarkName);
         wrapper.begin(this);
+        Log.i(TAG, "[End] " + benchmarkName);
 
         if (wrapper.wasInterrupted() && userInterrupted()) {
             throw new InterruptedException("Interrupted by user");
@@ -272,7 +275,7 @@ public abstract class MeasuringTool implements Runnable {
     private String description;
     protected boolean warmup;
     private static boolean userInterrupted = false;
-
+    private final static String TAG = "MeasuringTool";
     public static class UnsupportedOptionException extends RuntimeException {}
 }
 

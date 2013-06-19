@@ -101,6 +101,13 @@ public class ToolConfig implements Iterable<MeasuringTool> {
 
             tool = (MeasuringTool)ctor.newInstance(rounds, repetitions, allocRepetitions, warmup);
             tool.setDescription(specs.optString("description", ""));
+
+            JSONObject options = specs.optJSONObject ("options");
+            if (options != null) {
+                // todo here
+            }
+
+            
         }
         catch (Exception e) {
             Log.e("ToolConfig", "Error instantiating tool", e);

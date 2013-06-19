@@ -164,6 +164,7 @@ public enum BenchmarkRunner {
         try {
             BenchmarkRegistry.init(this.repetitions);
             // todo replace with config
+            MeasuringTool.setDataDir(dataDir);
             initTools(config, this.repetitions, this.allocatingRepetitions);
         }
         catch (Exception e) {
@@ -219,7 +220,7 @@ public enum BenchmarkRunner {
                 return;
             }
 
-            Log.v("Runner", tool.getClass().getSimpleName());
+            Log.i(TAG, tool.getClass().getSimpleName());
 
             if (!tool.ignore()) {
                 // set the slower CPU frequency etc. after the warmup
@@ -554,8 +555,6 @@ public enum BenchmarkRunner {
             if (Thread.interrupted()) {
                 throw new InterruptedException();
             }
-            Log.v(TAG, "Benchmark " + benchmark.getClass().getSimpleName());
-
             bPar.setUp(); // (I) needs tearDown (see II)
 
             try {

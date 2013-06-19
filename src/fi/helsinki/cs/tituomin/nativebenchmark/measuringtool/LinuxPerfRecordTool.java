@@ -23,7 +23,7 @@ public class LinuxPerfRecordTool extends CommandlineTool {
 
     protected List<OptionSpec> specifyAllowedOptions(List<OptionSpec> options) {
         options = super.specifyAllowedOptions(options);
-        options.add(OptionSpec.OUTPUT_FILEPATH);
+        //        options.add(OptionSpec.OUTPUT_FILEPATH);
         options.add(OptionSpec.MEASURE_LENGTH); // must be last
         return options;
     }
@@ -36,12 +36,21 @@ public class LinuxPerfRecordTool extends CommandlineTool {
     }
 
     protected void init() throws IOException, InterruptedException {
-        File perfDir = new File(getDataDir(), "perf");
-        perfDir.mkdir();
+        super.init();
+        getPerfDir().mkdir();
+    }
+
+    private File getPerfDir() {
+        return new File(getDataDir(), "perf");
     }
 
     protected String command() { 
-        return "perf record -a -g";
+        String uuid = Utils.getUUID();
+        String filename = generateFilename(uuid);
+        String basePath = getPerfDir().getPath() + "/";
+        setFilename(filename, basePath);
+        setUUID(uuid);
+        return "perf record -a -g --output=" + basePath  + filename;
     }
 
     private String generateFilename (String uuid) {
@@ -49,15 +58,7 @@ public class LinuxPerfRecordTool extends CommandlineTool {
     }
 
     public String formatParameter(MeasuringOption option) {
-        if (option.type() == OptionSpec.OUTPUT_FILEPATH) {
-            String prefix = "--output=";
-            String uuid = Utils.getUUID();
-            String filename = generateFilename(uuid);
-            setFilename(filename, option.value());
-            setUUID(uuid);
-            return prefix + option.value() + "/" + filename;
-        }
-        else if (option.type() == OptionSpec.MEASURE_LENGTH) {
+        if (option.type() == OptionSpec.MEASURE_LENGTH) {
             return "sleep " + option.value();
         }
         return super.formatParameter(option);
