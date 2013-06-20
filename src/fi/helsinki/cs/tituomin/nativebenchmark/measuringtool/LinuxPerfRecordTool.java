@@ -23,7 +23,7 @@ public class LinuxPerfRecordTool extends CommandlineTool {
 
     protected List<OptionSpec> specifyAllowedOptions(List<OptionSpec> options) {
         options = super.specifyAllowedOptions(options);
-        //        options.add(OptionSpec.OUTPUT_FILEPATH);
+        options.add(OptionSpec.OUTPUT_FILEPATH);
         options.add(OptionSpec.MEASURE_LENGTH); // must be last
         return options;
     }
@@ -33,6 +33,17 @@ public class LinuxPerfRecordTool extends CommandlineTool {
         commands.add("echo \"0\" > /proc/sys/kernel/kptr_restrict");
         commands.add("echo \"-1\" > /proc/sys/kernel/perf_event_paranoid");
         return commands;
+    }
+
+    protected List<MeasuringOption> defaultOptions(List<MeasuringOption> options) {
+        options = super.defaultOptions(options);
+        String uuid = Utils.getUUID();
+        String filename = generateFilename(uuid);
+        String basePath = getPerfDir().getPath() + "/";
+        setFilename(filename, basePath);
+        setUUID(uuid);
+        options.add(new BasicOption(OptionSpec.OUTPUT_FILEPATH, basePath + filename));
+        return options;
     }
 
     protected void init() throws IOException, InterruptedException {
@@ -45,12 +56,7 @@ public class LinuxPerfRecordTool extends CommandlineTool {
     }
 
     protected String command() { 
-        String uuid = Utils.getUUID();
-        String filename = generateFilename(uuid);
-        String basePath = getPerfDir().getPath() + "/";
-        setFilename(filename, basePath);
-        setUUID(uuid);
-        return "perf record -a -g --output=" + basePath  + filename;
+        return "perf record -a -g";
     }
 
     private String generateFilename (String uuid) {
@@ -58,7 +64,10 @@ public class LinuxPerfRecordTool extends CommandlineTool {
     }
 
     public String formatParameter(MeasuringOption option) {
-        if (option.type() == OptionSpec.MEASURE_LENGTH) {
+        if (option.type() == OptionSpec.OUTPUT_FILEPATH) {
+            return "--output=" + option.value();
+        }
+        else if (option.type() == OptionSpec.MEASURE_LENGTH) {
             return "sleep " + option.value();
         }
         return super.formatParameter(option);

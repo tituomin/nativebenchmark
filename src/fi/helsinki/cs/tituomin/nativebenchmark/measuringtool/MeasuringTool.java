@@ -28,12 +28,12 @@ import fi.helsinki.cs.tituomin.nativebenchmark.measuringtool.AllocatingBenchmark
 public abstract class MeasuringTool implements Runnable {
 
     public MeasuringTool(int rounds, long defaultRepetitions, long allocRepetitions, boolean warmup) throws IOException, InterruptedException {
+        clearMeasurements();
         specifyOptions();
         this.rounds = rounds;
         this.defaultRepetitions = defaultRepetitions;
         this.allocRepetitions = allocRepetitions;
         this.warmup = warmup;
-        clearMeasurements();
         init();
     }
 
@@ -80,6 +80,7 @@ public abstract class MeasuringTool implements Runnable {
     public void startMeasuring(Benchmark benchmark) throws InterruptedException, IOException, RunnerException {
         String benchmarkName = benchmark.getClass().getSimpleName();
         clearMeasurements();
+        setDefaultOptions();
         benchmark.setRepetitions(this.defaultRepetitions);
         RunningWrapper wrapper = wrap(benchmark);
         Log.i(TAG, "[Begin] " + benchmarkName);
@@ -136,6 +137,9 @@ public abstract class MeasuringTool implements Runnable {
                 this.requiredOptions.add(o);
             }
         }
+    }
+
+    protected void setDefaultOptions() {
         for (MeasuringOption op : defaultOptions(
                  new LinkedList<MeasuringOption>())) {
             setOption(op);

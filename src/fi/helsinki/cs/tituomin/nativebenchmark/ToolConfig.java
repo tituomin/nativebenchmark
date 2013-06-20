@@ -1,17 +1,18 @@
 package fi.helsinki.cs.tituomin.nativebenchmark;
 
-import org.json.JSONObject;
-import org.json.JSONArray;
-import org.json.JSONException;
-import java.util.Map;
-import java.util.HashMap;
-import java.util.Iterator;
+
+import android.util.Log;
+import fi.helsinki.cs.tituomin.nativebenchmark.measuringtool.MeasuringTool;
 import java.io.File;
 import java.lang.reflect.Constructor;
-import android.util.Log;
+import java.lang.reflect.InvocationTargetException;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
 import java.util.NoSuchElementException;
-
-import fi.helsinki.cs.tituomin.nativebenchmark.measuringtool.MeasuringTool;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 public class ToolConfig implements Iterable<MeasuringTool> {
 
@@ -99,12 +100,21 @@ public class ToolConfig implements Iterable<MeasuringTool> {
 
             Log.v("ToolConfig", "Tool instantiation " + rounds + " " + repetitions + " " + warmup);
 
-            tool = (MeasuringTool)ctor.newInstance(rounds, repetitions, allocRepetitions, warmup);
+            try {
+                tool = (MeasuringTool)ctor.newInstance(rounds, repetitions, allocRepetitions, warmup);
+            }
+            catch (InvocationTargetException e) {
+                Log.e("ToolConfig", "Constructor exception", e.getCause());
+            }
             tool.setDescription(specs.optString("description", ""));
 
             JSONObject options = specs.optJSONObject ("options");
             if (options != null) {
-                // todo here
+                Iterator keys = options.keys();
+                while (keys.hasNext()) {
+                    String key = (String)keys.next();
+                    tool.set(key, options.getString(key));
+                }
             }
 
             

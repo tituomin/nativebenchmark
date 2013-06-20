@@ -2,6 +2,7 @@ package fi.helsinki.cs.tituomin.nativebenchmark.measuringtool;
 
 import fi.helsinki.cs.tituomin.nativebenchmark.ApplicationState;
 import fi.helsinki.cs.tituomin.nativebenchmark.Benchmark;
+import fi.helsinki.cs.tituomin.nativebenchmark.BenchmarkRegistry;
 import fi.helsinki.cs.tituomin.nativebenchmark.ShellEnvironment;
 
 import java.util.List;
@@ -99,7 +100,10 @@ public abstract class CommandlineTool extends MeasuringTool {
             throw e;
         }
         finally {
+            Log.v("CommandLineTool", "Trying to interrupt.");
             benchmarkThread.interrupt();
+            BenchmarkRegistry.interruptNative();
+            Log.v("CommandLineTool", "Interrupt finished.");
             benchmarkThread.join();
         }
     }
