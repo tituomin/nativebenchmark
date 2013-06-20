@@ -114,7 +114,12 @@ public class BenchmarkSelector extends Activity implements ApplicationState {
     
     private void initSpinner(Map<String,ToolConfig> conf) {
         Spinner spinner = (Spinner) findViewById(R.id.config_spinner);
-        ArrayAdapter<CharSequence> adapter = new ArrayAdapter(this, android.R.layout.simple_spinner_item, conf.keySet().toArray(new String[1]));
+        String keys[] = conf.keySet().toArray(new String[1]);
+        ArrayAdapter<CharSequence> adapter = new ArrayAdapter(this, android.R.layout.simple_spinner_item, keys);
+
+        int indexOfDefault = -1;
+        while (++indexOfDefault < keys.length && 
+               !keys[indexOfDefault].equals("default"));
 
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spinner.setAdapter(adapter);
@@ -131,6 +136,9 @@ public class BenchmarkSelector extends Activity implements ApplicationState {
                     // Another interface callback
                 
                 }});
+
+        spinner.setSelection(indexOfDefault);
+
     }
 
     public void displayMessage(ApplicationState.State state, String message)  {
@@ -170,13 +178,14 @@ public class BenchmarkSelector extends Activity implements ApplicationState {
                 }
 
                 switch (state) {
-                case MEASURING:
+                case MEASURING_STARTED:
                     wakeLock.acquire();
                     getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
                     expPick.setEnabled(false);
                     numPick.setEnabled(false);
                     switchButton(button);
                     LogAccess.start();
+                    state = ApplicationState.State.MILESTONE;
                     break;
                 case MILESTONE:
                     break;
@@ -306,7 +315,7 @@ public class BenchmarkSelector extends Activity implements ApplicationState {
                             break;
                         }}}});
 
-        this.updateState(ApplicationState.State.MEASURING);
+        this.updateState(ApplicationState.State.MEASURING_STARTED);
         stateThread.start();
         measuringThread.start();
     }

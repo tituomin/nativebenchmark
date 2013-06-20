@@ -100,10 +100,8 @@ public abstract class CommandlineTool extends MeasuringTool {
             throw e;
         }
         finally {
-            Log.v("CommandLineTool", "Trying to interrupt.");
             benchmarkThread.interrupt();
             BenchmarkRegistry.interruptNative();
-            Log.v("CommandLineTool", "Interrupt finished.");
             benchmarkThread.join();
         }
     }

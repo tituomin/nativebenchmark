@@ -16,7 +16,7 @@ import java.util.regex.Pattern;
 public class LogAccess {
 
     public static void dumpLog(File dir) throws IOException {
-        Process process = Runtime.getRuntime().exec("logcat -d -v time");
+        Process process = Runtime.getRuntime().exec("logcat -d -b main -b system -b radio -b events -v time");
         try {
             BufferedReader bufferedReader = 
                 new BufferedReader(

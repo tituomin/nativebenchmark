@@ -68,6 +68,7 @@ public enum BenchmarkRunner {
 
         measuringTools = new ArrayList<MeasuringTool> ();
         for (MeasuringTool tool : conf) {
+            Log.v(TAG, "-------has tool");
             measuringTools.add(tool);
         }
 
@@ -165,6 +166,7 @@ public enum BenchmarkRunner {
             BenchmarkRegistry.init(this.repetitions);
             // todo replace with config
             MeasuringTool.setDataDir(dataDir);
+            Log.v(TAG, config.toString());
             initTools(config, this.repetitions, this.allocatingRepetitions);
         }
         catch (Exception e) {
@@ -205,7 +207,6 @@ public enum BenchmarkRunner {
 
         //Collections.shuffle(benchmarks);
         if (this.runAtMaxSpeed) {
-            Log.v(TAG, "maxed");
             try {
                 Init.initEnvironment(true);
             }

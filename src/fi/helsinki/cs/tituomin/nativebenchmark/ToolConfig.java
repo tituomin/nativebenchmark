@@ -32,6 +32,10 @@ public class ToolConfig implements Iterable<MeasuringTool> {
         this.contents = job;
     }
 
+    public String toString() {
+        return this.contents.toString();
+    }
+
     public Iterator<MeasuringTool> iterator() {
         try {
             return new ToolIterator();
@@ -47,7 +51,7 @@ public class ToolConfig implements Iterable<MeasuringTool> {
         private int currentToolIndex;
 
         public ToolIterator () throws JSONException {
-            currentToolIndex = 0;
+            currentToolIndex = -1;
             toolArray = contents.getJSONArray("tools");
         }
         public boolean hasNext() {

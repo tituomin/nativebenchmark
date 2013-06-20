@@ -8,7 +8,7 @@ public interface ApplicationState {
 
     public static enum State {
         INITIALISED        ( R.string.app_name ),
-        MEASURING          ( R.string.measuring_started ),
+        MEASURING_STARTED  ( R.string.measuring_started ),
         INTERRUPTING       ( R.string.interrupting ),
         INTERRUPTED        ( R.string.interrupted ),
         MILESTONE          ( R.string.measuring_milestone ),
