@@ -268,7 +268,7 @@ public enum BenchmarkRunner {
                     }
                 }
                 catch (InterruptedException e) {
-                    logE("Measuring thread was interrupted", e);
+                    logE("Measuring thread was interrupted");
                     mainUI.updateState(
                         ApplicationState.State.INTERRUPTED);
                     interrupted = true;
@@ -288,7 +288,7 @@ public enum BenchmarkRunner {
                         break roundloop;
                     }
                     catch (InterruptedException e) {
-                        logE("Measuring thread was interrupted", e);
+                        logE("Measuring thread was interrupted");
                         mainUI.updateState(
                             ApplicationState.State.INTERRUPTED);
 
@@ -467,7 +467,7 @@ public enum BenchmarkRunner {
         Log.e(TAG, "exception", e);
     }
     private static void logE(String msg) {
-        Log.e(TAG, "msg");
+        Log.e(TAG, msg);
     }
 
     private static void deleteFiles(List<String> filenames) {
