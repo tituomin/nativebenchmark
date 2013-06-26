@@ -42,6 +42,11 @@ import android.os.Environment;
 import android.util.Log;
 import android.os.SystemClock;
 
+import static fi.helsinki.cs.tituomin.nativebenchmark.Utils.colPr;
+import static fi.helsinki.cs.tituomin.nativebenchmark.Utils.getUUID;
+import static fi.helsinki.cs.tituomin.nativebenchmark.Utils.makeWriter;
+import static fi.helsinki.cs.tituomin.nativebenchmark.Utils.makeOutputStream;
+
 public enum BenchmarkRunner {
     INSTANCE; // singleton enum pattern
 
@@ -71,43 +76,6 @@ public enum BenchmarkRunner {
             Log.v(TAG, "-------has tool");
             measuringTools.add(tool);
         }
-
-        // // warmup round I
-        // measuringTools.add(
-        //     new JavaSystemNanoResponseTimeRecorder((int)WARMUP_REPS, 1, allocRepetitions, true));
-
-        // // warmup round II
-        // measuringTools.add(
-        //     new JavaSystemNanoResponseTimeRecorder(1, WARMUP_REPS, allocRepetitions, true));
-
-        // // total response time
-        // measuringTools.add(
-        //     new JavaSystemNanoResponseTimeRecorder(1000, repetitions, allocRepetitions, false));
-
-        // //measuringTools.add(
-        // //    new MockCommandlineTool(1, repetitions));
-
-        // // warmup round I
-        // // measuringTools.add(
-        // //     new ResponseTimeRecorder((int)WARMUP_REPS, 1, allocRepetitions, true));
-
-        // // warmup round II
-        // measuringTools.add(
-        //     new ResponseTimeRecorder(1, WARMUP_REPS, allocRepetitions, true));
-
-        // // total response time
-        // measuringTools.add(
-        //     new ResponseTimeRecorder(1000, repetitions, allocRepetitions, false));
-
-        // // call profile
-        // measuringTools.add(
-        //     new LinuxPerfRecordTool(1, allocRepetitions)
-        //     .set("output_filepath", perfDir.getPath())
-        //     .set("measure_length", "10"));
-
-        // total response time
-        //measuringTools.add(new ResponseTimeRecorder(1000, repetitions));
-
     }
 
     private long repetitions;
@@ -179,33 +147,9 @@ public enum BenchmarkRunner {
         BenchmarkInitialiser.init(benchmarkParameter);
 
         List<Benchmark> allBenchmarks = BenchmarkRegistry.getBenchmarks();
-        List<Benchmark> benchmarks = new ArrayList<Benchmark> ();;
 
-        boolean substringSearch = !this.benchmarkSubstring.equals("");
-        for (Benchmark b : allBenchmarks) {
-            boolean selected;
-            if (this.runAllBenchmarks) {
-                selected = true;
-            }
-            else if (substringSearch) {
-                selected = (
-                    b.getClass().getSimpleName().toLowerCase().indexOf(
-                        this.benchmarkSubstring) != -1);
-            }
-            else {
-                selected = (
-                    b.representative() &&
-                        ((!b.isAllocating()) && this.benchmarkSet == BenchmarkSet.NON_ALLOC) ||
-                          (b.isAllocating()  && this.benchmarkSet == BenchmarkSet.ALLOC));
-            }
-            if (selected) {
-                benchmarks.add(b);
-            }
-        }
-
-        int numOfBenchmarks = benchmarks.size();
-
-        //Collections.shuffle(benchmarks);
+        // todo enable
+        // Collections.shuffle(benchmarks);
         if (this.runAtMaxSpeed) {
             try {
                 Init.initEnvironment(true);
@@ -220,6 +164,35 @@ public enum BenchmarkRunner {
             if (interrupted) {
                 return;
             }
+
+            List<Benchmark> benchmarks = new ArrayList<Benchmark> ();
+
+            String substringToApply = this.benchmarkSubstring;
+            if (!tool.getFilter().equals("")) {
+                substringToApply = tool.getFilter();
+            }
+
+            for (Benchmark b : allBenchmarks) {
+                boolean selected;
+                if (this.runAllBenchmarks) {
+                    selected = true;
+                }
+                else if (!substringToApply.equals("")) {
+                    selected = (
+                        b.getClass().getSimpleName().toLowerCase().indexOf(
+                            substringToApply) != -1);
+                }
+                else {
+                    selected = (
+                        b.representative() &&
+                        ((!b.isAllocating()) && this.benchmarkSet == BenchmarkSet.NON_ALLOC) ||
+                        (b.isAllocating()  && this.benchmarkSet == BenchmarkSet.ALLOC));
+                }
+                if (selected) {
+                    benchmarks.add(b);
+                }
+            }
+            int numOfBenchmarks = benchmarks.size();
 
             Log.i(TAG, tool.getClass().getSimpleName());
 
@@ -245,7 +218,7 @@ public enum BenchmarkRunner {
             int round = -1;
             boolean labelsWritten = false;
 
-        roundloop:
+        ROUNDLOOP:
             while (++round < max_rounds) {
                 benchmarkCount = 0;
                 PrintWriter tempWriter = null;
@@ -272,7 +245,7 @@ public enum BenchmarkRunner {
                     mainUI.updateState(
                         ApplicationState.State.INTERRUPTED);
                     interrupted = true;
-                    break roundloop;
+                    break ROUNDLOOP;
                 }
 
                 int j = 0;
@@ -285,7 +258,7 @@ public enum BenchmarkRunner {
                         mainUI.updateState(
                             ApplicationState.State.ERROR);
                         interrupted = true;
-                        break roundloop;
+                        break ROUNDLOOP;
                     }
                     catch (InterruptedException e) {
                         logE("Measuring thread was interrupted");
@@ -293,10 +266,8 @@ public enum BenchmarkRunner {
                             ApplicationState.State.INTERRUPTED);
 
                         interrupted = true;
-                        break roundloop;
+                        break ROUNDLOOP;
                     }
-                    // todo: remove UI overhead?
-                    //                    Log.v(TAG, benchmark.getClass().getName());
 
                     if (collectedData.isEmpty() || tool.ignore()) {
                         continue;
@@ -351,7 +322,7 @@ public enum BenchmarkRunner {
                     mainUI.updateState(ApplicationState.State.ERROR);
                     Log.e("BenchmarkRunner", "Error writing results", e);
                     interrupted = true;
-                    break roundloop;
+                    break ROUNDLOOP;
                 }
                 finally {
                     try {
@@ -370,7 +341,7 @@ public enum BenchmarkRunner {
                         mainUI.updateState(ApplicationState.State.ERROR);
                         Log.e("BenchmarkRunner", "Error closing files", e);
                         interrupted = true;
-                        break roundloop;
+                        break ROUNDLOOP;
                     }
                 }
             }
@@ -423,40 +394,34 @@ public enum BenchmarkRunner {
         int numOfBenchmarks, int rounds) {
 
         Date end = new Date();
-        PrintWriter catalogWriter = null;
+        PrintWriter c = null;
         try {
-            String f = "%20s: %s";
-            catalogWriter = Utils.makeWriter(catalogFile, true);
-            catalogWriter.println("");
+            c = Utils.makeWriter(catalogFile, true);
 
-            catalogWriter.println(String.format(f, "id", measurementID));
-
+            c.println("");
             for (Pair<String,String> pair: tool.configuration()) {
-                catalogWriter.println(String.format(f, pair.first, pair.second));
+                colPr(c, pair.first, pair.second);
             }
-            //            catalogWriter.println(String.format(f, "tool", tool.getClass().getSimpleName()));
-            //            catalogWriter.println(String.format(f, "repetitions", this.repetitions));
-
-            catalogWriter.println(String.format(f, "cpu-freq", cpuFreq));
-            catalogWriter.println(String.format(f, "logfile", LogAccess.filename()));
-            catalogWriter.println(String.format(f, "rounds", rounds));
-            catalogWriter.println(String.format(f, "start", start));
-            catalogWriter.println(String.format(f, "end", end));
-            catalogWriter.println(String.format(f, "duration", Utils.humanTime(endTime - startTime)));
-            catalogWriter.println(String.format(f, "benchmarks", numOfBenchmarks));
-            catalogWriter.println(String.format(f, "code-revision", this.appRevision));
-            catalogWriter.println(String.format(f, "code-checksum", this.appChecksum));
-            catalogWriter.println(String.format(f, "benchmark-set", this.benchmarkSet));
-            catalogWriter.println(String.format(f, "substring-filter", this.benchmarkSubstring));
-            catalogWriter.println("");
+            colPr(c, "id", measurementID);
+            colPr(c, "cpu-freq", cpuFreq);
+            colPr(c, "logfile", LogAccess.filename());
+            colPr(c, "rounds", rounds);
+            colPr(c, "start", start);
+            colPr(c, "end", end);
+            colPr(c, "duration", Utils.humanTime(endTime - startTime));
+            colPr(c, "benchmarks", numOfBenchmarks);
+            colPr(c, "code-revision", this.appRevision);
+            colPr(c, "code-checksum", this.appChecksum);
+            colPr(c, "benchmark-set", this.benchmarkSet);
+            colPr(c, "substring-filter", this.benchmarkSubstring);
+            c.println("");
         }
         catch (IOException e ) {
             logE(e);
         }
         finally {
-            catalogWriter.close();
+            c.close();
         }
-        
     }
 
     private final static String TAG = "BenchmarkRunner";

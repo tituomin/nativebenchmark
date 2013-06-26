@@ -26,7 +26,7 @@ public class AllocatingBenchmarkLongRunningWrapper extends AllocatingBenchmarkWr
         // This method ensures the garbage collector is run
         // every benchmark.maxrepetitions iteration
         // but otherwise the measurement is
-        // run for a long period
+        // run for a period long enough for profiling.
         Benchmark benchmark = getBenchmark();
         long interval = BenchmarkRegistry.CHECK_INTERRUPTED_INTERVAL;
         long division, remainder;

@@ -11,7 +11,7 @@
                 "rounds"             : "warmup_rounds",
                 "repetitions"        : 1,
                 "warmup"             : true,
-                "filters"            : ["00026"]
+                "filter"             : "00026"
             },
             {
                 "description"        : "Warmup for benchmarks",
@@ -37,19 +37,20 @@
         ]
     },
 
-    "warmup_test_measuring"          : {
+    "warmup_measuring"          : {
         "tools"                      : [
             {
                 "description"        : "Warmup for measuring code",
                 "class"              : "JavaSystemNanoResponseTimeRecorder",
+                "rounds"             : 50000,
                 "repetitions"        : 1,
-                "warmup"             : true,
-                "filters"            : ["00026"]
+                "warmup"             : false,
+                "filter"            : "00026"
             }
         ]
     },
 
-    "warmup_test_benchmarks"         : {
+    "warmup_benchmarks"         : {
         "tools"                      : [
             {
                 "description"        : "Warmup for benchmarks",

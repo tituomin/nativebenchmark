@@ -37,6 +37,14 @@ public class Utils {
             "(" + seconds_total + " s tot.)");
     }
 
+    public static String colFmt(String label, String value) {
+        return String.format("%20s: %s", label, value);
+    }
+
+    public static void colPr(PrintWriter p, String label, Object value) {
+        p.println(colFmt(label, value.toString()));
+    }
+        
     public static void copyStream(InputStream in, OutputStream out) throws IOException {
         int count;
         while ((count = in.read(buffer, 0, BUFFERSIZE)) != -1) {

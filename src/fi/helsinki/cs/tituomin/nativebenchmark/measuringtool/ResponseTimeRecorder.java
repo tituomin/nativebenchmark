@@ -21,7 +21,7 @@ public class ResponseTimeRecorder extends MeasuringTool {
     }
 
     public boolean explicitGC() {
-        return !warmup;
+        return !warmup && defaultRepetitions > 100;
     }
 
     public boolean ignore() {

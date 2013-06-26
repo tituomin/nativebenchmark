@@ -76,10 +76,6 @@ public class ToolConfig implements Iterable<MeasuringTool> {
     }
 
     private MeasuringTool createTool(JSONObject specs) {
-
-        long repetitions;
-        int rounds;
-        boolean warmup;
         
         // todo
         int defaultRounds = 1;
@@ -87,15 +83,15 @@ public class ToolConfig implements Iterable<MeasuringTool> {
 
         MeasuringTool tool = null;
         try {
-            repetitions = specs.optLong(
+            long repetitions = specs.optLong(
                 "repetitions", contents.optLong(
                     specs.optString("repetitions"), defaultRepetitions));
 
-            rounds = specs.optInt(
+            int rounds = specs.optInt(
                 "rounds", contents.optInt(
                     specs.optString("rounds"), defaultRounds));
 
-            warmup = specs.optBoolean("warmup", false);
+            boolean warmup = specs.optBoolean("warmup", false);
 
             Class<?> _class = Class.forName(TOOL_PACKAGE + "." + specs.getString("class"));
 
@@ -111,6 +107,7 @@ public class ToolConfig implements Iterable<MeasuringTool> {
                 Log.e("ToolConfig", "Constructor exception", e.getCause());
             }
             tool.setDescription(specs.optString("description", ""));
+            tool.setFilter(specs.optString("filter", ""));
 
             JSONObject options = specs.optJSONObject ("options");
             if (options != null) {

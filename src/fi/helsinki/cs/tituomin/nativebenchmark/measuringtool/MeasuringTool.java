@@ -206,7 +206,7 @@ public abstract class MeasuringTool implements Runnable {
     private BenchmarkResult currentMeasurement;
     private List<BenchmarkResult> measurements;
 
-    private long defaultRepetitions;
+    protected long defaultRepetitions;
 
     protected void putMeasurement(String key, String value) {
         currentMeasurement.put(key, value);
@@ -253,6 +253,13 @@ public abstract class MeasuringTool implements Runnable {
         return dataDir;
     }
 
+    public void setFilter(String substring) {
+        filterSubstring = substring;
+    }
+    public String getFilter() {
+        return filterSubstring;
+    }
+
     public List<Pair<String,String>> configuration() {
         List<Pair<String,String>> pairs = new ArrayList<Pair<String,String>> ();
         pairs.add(new Pair<String,String>("tool", this.getClass().getSimpleName()));
@@ -277,6 +284,7 @@ public abstract class MeasuringTool implements Runnable {
     private int rounds;
     private long allocRepetitions;
     private String description;
+    private String filterSubstring;
     protected boolean warmup;
     private static boolean userInterrupted = false;
     private final static String TAG = "MeasuringTool";
