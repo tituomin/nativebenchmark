@@ -20,10 +20,6 @@ public class ResponseTimeRecorder extends MeasuringTool {
         return options;
     }
 
-    public boolean explicitGC() {
-        return !warmup && defaultRepetitions > 100;
-    }
-
     public boolean ignore() {
         return warmup;
     }

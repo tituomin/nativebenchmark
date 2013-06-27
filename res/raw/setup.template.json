@@ -40,24 +40,47 @@
     "warmup_measuring"          : {
         "tools"                      : [
             {
+                "description"        : "Warmup for benchmarks",
+                "class"              : "JavaSystemNanoResponseTimeRecorder",
+                "rounds"             : 1,
+                "repetitions"        : 50000,
+                "filter"             : "00026"
+                "warmup"             : false,
+                "gc"                 : false
+            },
+            {
                 "description"        : "Warmup for measuring code",
                 "class"              : "JavaSystemNanoResponseTimeRecorder",
                 "rounds"             : 50000,
                 "repetitions"        : 1,
                 "warmup"             : false,
-                "filter"            : "00026"
+                "gc"                 : false,
+                "filter"             : "00026"
             }
         ]
     },
 
-    "warmup_benchmarks"         : {
+    "warmup_measuring_gc"          : {
         "tools"                      : [
             {
                 "description"        : "Warmup for benchmarks",
                 "class"              : "JavaSystemNanoResponseTimeRecorder",
                 "rounds"             : 1,
-                "warmup"             : true
+                "repetitions"        : 50000,
+                "warmup"             : false,
+                "filter"             : "00026"
+                "gc"                 : true
+            },
+            {
+                "description"        : "Warmup for measuring code",
+                "class"              : "JavaSystemNanoResponseTimeRecorder",
+                "rounds"             : 50000,
+                "repetitions"        : 1,
+                "warmup"             : false,
+                "gc"                 : true,
+                "filter"             : "00026"
             }
         ]
     }
+
 }

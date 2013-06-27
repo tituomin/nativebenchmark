@@ -34,6 +34,7 @@ public abstract class MeasuringTool implements Runnable {
         this.defaultRepetitions = defaultRepetitions;
         this.allocRepetitions = allocRepetitions;
         this.warmup = warmup;
+        this.explicitGC = !warmup;
         init();
     }
 
@@ -115,7 +116,11 @@ public abstract class MeasuringTool implements Runnable {
     }
 
     public boolean explicitGC() {
-        return true;
+        return this.explicitGC;
+    }
+
+    public void setExplicitGC(boolean e) {
+        this.explicitGC = e;
     }
 
     protected abstract List<MeasuringOption>
@@ -259,7 +264,6 @@ public abstract class MeasuringTool implements Runnable {
     public String getFilter() {
         return filterSubstring;
     }
-
     public List<Pair<String,String>> configuration() {
         List<Pair<String,String>> pairs = new ArrayList<Pair<String,String>> ();
         pairs.add(new Pair<String,String>("tool", this.getClass().getSimpleName()));
@@ -286,6 +290,7 @@ public abstract class MeasuringTool implements Runnable {
     private String description;
     private String filterSubstring;
     protected boolean warmup;
+    private boolean explicitGC;
     private static boolean userInterrupted = false;
     private final static String TAG = "MeasuringTool";
     public static class UnsupportedOptionException extends RuntimeException {}

@@ -108,6 +108,7 @@ public class ToolConfig implements Iterable<MeasuringTool> {
             }
             tool.setDescription(specs.optString("description", ""));
             tool.setFilter(specs.optString("filter", ""));
+            tool.setExplicitGC(specs.optBoolean("gc", !warmup));
 
             JSONObject options = specs.optJSONObject ("options");
             if (options != null) {
