@@ -78,14 +78,15 @@ public class BenchmarkSelector extends Activity implements ApplicationState {
         stateChanger = new StateChanger();
 
         configurations = initConfig();
-        initSpinner(configurations);
+        if (configurations != null) {
+            initSpinner(configurations);
+            File sd = Environment.getExternalStorageDirectory();
+            dataDir = new File(sd, "results");
+            dataDir.mkdir();
 
-        File sd = Environment.getExternalStorageDirectory();
-        dataDir = new File(sd, "results");
-        dataDir.mkdir();
-
-        // pre-enlarges the heap
-        this.allocationArray = new byte[1024 * 1024 * 100];
+            // pre-enlarges the heap
+            this.allocationArray = new byte[1024 * 1024 * 100];
+        }
 
     }
 
@@ -106,8 +107,9 @@ public class BenchmarkSelector extends Activity implements ApplicationState {
         }
         catch (Exception e) {
             String msg = getResources().getString(R.string.config_error);
-            updateState(ApplicationState.State.ERROR, msg);
+            updateState(ApplicationState.State.INIT_FAIL, msg);
             Log.e(TAG, msg, e);
+            stateChanger.run();
             return null;
         }
     }
@@ -210,6 +212,7 @@ public class BenchmarkSelector extends Activity implements ApplicationState {
                     numPick.setEnabled(true);
                     expPick.setEnabled(true);
                     break;
+                case INIT_FAIL:
                 }
             }
         }

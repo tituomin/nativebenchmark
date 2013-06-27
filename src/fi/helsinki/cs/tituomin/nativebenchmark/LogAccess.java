@@ -90,14 +90,18 @@ public class LogAccess {
             Log.e(TAG, "Error writing log file.");
         }
         finally {
+            writer.flush();
             if (writer != null) {
                 writer.close();
             }
         }
     }
 
+    //06-27 23:52:37.348 I/LogAccess( 2378): [End] 43ba52d0-61b0-47e4-991b-c98a3dd21f9f
+
+
     private static Pattern makeMarkerPattern(String type) {
-        return Pattern.compile("[-:.0-9 ]+ I/"+ TAG + "\\([^)]+\\): \\[" + type +"\\] " + currentRunId);
+        return Pattern.compile("[-:. [0-9]]+ I/"+ TAG + "\\([ 0-9]+\\): \\[" + type +"\\] " + currentRunId);
     }
 
     private static final int LOGLEVEL         = Log.INFO;

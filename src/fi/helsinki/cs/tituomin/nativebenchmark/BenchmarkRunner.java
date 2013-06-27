@@ -150,14 +150,12 @@ public enum BenchmarkRunner {
 
         // todo enable
         // Collections.shuffle(benchmarks);
-        if (this.runAtMaxSpeed) {
-            try {
-                Init.initEnvironment(true);
-            }
-            catch (IOException e) {
-                handleException(e, mainUI);
-                return;
-            }
+        try {
+            Init.initEnvironment(true); // run warmup at max speed
+        }
+        catch (IOException e) {
+            handleException(e, mainUI);
+            return;
         }
 
         for (MeasuringTool tool : measuringTools) {
@@ -199,12 +197,14 @@ public enum BenchmarkRunner {
             if (!tool.ignore()) {
                 // set the slower CPU frequency etc. after the warmup
                 // round(s), taking less time
-                try {
-                    Init.initEnvironment(this.runAtMaxSpeed);
-                }
-                catch (IOException e) {
-                    handleException(e, mainUI);
-                    return;
+                if (!this.runAtMaxSpeed) {
+                    try {
+                        Init.initEnvironment(false);
+                    }
+                    catch (IOException e) {
+                        handleException(e, mainUI);
+                        return;
+                    }
                 }
             }
 

@@ -13,6 +13,7 @@ public interface ApplicationState {
         INTERRUPTED        ( R.string.interrupted ),
         MILESTONE          ( R.string.measuring_milestone ),
         ERROR              ( R.string.error ),
+        INIT_FAIL          ( R.string.error ),
         MEASURING_FINISHED ( R.string.measuring_finished );
 
         public final int stringId;

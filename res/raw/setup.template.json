@@ -44,7 +44,7 @@
                 "class"              : "JavaSystemNanoResponseTimeRecorder",
                 "rounds"             : 1,
                 "repetitions"        : 50000,
-                "filter"             : "00026"
+                "filter"             : "00026",
                 "warmup"             : false,
                 "gc"                 : false
             },
@@ -68,7 +68,7 @@
                 "rounds"             : 1,
                 "repetitions"        : 50000,
                 "warmup"             : false,
-                "filter"             : "00026"
+                "filter"             : "00026",
                 "gc"                 : true
             },
             {
