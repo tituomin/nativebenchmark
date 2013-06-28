@@ -84,7 +84,7 @@ public abstract class MeasuringTool implements Runnable {
         setDefaultOptions();
         benchmark.setRepetitions(this.defaultRepetitions);
         RunningWrapper wrapper = wrap(benchmark);
-        Log.i(TAG, "[Begin] " + benchmarkName);
+        Log.i(TAG, "[Start] " + benchmarkName);
         wrapper.begin(this);
         Log.i(TAG, "[End] " + benchmarkName);
 
