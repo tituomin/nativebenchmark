@@ -1,42 +1,50 @@
 package fi.helsinki.cs.tituomin.nativebenchmark;
 
-import fi.helsinki.cs.tituomin.nativebenchmark.measuringtool.MeasuringTool;
-import fi.helsinki.cs.tituomin.nativebenchmark.measuringtool.LinuxPerfRecordTool;
-import fi.helsinki.cs.tituomin.nativebenchmark.measuringtool.BasicOption;
-//import fi.helsinki.cs.tituomin.nativebenchmark.BenchmarkRegistry;
+
 //import fi.helsinki.cs.tituomin.nativebenchmark.BenchmarkInitialiser;
+//import fi.helsinki.cs.tituomin.nativebenchmark.BenchmarkRegistry;
 //import fi.helsinki.cs.tituomin.nativebenchmark.BenchmarkRunner;
 
 import android.app.Activity;
+import android.app.ActivityManager;
+import android.app.AlertDialog;
+import android.app.Dialog;
+import android.app.DialogFragment;
+import android.app.Notification;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
+import android.app.TaskStackBuilder;
+import android.content.Context;
+import android.content.DialogInterface;
+import android.content.Intent;
+import android.content.res.Resources;
+import android.media.RingtoneManager;
+import android.net.Uri;
 import android.os.Bundle;
-import android.view.View;
-import android.widget.TextView;
-import android.widget.Button;
+import android.os.Environment;
+import android.os.PowerManager;
 import android.util.Log;
 import android.util.Pair;
+import android.view.View;
+import android.view.WindowManager;
+import android.widget.AdapterView.OnItemSelectedListener;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.Button;
+import android.widget.CheckBox;
+import android.widget.Checkable;
+import android.widget.NumberPicker;
+import android.widget.RadioButton;
+import android.widget.Spinner;
+import android.widget.TextView;
+import fi.helsinki.cs.tituomin.nativebenchmark.measuringtool.BasicOption;
+import fi.helsinki.cs.tituomin.nativebenchmark.measuringtool.LinuxPerfRecordTool;
+import fi.helsinki.cs.tituomin.nativebenchmark.measuringtool.MeasuringTool;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.io.File;
 import java.util.Map;
-import android.os.Environment;
-import android.content.res.Resources;
-import android.widget.NumberPicker;
-import android.widget.CheckBox;
-import android.widget.Checkable;
-import android.widget.RadioButton;
-import android.widget.Spinner;
-import android.widget.ArrayAdapter;
-import android.widget.AdapterView.OnItemSelectedListener;
-import android.widget.AdapterView;
-import android.view.WindowManager;
-import android.os.PowerManager;
-import android.content.Context;
-import android.content.DialogInterface;
-import android.app.DialogFragment;
-import android.app.AlertDialog;
-import android.app.Dialog;
-import android.app.ActivityManager;
 
 public class BenchmarkSelector extends Activity implements ApplicationState {
     /** Called when the activity is first created. */
@@ -143,7 +151,7 @@ public class BenchmarkSelector extends Activity implements ApplicationState {
 
     }
 
-    public void displayMessage(ApplicationState.State state, String message)  {
+    public void displayMessage(ApplicationState.State state, String messa)  {
         displayMessage(state.stringId, message);
     }
 
@@ -207,6 +215,7 @@ public class BenchmarkSelector extends Activity implements ApplicationState {
                         displayMessage(ApplicationState.State.ERROR, "Could not save log file.");
                     }
                     // intended fallthrough
+                    notifyFinished();
                 case INITIALISED:
                     resetButton(button);
                     numPick.setEnabled(true);
@@ -321,6 +330,41 @@ public class BenchmarkSelector extends Activity implements ApplicationState {
         this.updateState(ApplicationState.State.MEASURING_STARTED);
         stateThread.start();
         measuringThread.start();
+    }
+
+    private void notifyFinished() {
+        Uri alarmSound = RingtoneManager.getDefaultUri(
+            RingtoneManager.TYPE_NOTIFICATION);
+
+        Notification.Builder mBuilder =
+            new Notification.Builder(this)
+            .setSmallIcon(android.R.drawable.ic_media_play)
+            .setContentTitle(getResources().getText(R.string.measuring_finished))
+            .setContentText(getResources().getText(R.string.measuring_finished))
+            .setSound(alarmSound);
+
+        // Creates an explicit intent for an Activity in your app
+        Intent resultIntent = new Intent(this, BenchmarkSelector.class);
+
+        // The stack builder object will contain an artificial back stack for the
+        // started Activity.
+        // This ensures that navigating backward from the Activity leads out of
+        // your application to the Home screen.
+        TaskStackBuilder stackBuilder = TaskStackBuilder.create(this);
+        // Adds the back stack for the Intent (but not the Intent itself)
+        stackBuilder.addParentStack(BenchmarkSelector.class);
+        // Adds the Intent that starts the Activity to the top of the stack
+        stackBuilder.addNextIntent(resultIntent);
+        PendingIntent resultPendingIntent =
+            stackBuilder.getPendingIntent(
+                0,
+                PendingIntent.FLAG_UPDATE_CURRENT
+                                          );
+        //        mBuilder.setContentIntent(resultPendingIntent);
+        NotificationManager mNotificationManager =
+            (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        // mId allows you to update the notification later on.
+        mNotificationManager.notify(1, mBuilder.build());
     }
 
     private class RepsListener implements NumberPicker.OnValueChangeListener {
