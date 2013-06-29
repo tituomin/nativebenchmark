@@ -20,11 +20,7 @@ public class Init {
 
     }
 
-    private static boolean initDone = false;
     public static void initEnvironment(boolean maxSpeed) throws IOException {
-        if (!initDone) {
-            ShellEnvironment.runAsRoot(initScript(maxSpeed ? CPUFREQ_MAX : CPUFREQ));
-            initDone = true;
-        }
+        ShellEnvironment.runAsRoot(initScript(maxSpeed ? CPUFREQ_MAX : CPUFREQ));
     }
 }
