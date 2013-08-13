@@ -194,7 +194,6 @@ public class BenchmarkSelector extends Activity implements ApplicationState {
                     expPick.setEnabled(false);
                     numPick.setEnabled(false);
                     switchButton(button);
-                    LogAccess.start();
                     state = ApplicationState.State.MILESTONE;
                     break;
                 case MILESTONE:
@@ -328,6 +327,7 @@ public class BenchmarkSelector extends Activity implements ApplicationState {
                         }}}});
 
         this.updateState(ApplicationState.State.MEASURING_STARTED);
+        LogAccess.start();
         stateThread.start();
         measuringThread.start();
     }

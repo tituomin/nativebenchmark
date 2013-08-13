@@ -99,7 +99,6 @@ public class LogAccess {
 
     //06-27 23:52:37.348 I/LogAccess( 2378): [End] 43ba52d0-61b0-47e4-991b-c98a3dd21f9f
 
-
     private static Pattern makeMarkerPattern(String type) {
         return Pattern.compile("[-:. [0-9]]+ I/"+ TAG + "\\([ 0-9]+\\): \\[" + type +"\\] " + currentRunId);
     }

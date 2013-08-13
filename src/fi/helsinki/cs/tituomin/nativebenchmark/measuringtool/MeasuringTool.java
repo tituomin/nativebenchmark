@@ -1,29 +1,32 @@
 package fi.helsinki.cs.tituomin.nativebenchmark.measuringtool;
 
-import java.util.Map;
-import java.util.HashMap;
-import java.util.Set;
-import java.util.HashSet;
-import java.util.List;
-import java.util.LinkedList;
-import java.util.ArrayList;
-import android.util.Pair;
-import java.util.HashMap;
-import java.io.IOException;
-import java.io.File;
-import android.util.Log;
-import java.util.Observer;
-import java.util.Observable;
-import fi.helsinki.cs.tituomin.nativebenchmark.ApplicationState;
-import fi.helsinki.cs.tituomin.nativebenchmark.measuringtool.MeasuringOption;
-import fi.helsinki.cs.tituomin.nativebenchmark.measuringtool.OptionSpec;
-import fi.helsinki.cs.tituomin.nativebenchmark.Benchmark;
-import fi.helsinki.cs.tituomin.nativebenchmark.BenchmarkResult;
-import fi.helsinki.cs.tituomin.nativebenchmark.BenchmarkRegistry;
 
-import fi.helsinki.cs.tituomin.nativebenchmark.measuringtool.RunningWrapper;
+import android.util.Log;
+import android.util.Pair;
+import fi.helsinki.cs.tituomin.nativebenchmark.ApplicationState;
+import fi.helsinki.cs.tituomin.nativebenchmark.Benchmark;
+import fi.helsinki.cs.tituomin.nativebenchmark.BenchmarkRegistry;
+import fi.helsinki.cs.tituomin.nativebenchmark.BenchmarkResult;
 import fi.helsinki.cs.tituomin.nativebenchmark.measuringtool.AllocatingBenchmarkLongRunningWrapper;
 import fi.helsinki.cs.tituomin.nativebenchmark.measuringtool.AllocatingBenchmarkShortRunningWrapper;
+import fi.helsinki.cs.tituomin.nativebenchmark.measuringtool.MeasuringOption;
+import fi.helsinki.cs.tituomin.nativebenchmark.measuringtool.OptionSpec;
+import fi.helsinki.cs.tituomin.nativebenchmark.measuringtool.RunningWrapper;
+import java.io.File;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Observable;
+import java.util.Observer;
+import java.util.Set;
 
 public abstract class MeasuringTool implements Runnable {
 
@@ -84,9 +87,14 @@ public abstract class MeasuringTool implements Runnable {
         setDefaultOptions();
         benchmark.setRepetitions(this.defaultRepetitions);
         RunningWrapper wrapper = wrap(benchmark);
-        Log.i(TAG, "[Start] " + benchmarkName);
+        Date start = null, end = null;
+
+        start = new Date();
         wrapper.begin(this);
-        Log.i(TAG, "[End] " + benchmarkName);
+        end = new Date();
+        
+        putMeasurement("start", DATEFORMAT.format(start));
+        putMeasurement("end", DATEFORMAT.format(end));
 
         if (wrapper.wasInterrupted() && userInterrupted()) {
             throw new InterruptedException("Interrupted by user");
@@ -294,5 +302,8 @@ public abstract class MeasuringTool implements Runnable {
     private static boolean userInterrupted = false;
     private final static String TAG = "MeasuringTool";
     public static class UnsupportedOptionException extends RuntimeException {}
+
+    private static SimpleDateFormat DATEFORMAT = new SimpleDateFormat("MM-dd HH:mm:ss.SSS", Locale.US);
+
 }
 

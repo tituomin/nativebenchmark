@@ -156,7 +156,16 @@ def add_field_and_array_benchmarks(benchmarks):
                     'GET_STATIC_TYPE_FIELD({_type}, {java_type_name});',
                     _type)})
 
-        # java
+        # java.append({
+        #         'id' : make_id('GetStatic{_type}Field', _type),
+        #         'representative': representative,
+        #         'direction' : 'jj',
+        #         'code' : put(
+        #             'fi.helsinki.cs.tituomin.nativebenchmark.MockObject.',
+                    
+        #             ),
+        #         'finished' : 'finished' : 'persistentValue = localPersistentValue;'
+        #         })
 
         c.append({
                 'direction' : 'cj',
