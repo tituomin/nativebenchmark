@@ -55,26 +55,30 @@ void function_wrapper() {
         jstringValue,
         jchar_ptr__IN);
 
-    // @CopyUnicode vary=size direction=cj
+    // @StringLength vary=size direction=cj
 
     jsize__IN = (*env)->GetStringLength(env, jstringValue);
+
+    // @StringLengthUTF vary=size direction=cj
+
+    jsize__IN = (*env)->GetStringUTFLength(env, jstringValue);
+
+    // @CopyUnicode vary=size direction=cj
 
     (*env)->GetStringRegion(
         env,
         jstringValue,
         0,
-        jsize__IN,
+        current_size,
         jchar_buf__IN);
 
     // @CopyUTF vary=size direction=cj
-
-    jsize__IN = (*env)->GetStringLength(env, jstringValue);
 
     (*env)->GetStringUTFRegion(
         env,
         jstringValue,
         0,
-        jsize__IN,
+        current_size,
         char_buf__IN);
 
     // @ReadPrimitiveArrayCritical vary=size direction=cj
