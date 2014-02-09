@@ -27,8 +27,6 @@ void function_wrapper() {
             jstringValue,
             &jboolean__IN));
 
-    jsize__IN = (*env)->GetStringLength(env, jstringValue);
-
     (*env)->ReleaseStringChars(env,
         jstringValue,
         jchar_ptr__IN);
