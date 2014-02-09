@@ -139,6 +139,8 @@ POINTER_IN(void);
 VARIABLE_IN(jfieldID);
 VARIABLE_IN(jmethodID);
 
+PRIMITIVE_IN(char);
+
 // references
 
 REFERENCE_IN(jobject);

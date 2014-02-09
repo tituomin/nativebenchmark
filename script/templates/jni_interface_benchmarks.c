@@ -68,6 +68,17 @@ void function_wrapper() {
         jsize__IN,
         jchar_buf__IN);
 
+    // @CopyUTF vary=size direction=cj
+
+    jsize__IN = (*env)->GetStringLength(env, jstringValue);
+
+    (*env)->GetStringUTFRegion(
+        env,
+        jstringValue,
+        0,
+        jsize__IN,
+        char_buf__IN);
+
     // @ReadPrimitiveArrayCritical vary=size direction=cj
 
     ASSIGN_AND_CHECK(
