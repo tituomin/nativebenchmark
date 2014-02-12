@@ -69,8 +69,6 @@ def modifier_combinations():
 
 def method_combinations():
     combinations = []
-
-
     combinations.append({
             'description'      : 'no arguments or return types',
             'representative'   : True,
@@ -96,7 +94,7 @@ def method_combinations():
             'return_types'     : [return_types['v']],
             'native_modifiers' : [('private', '')],
             'types'            : jni_types.type_combinations(
-                typeset = types.values()),
+                typeset = types.values())
             })
 
     combinations.append({
@@ -107,13 +105,13 @@ def method_combinations():
             'types'            : [types['i']]
             })
 
-    ret_types = filter(
+    filtered_return_types = filter(
         lambda x : x['symbol'] != 'l',
         jni_types.type_combinations(typeset = types.values()))
 
     combinations.append({
             'description'      : 'return types',
-            'return_types'     : ret_types,
+            'return_types'     : filtered_return_types,
             'native_modifiers' : [('private', '')],
             'types'            : [types['i']]
             })
