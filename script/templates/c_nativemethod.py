@@ -1,5 +1,5 @@
 
-from templating import partial
+from templating import partial, put
 import loop_code
 
 # todo: templates confusingly named
@@ -42,10 +42,25 @@ t_caller_java = partial(
     return_type = 'void',
     function = 'runInternal',
     parameters = 'jobject instance',
-    prebody = 'jmethodID mid = mids[<% seq_no %> - 1];',
-    body = partial(
-        loop_code.t_c_jni_call,
+    prebody = 'jmethodID mid = mids[<% seq_no %> - 1];')
+
+def call_java_from_c(static = True, nonvirtual = False, **parameters):
+    benchmark_body = ''
+    if static:
         benchmark_body = (
             '(*env)->CallStatic<% java_method_type %>Method<% call_variant %>' +
-            '(env, java_counterparts_class, mid<% arguments %>);')))
+            '(env, java_counterparts_class, mid<% arguments %>);')
+    elif nonvirtual:
+        benchmark_body = (
+            '(*env)->CallNonvirtual<% java_method_type %>Method<% call_variant %>' +
+            '(env, java_counterparts_object, java_counterparts_class, mid<% arguments %>);')
+    else:
+        benchmark_body = (
+            '(*env)->Call<% java_method_type %>Method<% call_variant %>' +
+            '(env, java_counterparts_object, mid<% arguments %>);')
 
+    parameters['body'] = put(
+        loop_code.t_c_jni_call,
+        benchmark_body = put(benchmark_body, **parameters))
+
+    return partial(t_caller_java, **parameters)

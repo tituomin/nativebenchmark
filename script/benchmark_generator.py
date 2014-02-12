@@ -63,7 +63,7 @@ def parameter_initialisation(language, typespec, name):
         return expression
 
 def modifier_combinations():
-    privacy = ['private', 'public', 'protected'] #synchronized, floatingpoint?
+    privacy = ['private', 'public', 'protected']
     static = ['static', '']
     return list(itertools.product(privacy, static))
 
@@ -122,13 +122,11 @@ def generate_benchmarks():
     global class_counter
     java = []
     java_callees = []
-    c = []
+    c_implementations = []
     c_runners = []
     c_methodid_inits = []
 
-    all_combinations = method_combinations()
-
-    for spec in all_combinations:
+    for spec in method_combinations():
         for native_modifier in spec['native_modifiers']:
             for return_type in spec['return_types']:
                 if 'representative' not in spec:
@@ -178,12 +176,13 @@ def generate_benchmarks():
 
                     sequence_no = next_sequence_no()
 
-                    for from_lang, to_lang in [('J', 'C'), ('J', 'J'), ('C','C'), ('C', 'J')]:
+                    for from_lang, to_lang in [
+                            ('J', 'C'), ('J', 'J'),
+                            ('C', 'C'), ('C', 'J')]:
 
                         classname = benchmark_classname(
                             '2'.join((from_lang, to_lang)),
                             sequence_no)
-
 
                         if to_lang == 'C':
                             counterpart_method_name = 'nativemethod'
@@ -261,14 +260,14 @@ def generate_benchmarks():
                             # to counterpart class (at the end or beginning) ?
 
                         if (from_lang, to_lang) == ('J', 'C'):
-                            c.append(
+                            c_implementations.append(
                                 put(c_nativemethod.t,
-                                    return_type               = return_type['c'],
-                                    packagename               = ('_').join(packagename),
-                                    classname                 = classname,
-                                    function                  = native_method_name,
-                                    parameters                = ", ".join(c_parameter_declarations[0:i+2]),
-                                    return_expression         = return_expression))
+                                    return_type       = return_type['c'],
+                                    packagename       = ('_').join(packagename),
+                                    classname         = classname,
+                                    function          = native_method_name,
+                                    parameters        = ", ".join(c_parameter_declarations[0:i+2]),
+                                    return_expression = return_expression))
 
                         if (from_lang, to_lang) == ('C', 'C'):
                             jni_param_names = ['env', 'instance']
@@ -299,7 +298,9 @@ def generate_benchmarks():
                                 arguments = ', ' + arguments
 
                             c_runners.append(
-                                put(c_nativemethod.t_caller_java,
+                                c_nativemethod.call_java_from_c(
+                                    static = True,
+                                    nonvirtual = False,
                                     seq_no = class_counter,
                                     packagename = '_'.join(packagename),
                                     classname = classname,
@@ -320,8 +321,10 @@ def generate_benchmarks():
     jcp_decl = ''
     jcp_init = ''
     for _type in ref_types:
-        jcp_decl += "private static {_type1} {_type2}Value;\n".format(_type1 = _type['java'], _type2 = _type['c'])
-        jcp_init += parameter_initialisation('java', _type, _type['c'] + 'Value') + ";\n"
+        jcp_decl += "private static {_type1} {_type2}Value;\n".format(
+            _type1 = _type['java'], _type2 = _type['c'])
+        jcp_init += parameter_initialisation(
+            'java', _type, _type['c'] + 'Value') + ";\n"
 
     
     java_counterparts_class = {
@@ -336,7 +339,7 @@ def generate_benchmarks():
                 counterpart_methods = ''.join(java_callees))}
 
     c_file = put(c_module.t,
-        jni_function_templates = ''.join(c),
+                 jni_function_templates = ''.join(c_implementations),
         initialisers='')
     
     c_runners_file = put(c_module.t,
