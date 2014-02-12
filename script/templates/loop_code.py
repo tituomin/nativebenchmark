@@ -59,7 +59,8 @@ if (--refs == 0) {
 t_c_base = partial(
     t,
     declare_counters = 'jlong interval, division, remainder;',
-    init_counters    = 'interval = CHECK_INTERRUPTED_INTERVAL;',#;\n__android_log_print(ANDROID_LOG_DEBUG, "nativebenchmark", "interval is %lld", interval);',
+    init_counters    = 'interval = CHECK_INTERRUPTED_INTERVAL;'
+    ,#;\n__android_log_print(ANDROID_LOG_DEBUG, "nativebenchmark", "interval is %lld", interval);',
     test_interrupted = 'interrupted')
 
 t_c_jni_call = partial(
@@ -72,7 +73,9 @@ t_c_jni_call = partial(
 
 t_c = partial(
     t_c_base,
-    remove = ['extra_debug', 'debug', 'debug_interrupted', 'additional_declaration', 'additional_init', 'pre_body', 'post_body', 'removal_prevention'])
+    remove = ['extra_debug', 'debug', 'debug_interrupted',
+              'additional_declaration', 'additional_init',
+              'pre_body', 'post_body', 'removal_prevention'])
 
 t_java = partial(
     t,
