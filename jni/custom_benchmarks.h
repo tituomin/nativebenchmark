@@ -38,6 +38,9 @@
     (*env)->Set##_jname##ArrayRegion(env,                              \
         _ctype##ArrayValue, 0, current_size, _ctype ## _buf__IN)
 
+#define GET_PRIMITIVE_ARRAY_LENGTH(_ctype)                 \
+    jsize__IN = (*env)->GetArrayLength(env, _ctype##ArrayValue);
+
 // ----- ----- ----- ---- method calls ... ... 
 
 #define CALL_VIRTUAL(_lhs, _jname, _parameters, _check_exceptions)                                         \

@@ -17,6 +17,11 @@ void function_wrapper() {
         jobject__IN,
         (*env)->NewObject(env, jclassValue, objectConstructorID));
 
+    // @AllocObject alloc=true direction=cj
+    ASSIGN_AND_CHECK(
+        jobject__IN,
+        (*env)->AllocObject(env, jclassValue));
+
     // -----------------------
 
     // @ReadUnicode vary=size direction=cj
@@ -217,13 +222,13 @@ void function_wrapper() {
 
     (*env)->DeleteLocalRef(env, jobject__IN);
 
-    // @WeakGlobalRef direction=cj
+    // ---WeakGlobalRef direction=cj
 
-    ASSIGN_AND_CHECK(
-        jobject__IN,
-        (*env)->NewWeakGlobalRef(env, jobjectValue));
+    /* ASSIGN_AND_CHECK( */
+    /*     jobject__IN, */
+    /*     (*env)->NewWeakGlobalRef(env, jobjectValue)); */
 
-    (*env)->DeleteWeakGlobalRef(env, jobject__IN);
+    /* (*env)->DeleteWeakGlobalRef(env, jobject__IN); */
 
     // @LocalFrame direction=cj
 
@@ -232,6 +237,10 @@ void function_wrapper() {
         (*env)->PushLocalFrame(env, 16));
 
     jobject__IN = (*env)->PopLocalFrame(env, NULL);
+
+    // @ExceptionCheck direction=cj
+
+    (*env)->ExceptionCheck(env);
 
     // @END
 

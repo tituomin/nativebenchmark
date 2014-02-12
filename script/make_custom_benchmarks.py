@@ -243,6 +243,15 @@ def add_field_and_array_benchmarks(benchmarks):
         c.append({
                 'vary' : 'size',
                 'representative' : representative,
+                'direction' : 'cj',
+                'id' : make_id('Get{_type}ArrayLength', _type),
+                'code' : macro_call(
+                    'GET_PRIMITIVE_ARRAY_LENGTH({_type});',
+                    _type)})
+
+        c.append({
+                'vary' : 'size',
+                'representative' : representative,
                 'direction' : 'cc',
                 'id' : make_id('ReadComplete{_type}Array', _type),
                 'code' : put(
