@@ -23,6 +23,7 @@ t = partial(
               'parameter_initialisations',
               'prebody'])
 
+# C to C
 t_caller_native = partial(
     t_run_method,
     return_type = 'void',
@@ -35,6 +36,7 @@ t_caller_native = partial(
             '<% counterpart_method_name %>' +
             '(<% counterpart_method_arguments %>);')))
 
+# C to J
 t_caller_java = partial(
     t_run_method,
     return_type = 'void',

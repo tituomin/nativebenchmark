@@ -20,13 +20,6 @@ class_counter = 0
 
 # todo: initialize complex return values for c side
 
-def create_benchmarks():
-    benchmarks = { 'java' : [] }
-    jb, jc, benchmarks['c'], benchmarks['c_run'] = generate_benchmarks()
-    benchmarks['java'].extend(jb)
-    benchmarks ['java_counter'] = jc
-    return benchmarks
-
 def next_sequence_no():
     global class_counter
     class_counter += 1
@@ -35,32 +28,32 @@ def next_sequence_no():
 def benchmark_classname(prefix, number):
     return prefix + 'Benchmark' + number
 
-def parameter_initialisation(language, type_data, name):
-    if type_data.get('is-array', False):
+def parameter_initialisation(language, typespec, name):
+    if typespec.get('is-array', False):
         if language == 'java':
             expression = 'benchmarkParameter.retrieve{_type}Array()'.format(
-                _type = type_data['java-element-type'].capitalize())
+                _type = typespec['java-element-type'].capitalize())
         else:
             expression = '{_type}ArrayValue'.format(
-                _type = type_data['c-element-type'])
+                _type = typespec['c-element-type'])
 
-    elif type_data.get('is-object', False):
+    elif typespec.get('is-object', False):
         if language == 'java':
             expression = 'benchmarkParameter.retrieve{_type}()'.format(
-                _type = type_data['java'])
+                _type = typespec['java'])
         else:
             expression = '{_type}Value'.format(
-                _type = type_data['c'])
+                _type = typespec['c'])
 
     elif language == 'java':
-        if type_data.get('java-literal'):
-            expression = type_data['java-literal']
+        if typespec.get('java-literal'):
+            expression = typespec['java-literal']
         else:
             expression = ''
 
     elif language == 'c':
-        if type_data.get('c-literal'):
-            expression = type_data['c-literal']
+        if typespec.get('c-literal'):
+            expression = typespec['c-literal']
         else:
             expression = ''
 
@@ -69,65 +62,63 @@ def parameter_initialisation(language, type_data, name):
     else:
         return expression
 
-
 def modifier_combinations():
     privacy = ['private', 'public', 'protected'] #synchronized, floatingpoint?
     static = ['static', '']
     return list(itertools.product(privacy, static))
 
-def specify_combinations():
-    all_combinations = []
+def method_combinations():
+    combinations = []
 
-    all_combinations.append({
-            'representative' : True,
-            'description' : 'no arguments or return types',
-            'return_types': [return_types['v']],
+
+    combinations.append({
+            'description'      : 'no arguments or return types',
+            'representative'   : True,
+            'return_types'     : [return_types['v']],
             'native_modifiers' : modifier_combinations(),
-            'types' : []})
+            'types'            : []})
 
     for symbol, _type in types.iteritems():
-        representative = _type.get('representative', False)
-        
-        all_combinations.append({
-            'representative' : representative,
-            'description' : 'varying count {0}'.format(symbol),
-            'return_types' : [return_types['v']],
+        combinations.append({
+            'description'      : 'varying count {0}'.format(symbol),
+            'representative'   : _type.get('representative', False),
+            'return_types'     : [return_types['v']],
             'native_modifiers' : [('private', '')],
-            'types' : jni_types.type_combinations(
+            'types'            : jni_types.type_combinations(
                 size = 20,
                 typeset = [types[symbol]])})
 
-    # ! start from 1 to avoid duplicates!
-    all_combinations.append({
-            'representative' : True,
-            'skip' : 1,
-            'description' : 'vary number of types',
-            'return_types' : [return_types['v']],
+    # Start from 1 to avoid duplicates.
+    combinations.append({
+            'description'      : 'vary number of types',
+            'representative'   : True,
+            'skip'             : 1,
+            'return_types'     : [return_types['v']],
             'native_modifiers' : [('private', '')],
-            'types' : jni_types.type_combinations(
+            'types'            : jni_types.type_combinations(
                 typeset = types.values()),
-
             })
 
-    all_combinations.append({
-            'representative' : True,
-            'description' : 'modifier combinations',
-            'return_types' : [return_types['l']],
+    combinations.append({
+            'description'      : 'modifier combinations',
+            'representative'   : True,
+            'return_types'     : [return_types['l']],
             'native_modifiers' : modifier_combinations(),
-            'types' : [types['i']]
+            'types'            : [types['i']]
             })
 
-    ret_types = filter(lambda x: x['symbol'] != 'l', jni_types.type_combinations(
-        typeset = types.values()))
+    ret_types = filter(
+        lambda x : x['symbol'] != 'l',
+        jni_types.type_combinations(typeset = types.values()))
 
-    all_combinations.append({
-            'description' : 'return types',
-            'return_types' : ret_types,
+    combinations.append({
+            'description'      : 'return types',
+            'return_types'     : ret_types,
             'native_modifiers' : [('private', '')],
-            'types' : [types['i']]
+            'types'            : [types['i']]
             })
 
-    return all_combinations
+    return combinations
 
 def generate_benchmarks():
     global class_counter
@@ -137,7 +128,7 @@ def generate_benchmarks():
     c_runners = []
     c_methodid_inits = []
 
-    all_combinations = specify_combinations()
+    all_combinations = method_combinations()
 
     for spec in all_combinations:
         for native_modifier in spec['native_modifiers']:
@@ -356,4 +347,7 @@ def generate_benchmarks():
             mid_inits = ''.join(c_methodid_inits),
             amount_of_methods = len(c_methodid_inits)))
 
-    return java, java_counterparts_class, c_file, c_runners_file
+    return { 'java'              : java,
+             'java_counterparts' : java_counterparts_class,
+             'c'                 : c_file,
+             'c_runners'         : c_runners_file }

@@ -1,5 +1,5 @@
 
-from benchmark_generator import create_benchmarks, packagename
+from benchmark_generator import generate_benchmarks, packagename
 from make_custom_benchmarks import write_custom_benchmarks
 from templates import java_registry_init
 from templating import put
@@ -31,15 +31,15 @@ def write_benchmark(benchmark, java_output_dir):
         java_output.write(benchmark["code"])
     
 
-def write_benchmarks(c_output, c_run_output, java_output_dir):
-    benchmarks = create_benchmarks()
-    c_output.write(benchmarks['c'])
-    c_run_output.write(benchmarks['c_run'])
+def write_benchmarks(c_output, c_runners_output, java_output_dir):
+    benchmarks = generate_benchmarks()
 
+    c_output.write(benchmarks['c'])
+    c_runners_output.write(benchmarks['c_runners'])
+
+    write_benchmark(benchmarks['java_counterparts'], java_output_dir)
     for benchmark in benchmarks['java']:
         write_benchmark(benchmark, java_output_dir)
-
-    write_benchmark(benchmarks['java_counter'], java_output_dir)
 
     return [benchmark['class'] for benchmark in benchmarks['java']]
 
