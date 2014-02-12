@@ -48,7 +48,7 @@ if (refs == 0) {
 }
 """
 
-jni_pop_frame  = """
+jni_pop_frame = """
 if (--refs == 0) {
     (*env)->PopLocalFrame(env, NULL);
 }
