@@ -587,6 +587,7 @@ public enum BenchmarkRunner {
         bdata.put("from", from);
         bdata.put("to", to);
         bdata.put("representative", benchmark.representative() ? "1" : "0");
+        bdata.put("nonvirtual", benchmark.isNonvirtual() ? "1" : "0");
 
         if (seqNo == -1) {
             bdata.put("custom", "1");

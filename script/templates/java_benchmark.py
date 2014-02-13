@@ -10,6 +10,7 @@ import fi.helsinki.cs.tituomin.nativebenchmark.Benchmark;
 import fi.helsinki.cs.tituomin.nativebenchmark.BenchmarkRegistry;
 import fi.helsinki.cs.tituomin.nativebenchmark.BenchmarkParameter;
 import fi.helsinki.cs.tituomin.nativebenchmark.measuringtool.BasicOption;
+import fi.helsinki.cs.tituomin.nativebenchmark.MockObject;
 <% imports %>
 import android.util.Log;
 
@@ -49,6 +50,10 @@ public class <% classname %> <% class_relations %> extends Benchmark {
 
     public boolean isAllocating() {
         return <% is_allocating %>;
+    }
+
+    public boolean isNonvirtual() {
+        return <% is_nonvirtual %>;
     }
 
     <% native_method %>

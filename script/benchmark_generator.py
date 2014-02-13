@@ -258,6 +258,7 @@ def generate_benchmarks():
                                         imports                      = '',
                                         has_dynamic_parameters       = 'false', # todo
                                         is_allocating                = 'false',
+                                        is_nonvirtual                = 'false' if virtualcall else 'true',
                                         _id                          = benchmark_classname("", sequence_no),
                                         description                  = spec['description'],
                                         seq_no                       = class_counter,

@@ -13,6 +13,7 @@ public abstract class Benchmark implements Runnable {
     public abstract String id();
     public abstract int sequenceNo();
     public abstract boolean isAllocating();
+    public abstract boolean isNonvirtual();
     public abstract boolean dynamicParameters();
     public abstract boolean representative();
 
