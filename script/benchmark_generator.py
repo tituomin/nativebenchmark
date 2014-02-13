@@ -63,7 +63,7 @@ def parameter_initialisation(language, typespec, name):
         return expression
 
 def modifier_combinations():
-    privacy = ['private', 'public', 'protected']
+    privacy = ['public', 'private', 'protected']
     static = ['static', '']
     return list(itertools.product(privacy, static))
 
@@ -81,7 +81,7 @@ def method_combinations():
             'description'      : 'varying count {0}'.format(symbol),
             'representative'   : _type.get('representative', False),
             'return_types'     : [return_types['v']],
-            'target_modifiers' : [('private', '')],
+            'target_modifiers' : [('public', '')],
             'types'            : jni_types.type_combinations(
                 size = 20,
                 typeset = [types[symbol]])})
@@ -92,7 +92,7 @@ def method_combinations():
             'representative'   : True,
             'skip'             : 1,
             'return_types'     : [return_types['v']],
-            'target_modifiers' : [('private', '')],
+            'target_modifiers' : [('public', '')],
             'types'            : jni_types.type_combinations(
                 typeset = types.values())
             })
@@ -113,7 +113,7 @@ def method_combinations():
     combinations.append({
             'description'      : 'return types',
             'return_types'     : filtered_return_types,
-            'target_modifiers' : [('private', '')],
+            'target_modifiers' : [('public', '')],
             'types'            : [types['i']]
             })
 
@@ -189,7 +189,8 @@ def generate_benchmarks():
 
                             pairing = (from_lang, to_lang)
 
-                            if (virtualcall == False and pairing != ('C', 'J')):
+                            if (target_modifier[1] != 'static' and
+                                virtualcall == False and pairing != ('C', 'J')):
                                 # Nonvirtual calls only possible in C -> J.
                                 continue
 
