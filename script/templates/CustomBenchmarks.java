@@ -3,7 +3,6 @@ package fi.helsinki.cs.tituomin.nativebenchmark.benchmark;
 import android.content.pm.PermissionInfo;
 import java.nio.ByteBuffer;
 
-
 public class CustomBenchmarks {
 
     // @BEGIN
@@ -16,6 +15,7 @@ public class CustomBenchmarks {
     int capacityIn;
     ByteBuffer byteBufferIn;
     Object objectValue = benchmarkParameter.retrieveObject();
+    MockObject mockObject = benchmarkParameter.retrieveMockObject();
     String stringIn = benchmarkParameter.retrieveString();
     Object[] objectArrayValue = benchmarkParameter.retrieveObjectArray();
     ByteBuffer directByteBufferValue = benchmarkParameter.retrieveDirectByteBuffer();

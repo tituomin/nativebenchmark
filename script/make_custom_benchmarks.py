@@ -156,16 +156,20 @@ def add_field_and_array_benchmarks(benchmarks):
                     'GET_STATIC_TYPE_FIELD({_type}, {java_type_name});',
                     _type)})
 
-        # java.append({
-        #         'id' : make_id('GetStatic{_type}Field', _type),
-        #         'representative': representative,
-        #         'direction' : 'jj',
-        #         'code' : put(
-        #             'fi.helsinki.cs.tituomin.nativebenchmark.MockObject.',
+        java.append({
+                'id' : make_id('GetStatic{_type}Field', _type),
+                'representative': representative,
+                'direction' : 'jj',
+                'code' :
+                    "{_javatype} val = mockObject.{_ctype}StaticField;".format(
+                        _javatype = _type['java'],
+                        _ctype = _type['c']
                     
-        #             ),
-        #         'finished' : 'finished' : 'persistentValue = localPersistentValue;'
-        #         })
+                    ),
+                'finished' : 'persistentValue = localPersistentValue;'
+                })
+        # todo: separate inits from global inits
+        # and make side-effect real
 
         c.append({
                 'direction' : 'cj',
@@ -175,7 +179,18 @@ def add_field_and_array_benchmarks(benchmarks):
                     'SET_STATIC_TYPE_FIELD({_type}, {java_type_name});',
                     _type)})
 
-        # java
+        java.append({
+                'id' : make_id('SetStatic{_type}Field', _type),
+                'representative': representative,
+                'direction' : 'jj',
+                'code' : 
+                    "mockObject.{_ctype}StaticField = {_literal} ;".format(
+                        _ctype = _type['c'],
+                        _literal = _type.get('java-literal') or 'objectValue'
+                    
+                    ),
+                'finished' : 'persistentValue = localPersistentValue;'
+                })
 
         c.append({
                 'id' : make_id('Get{_type}Field', _type),
@@ -185,7 +200,18 @@ def add_field_and_array_benchmarks(benchmarks):
                     'GET_TYPE_FIELD({_type}, {java_type_name});',
                     _type)})
 
-        # java
+        java.append({
+                'id' : make_id('Get{_type}Field', _type),
+                'representative': representative,
+                'direction' : 'jj',
+                'code' : 
+                    "{_javatype} val = mockObject.{_ctype}Field;".format(
+                        _javatype = _type['java'],
+                        _ctype = _type['c']
+                    
+                    ),
+                'finished' : 'persistentValue = localPersistentValue;'
+                })
 
         c.append({
                 'id' : make_id('Set{_type}Field', _type),
@@ -195,7 +221,18 @@ def add_field_and_array_benchmarks(benchmarks):
                     'SET_TYPE_FIELD({_type}, {java_type_name});',
                     _type)})
 
-        # java
+        java.append({
+                'id' : make_id('Set{_type}Field', _type),
+                'representative': representative,
+                'direction' : 'jj',
+                'code' : 
+                    "mockObject.{_ctype}Field = {_literal} ;".format(
+                        _ctype = _type['c'],
+                        _literal = _type.get('java-literal') or 'objectValue'
+                    
+                    ),
+                'finished' : 'persistentValue = localPersistentValue;'
+                })
 
     for _type in jni_types.primitive_types.values():
         representative = _type.get('representative', False)
@@ -377,6 +414,7 @@ def write_custom_benchmarks(definition_files, c_custom_output_name, java_output_
                         to_language = to_lang,
                         seq_no = '-1',
                         has_dynamic_parameters = dyn_par,
+                        is_nonvirtual = 'false',
                         run_method = 'public native void runInternal();',
                         ))}
 
@@ -399,6 +437,7 @@ def write_custom_benchmarks(definition_files, c_custom_output_name, java_output_
                             is_allocating = is_allocating,
                             from_language = from_lang,
                             to_language = to_lang,
+                            is_nonvirtual = 'false',
                             seq_no = '-1',
                             has_dynamic_parameters = dyn_par,
                             run_method = put(

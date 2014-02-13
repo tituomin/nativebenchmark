@@ -17,7 +17,7 @@ public class BenchmarkParameter implements Iterable<Integer> {
     private native void freeReturnvalues();
 
     public void setUp() {
-        initReturnvalues(index * DEFAULTSIZE, new MockObject());
+        initReturnvalues(index * DEFAULTSIZE, mockObjectInstance);
         JavaCounterparts.initParams(this);
     }
 
@@ -28,6 +28,11 @@ public class BenchmarkParameter implements Iterable<Integer> {
     public static final int DEFAULTSIZE = 64;
     private static final int RANGE = 8;
     public static final int MAXSIZE = DEFAULTSIZE * RANGE;
+
+    public static MockObject mockObjectInstance = new MockObject();
+    public MockObject retrieveMockObject() {
+        return mockObjectInstance;
+    }
 
     public BenchmarkParameter() {
         index = 1;
