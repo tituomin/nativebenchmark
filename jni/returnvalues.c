@@ -84,6 +84,7 @@ void set_up_custom_context(JNIEnv* env, jobject bPar, jint size, jobject mockObj
     ASSIGN_BUFFER(jfloat);
     ASSIGN_BUFFER(jdouble);
     ASSIGN_BUFFER(jsize);
+    ASSIGN_BUFFER(char);
 
     jobject mock_object_l = mockObject;
     jclass mock_class_l = (*env)->GetObjectClass(env, mock_object_l);
