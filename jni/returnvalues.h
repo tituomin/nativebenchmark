@@ -93,6 +93,9 @@ jint __a, __b;
 #define POINTER_IN(_ctype)                                           \
     _ctype * _ctype ## _ptr__IN;
 
+#define CONST_POINTER_IN(_ctype) \
+    const _ctype * _ctype ## _const_ptr__IN;
+
 #define BUFFER_IN(_ctype)                                            \
     _ctype * _ctype ## _buf__IN;
 
@@ -127,7 +130,9 @@ jint __a, __b;
 
 PRIMITIVE_IN(jboolean);
 PRIMITIVE_IN(jbyte);
+CONST_POINTER_IN(char);
 PRIMITIVE_IN(jchar);
+CONST_POINTER_IN(jchar);
 PRIMITIVE_IN(jshort);
 PRIMITIVE_IN(jint);
 PRIMITIVE_IN(jlong);

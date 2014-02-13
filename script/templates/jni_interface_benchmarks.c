@@ -27,7 +27,7 @@ void function_wrapper() {
     // @ReadUnicode vary=size direction=cj
 
     ASSIGN_AND_CHECK(
-        jchar_ptr__IN,
+        jchar_const_ptr__IN,
         (*env)->GetStringChars(env,
             jstringValue,
             &jboolean__IN));
@@ -39,7 +39,7 @@ void function_wrapper() {
     // @ReadUtf vary=sizeobjectarrayelement direction=cj
 
     ASSIGN_AND_CHECK(
-        jbyte_ptr__IN,
+        char_const_ptr__IN,
         (*env)->GetStringUTFChars(env,
             jstringValue,
             &jboolean__IN));
@@ -51,7 +51,7 @@ void function_wrapper() {
     // @ReadUnicodeCritical vary=size direction=cj
 
     ASSIGN_AND_CHECK(
-        jchar_ptr__IN,
+        jchar_const_ptr__IN,
         (*env)->GetStringCritical(env,
             jstringValue,
             &jboolean__IN));
