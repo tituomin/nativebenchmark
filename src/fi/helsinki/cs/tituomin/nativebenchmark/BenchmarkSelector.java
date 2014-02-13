@@ -93,7 +93,9 @@ public class BenchmarkSelector extends Activity implements ApplicationState {
             dataDir.mkdir();
 
             // pre-enlarges the heap
-            this.allocationArray = new byte[1024 * 1024 * 100];
+            if (BenchmarkSelector.allocationArray == null) {
+                BenchmarkSelector.allocationArray = new byte[1024 * 1024 * 100];
+            }
         }
 
     }
@@ -413,7 +415,7 @@ public class BenchmarkSelector extends Activity implements ApplicationState {
     private PowerManager.WakeLock wakeLock;
     private Thread measuringThread;
     private Thread stateThread;
-    private byte[] allocationArray;
+    private static byte[] allocationArray;
     private StateChanger stateChanger;
     private File dataDir;
 
