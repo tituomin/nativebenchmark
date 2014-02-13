@@ -50,19 +50,35 @@ void throw_interrupted_exception(JNIEnv *env) {
 
 JNIEXPORT void JNICALL
 Java_fi_helsinki_cs_tituomin_nativebenchmark_BenchmarkRegistry_initNative
-(JNIEnv *env, jclass cls, jlong reps, jlong interval, jclass javaCounterparts, jclass thread_cls) {
+(JNIEnv *env, jclass cls, jlong reps, jlong interval, jclass javaCounterparts, jobject javaCounterpartsInstance, jclass thread_cls) {
     repetitions = reps;
     interrupted = 0;
 
     CHECK_INTERRUPTED_INTERVAL = interval;
+
     jclass java_counterparts_class_global_ref = NULL;
     jclass thread_class_global_ref = NULL;
+    jobject java_counterparts_object_global_ref = NULL;
+
     java_counterparts_class_global_ref = (*env)->NewGlobalRef(env, javaCounterparts);
     if (java_counterparts_class_global_ref == NULL) {
         __android_log_write(ANDROID_LOG_ERROR, "initNative", "Could not create global ref.");
         return;
     }
     java_counterparts_class = java_counterparts_class_global_ref;
+
+    java_counterparts_object_global_ref = (*env)->NewGlobalRef(env, javaCounterpartsInstance);
+    if (java_counterparts_object_global_ref == NULL) {
+        __android_log_write(ANDROID_LOG_ERROR, "initNative", "Could not create global ref.");
+        return;
+    }
+    java_counterparts_object = java_counterparts_object_global_ref;
+
+    if (!(*env)->IsInstanceOf(env, java_counterparts_object, java_counterparts_class)) {
+        __android_log_write(ANDROID_LOG_ERROR, "initNative", "JavaCounterparts instance or class is not correct.");
+        return;
+    }
+
     init_methodids(env);
 
     thread_class_global_ref = (*env)->NewGlobalRef(env, thread_cls);
@@ -100,7 +116,7 @@ Java_fi_helsinki_cs_tituomin_nativebenchmark_BenchmarkRegistry_interruptNative
 """
 
 mid_init_t = """
-    mid = (*env)->GetStaticMethodID(env, java_counterparts_class, "<% method_name %>", "<% method_descriptor %>");
+    mid = (*env)->Get<% static %>MethodID(env, java_counterparts_class, "<% method_name %>", "<% method_descriptor %>");
     if (mid == NULL) {
         __android_log_write(ANDROID_LOG_VERBOSE, "nativemethod", "<% method_descriptor %> not found.");
         return; /* method not found */

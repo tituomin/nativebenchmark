@@ -10,9 +10,12 @@ import fi.helsinki.cs.tituomin.nativebenchmark.BenchmarkRunner;
 import android.util.Log;
 
 
-public class JavaCounterparts {
+public enum JavaCounterparts {
+    INSTANCE;
 
     <% return_value_declarations %>
+
+    private JavaCounterparts() { }
 
     public static void initParams(BenchmarkParameter benchmarkParameter) {
         <% return_value_inits %>
@@ -29,7 +32,7 @@ public class JavaCounterparts {
 
 counterpart_t = """
 
-public static <% return_type %> <% methodname %> (<% parameters %>) {
+<% privacy %> <% static %> <% return_type %> <% methodname %> (<% parameters %>) {
     return <% return_expression %>;
 }
 

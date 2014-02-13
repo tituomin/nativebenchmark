@@ -14,6 +14,7 @@ jlong repetitions;
 jlong repetitionsLeft;
 jclass thread_class;
 jclass java_counterparts_class;
+jobject java_counterparts_object;
 jmethodID current_thread_mid;
 jmethodID is_interrupted_mid;
 

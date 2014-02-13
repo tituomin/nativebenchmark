@@ -23,10 +23,10 @@ public class BenchmarkRegistry {
         benchmarks = new LinkedList<Benchmark> ();
         Class jCounterparts = Class.forName("fi.helsinki.cs.tituomin.nativebenchmark.benchmark.JavaCounterparts");
         Class threadClass = Class.forName("java.lang.Thread");
-        initNative(reps, CHECK_INTERRUPTED_INTERVAL, jCounterparts, threadClass);
+        initNative(reps, CHECK_INTERRUPTED_INTERVAL, jCounterparts, JavaCounterparts.INSTANCE, threadClass);
     }
 
-    public static native void initNative(long repetitions, long interval, Class javaCounterparts, Class threadClass);
+    public static native void initNative(long repetitions, long interval, Class javaCounterparts, JavaCounterparts counterInstance, Class threadClass);
     public static native void setRepetitions(long repetitions);
     public static native void interruptNative();
 }

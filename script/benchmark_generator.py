@@ -73,7 +73,7 @@ def method_combinations():
             'description'      : 'no arguments or return types',
             'representative'   : True,
             'return_types'     : [return_types['v']],
-            'native_modifiers' : modifier_combinations(),
+            'target_modifiers' : modifier_combinations(),
             'types'            : []})
 
     for symbol, _type in types.iteritems():
@@ -81,7 +81,7 @@ def method_combinations():
             'description'      : 'varying count {0}'.format(symbol),
             'representative'   : _type.get('representative', False),
             'return_types'     : [return_types['v']],
-            'native_modifiers' : [('private', '')],
+            'target_modifiers' : [('private', '')],
             'types'            : jni_types.type_combinations(
                 size = 20,
                 typeset = [types[symbol]])})
@@ -92,7 +92,7 @@ def method_combinations():
             'representative'   : True,
             'skip'             : 1,
             'return_types'     : [return_types['v']],
-            'native_modifiers' : [('private', '')],
+            'target_modifiers' : [('private', '')],
             'types'            : jni_types.type_combinations(
                 typeset = types.values())
             })
@@ -101,7 +101,7 @@ def method_combinations():
             'description'      : 'modifier combinations',
             'representative'   : True,
             'return_types'     : [return_types['l']],
-            'native_modifiers' : modifier_combinations(),
+            'target_modifiers' : modifier_combinations(),
             'types'            : [types['i']]
             })
 
@@ -112,7 +112,7 @@ def method_combinations():
     combinations.append({
             'description'      : 'return types',
             'return_types'     : filtered_return_types,
-            'native_modifiers' : [('private', '')],
+            'target_modifiers' : [('private', '')],
             'types'            : [types['i']]
             })
 
@@ -127,47 +127,49 @@ def generate_benchmarks():
     c_methodid_inits = []
 
     for spec in method_combinations():
-        for native_modifier in spec['native_modifiers']:
+        for target_modifier in spec['target_modifiers']:
             for return_type in spec['return_types']:
+
                 if 'representative' not in spec:
                     representative = return_type.get('representative', False)
                 else:
                     representative = spec['representative']
-                if representative:
-                    representative = "true"
-                else:
-                    representative = "false"
+
+                representative = "true" if representative else "false"
 
                 type_combination = spec['types']
 
-                native_method_modifiers = " ".join(native_modifier)
+                native_method_modifiers = " ".join(target_modifier)
                 return_expression = parameter_initialisation('c', return_type, None)
 
+                # Declare/initialize the parameters that are passed to the called
+                # function/method.
+
                 parameter_names = []
+
                 parameter_declarations = []
                 parameter_initialisations = []
+                c_parameter_declarations = []
                 c_parameter_initialisations = []
 
-                if native_modifier[1] == 'static':
-                    first_param = 'jclass cls'
+                if target_modifier[1] == 'static':
+                    c_parameter_declarations.append('jclass cls')
                 else:
-                    first_param = 'jobject instance'
-                c_parameter_declarations = [first_param]
+                    c_parameter_declarations.append('jobject instance')
 
                 for i, type_data in enumerate(type_combination):
                     parameter_names.append(type_data['symbol'] + str(i+1))
 
                     parameter_declarations.append(
                         type_data['java'] + ' ' + parameter_names[-1])
-
                     c_parameter_declarations.append(
                         type_data['c'] + ' ' + parameter_names[-1])
-
                     parameter_initialisations.append(
-                        parameter_initialisation('java', type_data, parameter_names[-1]))
-
+                        parameter_initialisation(
+                            'java', type_data, parameter_names[-1]))
                     c_parameter_initialisations.append(
-                        parameter_initialisation('c', type_data, parameter_names[-1]))
+                        parameter_initialisation(
+                            'c', type_data, parameter_names[-1]))
 
                 skip = spec.get('skip', 0)
                 upper_bound = len(type_combination)
@@ -184,14 +186,23 @@ def generate_benchmarks():
                             '2'.join((from_lang, to_lang)),
                             sequence_no)
 
+                        if from_lang == 'J' and to_lang == 'J':
+                            if target_modifier[0] == 'private':
+                                # A private method cannot
+                                # be called from Java.
+                                # Don't generate a benchmark.
+                                continue
+
                         if to_lang == 'C':
                             counterpart_method_name = 'nativemethod'
                         elif to_lang == 'J':
                             if from_lang == 'J':
                                 counterpart_method_name = '{classname}.benchmark{number}'.format(
-                                    classname=java_counterpart_classname, number=sequence_no)
+                                    classname=(java_counterpart_classname if target_modifier[1] == 'static'
+                                               else 'counterpartInstance'), number=sequence_no)
+
                             if from_lang == 'C':
-                                counterpart_method_name = 'benchmark{number}'.format(number=sequence_no)
+                                counterpart_method_name = 'benchmark' + sequence_no
 
                         if from_lang == 'C':
                             run_method = java_benchmark.native_run_method_t
@@ -237,7 +248,7 @@ def generate_benchmarks():
                                     classname                    = classname,
                                     library_name                 = library_name,
                                     run_method                   = run_method,
-                                    native_method                = native_method)})
+                                    native_method                = native_method if to_lang =='C' else '')})
 
 
                         if return_type.get('is-object') or return_type.get('is-array'):
@@ -251,6 +262,8 @@ def generate_benchmarks():
                                 put(
                                     java_counterparts.counterpart_t,
                                     return_type       = return_type['java'],
+                                    privacy           = target_modifier[0],
+                                    static            = target_modifier[1],
                                     methodname        = counterpart_method_name,
                                     parameters        = ", ".join(parameter_declarations[0:i+1]),
                                     return_expression = ret_expression
@@ -285,8 +298,6 @@ def generate_benchmarks():
                                         function = native_method_name),
                                     counterpart_method_arguments = ", ".join(jni_param_names[0:i+3])))
 
-
-                            
                         if (from_lang, to_lang) == ('C', 'J'):
                             if return_type.get('is-object', return_type.get('is-array', False)):
                                 java_method_type = 'Object'
@@ -299,7 +310,7 @@ def generate_benchmarks():
 
                             c_runners.append(
                                 c_nativemethod.call_java_from_c(
-                                    static = True,
+                                    static = (target_modifier[1] == 'static'),
                                     nonvirtual = False,
                                     seq_no = class_counter,
                                     packagename = '_'.join(packagename),
@@ -313,6 +324,7 @@ def generate_benchmarks():
                             c_methodid_inits.append(
                                 put(c_module.mid_init_t,
                                     seq_no = class_counter,
+                                    static = target_modifier[1].capitalize(),
                                     method_name = counterpart_method_name,
                                     method_descriptor = jni_types.method_descriptor(
                                         return_type, type_combination[0:i+1])))

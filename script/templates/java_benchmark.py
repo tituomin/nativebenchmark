@@ -69,6 +69,7 @@ loop = partial(loop_code.t_java,
 java_run_method_t   = partial("""
 
     public void runInternal() {
+        JavaCounterparts counterpartInstance = JavaCounterparts.INSTANCE;
         <% parameter_declarations %>;
         <% parameter_initialisations %>;
 
