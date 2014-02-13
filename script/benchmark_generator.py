@@ -122,7 +122,7 @@ def method_combinations():
 def generate_benchmarks():
     global class_counter
     java = []
-    java_callees = []
+    java_callees = {}
     c_implementations = []
     c_runners = []
     c_methodid_inits = []
@@ -197,6 +197,9 @@ def generate_benchmarks():
 
                             if to_lang == 'C':
                                 counterpart_method_name = 'nativemethod'
+                            if to_lang == 'J':
+                                counterpart_method_unqualified = (
+                                    'benchmark' + sequence_no)
 
                             if pairing == ('J', 'J'):
                                 if target_modifier[0] == 'private':
@@ -209,8 +212,6 @@ def generate_benchmarks():
                                     clsname = java_counterpart_classname
                                 else:
                                     clsname = 'counterpartInstance'     
-                                counterpart_method_unqualified = (
-                                    'benchmark' + sequence_no)
                                 counterpart_method_name = (
                                     clsname + '.' + counterpart_method_unqualified)
                                 native_method = ''
@@ -277,9 +278,8 @@ def generate_benchmarks():
 
                             # 4. Call target implementations.
 
-                            if pairing == ('J', 'J'):
-                                java_callees.append(
-                                    put(
+                            if to_lang == 'J':
+                                java_callees[counterpart_method_unqualified] = put(
                                         java_counterparts.counterpart_t,
                                         return_type       = return_type['java'],
                                         privacy           = target_modifier[0],
@@ -287,7 +287,7 @@ def generate_benchmarks():
                                         methodname        = counterpart_method_unqualified,
                                         parameters        = ", ".join(parameter_declarations[0:i+1]),
                                         return_expression = ret_expression
-                                        ))
+                                        )
 
                                 # todo append return expressions !! (performance optimisation removala)
                                 # to counterpart class (at the end or beginning) ?
@@ -368,7 +368,7 @@ def generate_benchmarks():
                 imports = '',
                 return_value_declarations = jcp_decl,
                 return_value_inits = jcp_init,
-                counterpart_methods = ''.join(java_callees))}
+                             counterpart_methods = ''.join(java_callees.values()))}
 
     c_file = put(
         c_module.t,
