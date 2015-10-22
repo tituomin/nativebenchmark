@@ -17,7 +17,7 @@ public class SocketCommunicator
     private ServerSocket server = null;
     private Socket client = null;
     private ObjectOutputStream out;
-    private String connectionStatus = null;
+    private String receivedCommand = null;
     public static InputStream nis = null;
     private final String sendMsg = "Hello world";
 
@@ -49,8 +49,8 @@ public class SocketCommunicator
                     int numRead = 0;
                     while ((numRead = SocketCommunicator.nis.read(bytes, 0, 1024)) >= 0)
                     {
-                        connectionStatus = new String(bytes, 0, numRead);
-                        Log.v(TAG, connectionStatus);
+                        receivedCommand = new String(bytes, 0, numRead);
+                        Log.v(TAG, receivedCommand);
                     }
                 }
                 catch (IOException ioException)
@@ -60,8 +60,8 @@ public class SocketCommunicator
             }
             catch (SocketTimeoutException e)
             {
-                connectionStatus = "Connection has timed out! Please try again";
-                Log.v(TAG, connectionStatus);
+                receivedCommand = "Connection has timed out! Please try again";
+                Log.v(TAG, receivedCommand);
             }
             catch (IOException e)
             {
@@ -70,8 +70,8 @@ public class SocketCommunicator
 
             if (client != null)
             {
-                connectionStatus = "Connection was succesful!";
-                Log.v(TAG, connectionStatus);
+                receivedCommand = "Connection was succesful!";
+                Log.v(TAG, receivedCommand);
             }
         }
     };
