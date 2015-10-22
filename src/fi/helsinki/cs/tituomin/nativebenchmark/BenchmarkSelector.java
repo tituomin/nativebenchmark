@@ -73,6 +73,12 @@ public class BenchmarkSelector extends Activity {
             this.resultView.setText(R.string.warning_changed);
         }
 
+        final Resources resources = getResources();
+        this.runner = BenchmarkRunner.INSTANCE
+            .setAppChecksum           (resources.getText(R.string.app_checksum))
+            .setAppRevision           (resources.getText(R.string.app_revision))
+            .setCacheDir              (getCacheDir());
+
         File sd = Environment.getExternalStorageDirectory();
         dataDir = new File(sd, "results");
         dataDir.mkdir();
@@ -81,7 +87,6 @@ public class BenchmarkSelector extends Activity {
 
         this.socketCommunicator = new SocketCommunicator();
         //this.controller.addListener(socketCommunicator);
-        this.socketCommunicator.startServer();
 
         // TODO: configuration is not UI specific.
         configurations = initConfig();
@@ -93,6 +98,7 @@ public class BenchmarkSelector extends Activity {
                 BenchmarkSelector.allocationArray = new byte[1024 * 1024 * 100];
             }
         }
+        this.socketCommunicator.startServer(this.controller, this.configurations, this.runner);
     }
 
     public void onDestroy() {
@@ -269,11 +275,7 @@ public class BenchmarkSelector extends Activity {
     }
 
     public void startMeasuring(View view) {
-        final Resources resources = getResources();
-        BenchmarkRunner runner = BenchmarkRunner.INSTANCE
-            .setAppChecksum           (resources.getText(R.string.app_checksum))
-            .setAppRevision           (resources.getText(R.string.app_revision))
-            .setCacheDir              (getCacheDir())
+        this.runner
             .setRepetitions           (repetitions)
             .setAllocatingRepetitions (Long.parseLong(textValue(R.id.alloc_reps)))
             .setBenchmarkSubstring    (textValue(R.id.benchmark_substring).toLowerCase())
@@ -293,7 +295,7 @@ public class BenchmarkSelector extends Activity {
 
         stateThread.start();
         allocationArray = null;
-        controller.startMeasuring(runner, configurations.get(selectedConfiguration));
+        controller.startMeasuring(this.runner, configurations.get(selectedConfiguration));
     }
 
     private void notifyFinished() {
@@ -379,6 +381,7 @@ public class BenchmarkSelector extends Activity {
     private File dataDir;
     private BenchmarkController controller;
     private SocketCommunicator socketCommunicator;
+    private BenchmarkRunner runner;
 
     private String selectedConfiguration;
 
