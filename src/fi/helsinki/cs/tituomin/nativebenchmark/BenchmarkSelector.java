@@ -6,7 +6,6 @@ package fi.helsinki.cs.tituomin.nativebenchmark;
 //import fi.helsinki.cs.tituomin.nativebenchmark.BenchmarkRunner;
 
 import android.app.Activity;
-import android.app.ActivityManager;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.DialogFragment;
@@ -22,7 +21,6 @@ import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
-import android.util.Log;
 import android.util.Pair;
 import android.view.View;
 import android.view.WindowManager;
@@ -36,7 +34,7 @@ import android.widget.NumberPicker;
 import android.widget.RadioButton;
 import android.widget.Spinner;
 import android.widget.TextView;
-import fi.helsinki.cs.tituomin.nativebenchmark.measuringtool.MeasuringTool;
+import android.util.Log;
 import fi.helsinki.cs.tituomin.nativebenchmark.SocketCommunicator;
 import fi.helsinki.cs.tituomin.nativebenchmark.BenchmarkController;
 import java.io.File;
@@ -45,7 +43,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Map;
 
-public class BenchmarkSelector extends Activity implements ApplicationState {
+public class BenchmarkSelector extends Activity {
     /** Called when the activity is first created. */
     @Override
     public void onCreate(Bundle savedInstanceState)
@@ -75,19 +73,20 @@ public class BenchmarkSelector extends Activity implements ApplicationState {
             this.resultView.setText(R.string.warning_changed);
         }
 
-        this.controller = new BenchmarkController();
-        this.controller.addListener(this);
+        File sd = Environment.getExternalStorageDirectory();
+        dataDir = new File(sd, "results");
+        dataDir.mkdir();
+
+        this.controller = new BenchmarkController(this, dataDir);
 
         this.socketCommunicator = new SocketCommunicator();
-        this.controller.addListener(socketCommunicator);
+        //this.controller.addListener(socketCommunicator);
         this.socketCommunicator.startServer();
 
+        // TODO: configuration is not UI specific.
         configurations = initConfig();
         if (configurations != null) {
             initSpinner(configurations);
-            File sd = Environment.getExternalStorageDirectory();
-            dataDir = new File(sd, "results");
-            dataDir.mkdir();
 
             // pre-enlarges the heap
             if (BenchmarkSelector.allocationArray == null) {
@@ -118,9 +117,8 @@ public class BenchmarkSelector extends Activity implements ApplicationState {
         }
         catch (Exception e) {
             String msg = getResources().getString(R.string.config_error);
-            updateState(ApplicationState.State.INIT_FAIL, msg);
             Log.e(TAG, msg, e);
-            stateChanger.run(); // TODO
+            displayMessage(ApplicationState.State.INIT_FAIL, msg);
             return null;
         }
     }
@@ -148,7 +146,7 @@ public class BenchmarkSelector extends Activity implements ApplicationState {
 
     }
 
-    public void displayMessage(ApplicationState.State state, String messa)  {
+    public void displayMessage(ApplicationState.State state, String message)  {
         displayMessage(state.stringId, message);
     }
 
@@ -166,48 +164,42 @@ public class BenchmarkSelector extends Activity implements ApplicationState {
 
     private class StateChanger implements Runnable {
         public void run() {
-            synchronized(BenchmarkSelector.this) {
-                if (message == null) {
-                    displayMessage(state.stringId);
-                }
-                else {
-                    displayMessage(state.stringId, message);
-                }
-                switch (state) {
-                case MEASURING_STARTED:
-                    getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-                    //wakeLock.acquire();
-                    expPick.setEnabled(false); // UI
-                    numPick.setEnabled(false); // UI
-                    switchButton(button);
-                    state = ApplicationState.State.MILESTONE;
-                    break;
-                case MILESTONE:
-                    break;
-                case ERROR:
-                    // intended fallthrough
-                case INTERRUPTED:
-                    // intended fallthrough
-                case MEASURING_FINISHED:
-                    getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-                    //LogAccess.end();
-                    stateThread.interrupt();
-                    //wakeLock.release();
-                    // try {
-                    //     LogAccess.dumpLog(dataDir);
-                    // }
-                    // catch (IOException e) {
-                    //     displayMessage(ApplicationState.State.ERROR, "Could not save log file.");
-                    // }
-                    notifyFinished();
-                    // intended fallthrough
-                case INITIALISED:
-                    resetButton(button);
-                    numPick.setEnabled(true);
-                    expPick.setEnabled(true);
-                    break;
-                case INIT_FAIL:
-                }
+            ApplicationState.DetailedState detailedState = controller.getState();
+            ApplicationState.State state = detailedState.state;
+            String message = detailedState.message;
+
+            if (message == null) {
+                displayMessage(state.stringId);
+            }
+            else {
+                displayMessage(state.stringId, message);
+            }
+            switch (state) {
+            case MEASURING_STARTED:
+                getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+                expPick.setEnabled(false);
+                numPick.setEnabled(false);
+                switchButton(button);
+                state = ApplicationState.State.MILESTONE;
+                break;
+            case MILESTONE:
+                break;
+            case ERROR:
+                displayMessage(ApplicationState.State.ERROR, message);
+                // intended fallthrough
+            case INTERRUPTED:
+                // intended fallthrough
+            case MEASURING_FINISHED:
+                getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+                stateThread.interrupt();
+                notifyFinished();
+                // intended fallthrough
+            case INITIALISED:
+                resetButton(button);
+                numPick.setEnabled(true);
+                expPick.setEnabled(true);
+                break;
+            case INIT_FAIL:
             }
         }
     }
@@ -260,8 +252,7 @@ public class BenchmarkSelector extends Activity implements ApplicationState {
                         new View.OnClickListener() {
                             public void onClick(View v) {
                                 displayMessage(ApplicationState.State.INTERRUPTING.stringId);
-                                MeasuringTool.userInterrupt();
-                                measuringThread.interrupt();
+                                controller.interruptMeasuring();
                             }
                         });
                 }
@@ -301,6 +292,8 @@ public class BenchmarkSelector extends Activity implements ApplicationState {
                         catch (InterruptedException e) { break; }}}});
 
         stateThread.start();
+        allocationArray = null;
+        controller.startMeasuring(runner, configurations.get(selectedConfiguration));
     }
 
     private void notifyFinished() {
@@ -381,8 +374,6 @@ public class BenchmarkSelector extends Activity implements ApplicationState {
     private TextView textView, resultView, repView;
     private NumberPicker numPick, expPick;
     private Button button;
-    private PowerManager.WakeLock wakeLock;
-    private Thread measuringThread;
     private Thread stateThread;
     private static byte[] allocationArray;
     private File dataDir;
