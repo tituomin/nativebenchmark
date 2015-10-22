@@ -5,6 +5,7 @@ public interface ApplicationState {
     public void updateState(State state);
     public void updateState(State state, String message);
     public boolean userWantsToRetry(Exception exception);
+    public DetailedState getState();
 
     public static enum State {
         INITIALISED        ( R.string.app_name ),
@@ -19,6 +20,19 @@ public interface ApplicationState {
         public final int stringId;
         State(int stringId) {
             this.stringId = stringId;
+        }
+    }
+
+    public class DetailedState {
+        public State state;
+        public String message;
+        public DetailedState() {
+            state = null;
+            message = null;
+        }
+        public DetailedState(DetailedState d) {
+            state = d.state;
+            message = d.message;
         }
     }
 }

@@ -1,5 +1,5 @@
-package fi.helsinki.cs.tituomin.nativebenchmark;
 
+package fi.helsinki.cs.tituomin.nativebenchmark;
 
 //import fi.helsinki.cs.tituomin.nativebenchmark.BenchmarkInitialiser;
 //import fi.helsinki.cs.tituomin.nativebenchmark.BenchmarkRegistry;
@@ -22,7 +22,6 @@ import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
-import android.os.PowerManager;
 import android.util.Log;
 import android.util.Pair;
 import android.view.View;
@@ -37,9 +36,9 @@ import android.widget.NumberPicker;
 import android.widget.RadioButton;
 import android.widget.Spinner;
 import android.widget.TextView;
-import fi.helsinki.cs.tituomin.nativebenchmark.measuringtool.BasicOption;
-import fi.helsinki.cs.tituomin.nativebenchmark.measuringtool.LinuxPerfRecordTool;
 import fi.helsinki.cs.tituomin.nativebenchmark.measuringtool.MeasuringTool;
+import fi.helsinki.cs.tituomin.nativebenchmark.SocketCommunicator;
+import fi.helsinki.cs.tituomin.nativebenchmark.BenchmarkController;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -72,18 +71,16 @@ public class BenchmarkSelector extends Activity implements ApplicationState {
 
         listener.onValueChange(numPick, 0, 0);
 
-        PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
-        wakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "Benchmarking");
-
         if (getResources().getString(R.string.app_dirty).equals("1")) {
             this.resultView.setText(R.string.warning_changed);
         }
 
-        ActivityManager am = (ActivityManager) getSystemService(ACTIVITY_SERVICE);
-        int memoryClass = am.getLargeMemoryClass();
-        Log.v("Selector", "Memory size " + Runtime.getRuntime().maxMemory());
-        Log.v("onCreate", "memoryClass:" + Integer.toString(memoryClass));
-        stateChanger = new StateChanger();
+        this.controller = new BenchmarkController();
+        this.controller.addListener(this);
+
+        this.socketCommunicator = new SocketCommunicator();
+        this.controller.addListener(socketCommunicator);
+        this.socketCommunicator.startServer();
 
         configurations = initConfig();
         if (configurations != null) {
@@ -97,7 +94,11 @@ public class BenchmarkSelector extends Activity implements ApplicationState {
                 BenchmarkSelector.allocationArray = new byte[1024 * 1024 * 100];
             }
         }
+    }
 
+    public void onDestroy() {
+        socketCommunicator.stopServer();
+        super.onDestroy();
     }
 
     private Map<String,ToolConfig> initConfig() {
@@ -119,11 +120,11 @@ public class BenchmarkSelector extends Activity implements ApplicationState {
             String msg = getResources().getString(R.string.config_error);
             updateState(ApplicationState.State.INIT_FAIL, msg);
             Log.e(TAG, msg, e);
-            stateChanger.run();
+            stateChanger.run(); // TODO
             return null;
         }
     }
-    
+
     private void initSpinner(Map<String,ToolConfig> conf) {
         Spinner spinner = (Spinner) findViewById(R.id.config_spinner);
         String keys[] = conf.keySet().toArray(new String[1]);
@@ -139,15 +140,9 @@ public class BenchmarkSelector extends Activity implements ApplicationState {
                 public void onItemSelected(
                     AdapterView<?> parent, View view,
                     int pos, long id) {
-                    // An item was selected. You can retrieve the selected item using
-                    // parent.getItemAtPosition(pos)
                     selectedConfiguration = (String) parent.getItemAtPosition(pos);
                 }
-
-                public void onNothingSelected(AdapterView<?> parent) {
-                    // Another interface callback
-                
-                }});
+                public void onNothingSelected(AdapterView<?> parent) { }});
 
         spinner.setSelection(indexOfDefault);
 
@@ -169,16 +164,6 @@ public class BenchmarkSelector extends Activity implements ApplicationState {
         this.resultView.setText(getResources().getString(id) + " " + message);
     }
 
-    public void updateState(ApplicationState.State state) {
-        updateState(state, null);
-    }
-    public void updateState(ApplicationState.State state, String message) {
-        synchronized(this) {
-            this.state = state;
-            this.message = message;
-        }
-    }
-
     private class StateChanger implements Runnable {
         public void run() {
             synchronized(BenchmarkSelector.this) {
@@ -188,35 +173,34 @@ public class BenchmarkSelector extends Activity implements ApplicationState {
                 else {
                     displayMessage(state.stringId, message);
                 }
-
                 switch (state) {
                 case MEASURING_STARTED:
-                    wakeLock.acquire();
                     getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-                    expPick.setEnabled(false);
-                    numPick.setEnabled(false);
+                    //wakeLock.acquire();
+                    expPick.setEnabled(false); // UI
+                    numPick.setEnabled(false); // UI
                     switchButton(button);
                     state = ApplicationState.State.MILESTONE;
                     break;
                 case MILESTONE:
                     break;
-
                 case ERROR:
+                    // intended fallthrough
                 case INTERRUPTED:
                     // intended fallthrough
                 case MEASURING_FINISHED:
-                    LogAccess.end();
-                    stateThread.interrupt();
-                    wakeLock.release();
                     getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-                    try {
-                        LogAccess.dumpLog(dataDir);
-                    }
-                    catch (IOException e) {
-                        displayMessage(ApplicationState.State.ERROR, "Could not save log file.");
-                    }
-                    // intended fallthrough
+                    //LogAccess.end();
+                    stateThread.interrupt();
+                    //wakeLock.release();
+                    // try {
+                    //     LogAccess.dumpLog(dataDir);
+                    // }
+                    // catch (IOException e) {
+                    //     displayMessage(ApplicationState.State.ERROR, "Could not save log file.");
+                    // }
                     notifyFinished();
+                    // intended fallthrough
                 case INITIALISED:
                     resetButton(button);
                     numPick.setEnabled(true);
@@ -294,44 +278,29 @@ public class BenchmarkSelector extends Activity implements ApplicationState {
     }
 
     public void startMeasuring(View view) {
-        allocationArray = null;
         final Resources resources = getResources();
-
-        measuringThread = new Thread(
-            new Runnable () {
-                public void run() {
-                    BenchmarkRunner runner = BenchmarkRunner.INSTANCE
-                        .setAppChecksum           (resources.getText(R.string.app_checksum))
-                        .setAppRevision           (resources.getText(R.string.app_revision))
-                        .setCacheDir              (getCacheDir())
-                        .setRepetitions           (repetitions)
-                        .setAllocatingRepetitions (Long.parseLong(textValue(R.id.alloc_reps)))
-                        .setBenchmarkSubstring    (textValue(R.id.benchmark_substring).toLowerCase())
-                        .setRunAllBenchmarks      (isChecked(R.id.checkbox_long))
-                        .setRunAtMaxSpeed         (isChecked(R.id.checkbox_max))
-                        .setBenchmarkSet          (isChecked(R.id.run_alloc) ?
-                                                   BenchmarkRunner.BenchmarkSet.ALLOC :
-                                                   BenchmarkRunner.BenchmarkSet.NON_ALLOC);
-                    
-                    runner.runBenchmarks(BenchmarkSelector.this, configurations.get(selectedConfiguration), dataDir);
-                }});
+        BenchmarkRunner runner = BenchmarkRunner.INSTANCE
+            .setAppChecksum           (resources.getText(R.string.app_checksum))
+            .setAppRevision           (resources.getText(R.string.app_revision))
+            .setCacheDir              (getCacheDir())
+            .setRepetitions           (repetitions)
+            .setAllocatingRepetitions (Long.parseLong(textValue(R.id.alloc_reps)))
+            .setBenchmarkSubstring    (textValue(R.id.benchmark_substring).toLowerCase())
+            .setRunAllBenchmarks      (isChecked(R.id.checkbox_long))
+            .setRunAtMaxSpeed         (isChecked(R.id.checkbox_max))
+            .setBenchmarkSet          (isChecked(R.id.run_alloc) ?
+                                       BenchmarkRunner.BenchmarkSet.ALLOC :
+                                       BenchmarkRunner.BenchmarkSet.NON_ALLOC);
 
         stateThread = new Thread(
             new Runnable () {
                 public void run() {
                     while (!Thread.currentThread().isInterrupted()) {
-                        runOnUiThread(stateChanger);
-                        try {
-                            Thread.sleep(5000);
-                        }
-                        catch (InterruptedException e) {
-                            break;
-                        }}}});
+                        runOnUiThread(new StateChanger());
+                        try { Thread.sleep(5000); }
+                        catch (InterruptedException e) { break; }}}});
 
-        this.updateState(ApplicationState.State.MEASURING_STARTED);
-        LogAccess.start();
         stateThread.start();
-        measuringThread.start();
     }
 
     private void notifyFinished() {
@@ -416,11 +385,10 @@ public class BenchmarkSelector extends Activity implements ApplicationState {
     private Thread measuringThread;
     private Thread stateThread;
     private static byte[] allocationArray;
-    private StateChanger stateChanger;
     private File dataDir;
+    private BenchmarkController controller;
+    private SocketCommunicator socketCommunicator;
 
-    private ApplicationState.State state;
-    private String message;
     private String selectedConfiguration;
 
     private static final String TAG = "BenchmarkSelector";

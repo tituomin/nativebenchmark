@@ -7,6 +7,7 @@ import java.io.IOException;
 
 public class Init {
 
+    private static final String TAG = "NativeBenchmark";
     public static final int CPUFREQ     =  400000;
     public static final int CPUFREQ_MAX = 1000000;
 
