@@ -37,6 +37,45 @@
         ]
     },
 
+    "default_full"                   : {
+        "warmup_rounds"              : 50000,
+        "warmup_repetitions"         : 50000,
+
+        "tools"                      : [
+            {
+                "description"        : "Warmup for measuring code",
+                "class"              : "JavaSystemNanoResponseTimeRecorder",
+                "rounds"             : "warmup_rounds",
+                "repetitions"        : 1,
+                "warmup"             : true,
+                "filter"             : "00026"
+            },
+            {
+                "description"        : "Warmup for benchmarks",
+                "class"              : "JavaSystemNanoResponseTimeRecorder",
+                "repetitions"        : "warmup_repetitions",
+                "rounds"             : 1,
+                "warmup"             : true
+            },
+            {
+                "description"        : "Response time",
+                "class"              : "JavaSystemNanoResponseTimeRecorder",
+                "repetitions"        : 10000,
+                "rounds"             : 1,
+                "warmup"             : false
+            },
+            {
+                "description"        : "Profile",
+                "class"              : "LinuxPerfRecordTool",
+                "warmup"             : false,
+                "rounds"             : 1,
+                "options"            : {
+                    "measure_length" : "10"
+                }
+            }
+        ]
+    },
+
     "warmup_measuring"          : {
         "tools"                      : [
             {
