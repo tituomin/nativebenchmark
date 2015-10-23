@@ -7,6 +7,7 @@ import android.app.ActivityManager;
 import android.content.Context;
 import android.os.PowerManager;
 import android.util.Log;
+import fi.helsinki.cs.tituomin.nativebenchmark.L;
 
 import java.io.File;
 import java.io.IOException;

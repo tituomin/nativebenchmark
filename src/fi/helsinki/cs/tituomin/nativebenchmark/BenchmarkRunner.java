@@ -10,6 +10,7 @@ import fi.helsinki.cs.tituomin.nativebenchmark.measuringtool.JavaSystemNanoRespo
 import fi.helsinki.cs.tituomin.nativebenchmark.measuringtool.LinuxPerfRecordTool;
 import fi.helsinki.cs.tituomin.nativebenchmark.measuringtool.CommandlineTool;
 import fi.helsinki.cs.tituomin.nativebenchmark.measuringtool.MockCommandlineTool;
+import fi.helsinki.cs.tituomin.nativebenchmark.L;
 
 import android.util.Pair;
 import java.util.Date;
@@ -250,6 +251,7 @@ public enum BenchmarkRunner {
 
                 int j = 0;
                 for (Benchmark benchmark : benchmarks) {
+                    if (L.og) { Log.i(TAG, benchmark.getClass().getSimpleName()); };
                     try {
                         collectedData = runSeries(benchmark, mainUI, tool, round);
                     }
