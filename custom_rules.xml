@@ -58,8 +58,19 @@
     <javah outputFile="${jni_src.dir}/${jni_header}" classpath="bin/classes" class="${jni_classes_other}" />
   </target>
 
-  <target name="build-ndk" depends="jni_headers_benchmark,jni_headers_other">
-    <exec executable="${ndk.dir}/ndk-build" failonerror="true"/>
+  <target name="should_update_native.check" depends="check-modified-other">
+      <condition property="should_update_native.condition">
+          <or>
+              <istrue value="code.generated" />
+              <isset property="natives.modified" />
+          </or>
+      </condition>
+  </target>
+
+  <target name="build-ndk"
+          depends="jni_headers_benchmark,jni_headers_other,should_update_native.check"
+          if="should_update_native.condition">
+      <exec executable="${ndk.dir}/ndk-build" failonerror="true"/>
   </target>
 
   <target name="update_revision">
