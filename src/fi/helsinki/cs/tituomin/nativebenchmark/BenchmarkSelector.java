@@ -22,6 +22,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.util.Pair;
+
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.AdapterView.OnItemSelectedListener;
@@ -34,7 +35,9 @@ import android.widget.NumberPicker;
 import android.widget.RadioButton;
 import android.widget.Spinner;
 import android.widget.TextView;
+
 import android.util.Log;
+
 import fi.helsinki.cs.tituomin.nativebenchmark.SocketCommunicator;
 import fi.helsinki.cs.tituomin.nativebenchmark.BenchmarkController;
 import java.io.File;
