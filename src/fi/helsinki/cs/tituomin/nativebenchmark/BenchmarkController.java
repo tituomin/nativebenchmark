@@ -88,6 +88,7 @@ public class BenchmarkController implements ApplicationState {
     }
 
     public void startMeasuring(BenchmarkRunner runner, ToolConfig configuration) {
+        runner.setBenchmarkSet(BenchmarkRunner.BenchmarkSet.NON_ALLOC); // TODO config via json
         measuringThread = new Thread(new BenchRunnable(runner, configuration));
         this.updateState(ApplicationState.State.MEASURING_STARTED);
         measuringThread.start();

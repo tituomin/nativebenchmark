@@ -99,7 +99,14 @@ public class SocketCommunicator
                 // .setBenchmarkSet          (isChecked(R.id.run_alloc) ?
                 //                            BenchmarkRunner.BenchmarkSet.ALLOC :
                 //                            BenchmarkRunner.BenchmarkSet.NON_ALLOC);
-            ToolConfig config = this.configurations.get(configKey);
+            Map<String,ToolConfig> configurations = null;
+            ToolConfig config = null;
+            try {
+                configurations = ToolConfig.readConfigFile();
+                config = configurations.get(configKey);
+            } catch (Exception e) {
+                Log.e(TAG, "Error reading configuration file.", e);
+            }
             if (config == null) {
                 Log.e(TAG, "Could not find configuration for " + configKey);
             }
@@ -117,12 +124,10 @@ public class SocketCommunicator
 
     public void startServer(
         BenchmarkController controller,
-        Map<String,ToolConfig> configurations,
         BenchmarkRunner runner)
 
     {
         this.controller = controller;
-        this.configurations = configurations;
         this.runner = runner;
         //initialize server socket in a new separate thread
         this.serverThread = new Thread(InitializeConnection);

@@ -1,9 +1,11 @@
 package fi.helsinki.cs.tituomin.nativebenchmark;
 
-
+import android.os.Environment;
 import android.util.Log;
 import fi.helsinki.cs.tituomin.nativebenchmark.measuringtool.MeasuringTool;
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
@@ -26,6 +28,16 @@ public class ToolConfig implements Iterable<MeasuringTool> {
             result.put(key, new ToolConfig(cfgObject.getJSONObject(key)));
         }
         return result;
+    }
+
+    public static Map<String,ToolConfig> readConfigFile() throws IOException, JSONException {
+        String jsonContents = null;
+        File configFile = new File(
+            Environment.getExternalStorageDirectory(),
+            "nativebenchmark_setup.json"
+        );
+        jsonContents = Utils.readFileToString(configFile);
+        return ToolConfig.readConfigurations(jsonContents);
     }
 
     public ToolConfig(JSONObject job) {
@@ -142,5 +154,6 @@ public class ToolConfig implements Iterable<MeasuringTool> {
 
     private JSONObject contents;
     private static final String TOOL_PACKAGE = "fi.helsinki.cs.tituomin.nativebenchmark.measuringtool";
+    private static final String TAG = "nativebenchmark.ToolConfig";
 
 }

@@ -89,7 +89,25 @@ public class BenchmarkSelector extends Activity {
         //this.controller.addListener(socketCommunicator);
 
         // TODO: configuration is not UI specific.
-        configurations = initConfig();
+        File configFile = new File(
+            Environment.getExternalStorageDirectory(),
+            "nativebenchmark_setup.json"
+        );
+        try {
+            if (!configFile.exists()) {
+                InputStream templateStream = getResources()
+                    .openRawResource(R.raw.setup);
+                OutputStream configFileStream = Utils.makeOutputStream(configFile, false);
+                Utils.copyStream(templateStream, configFileStream);
+            }
+            configurations = ToolConfig.readConfigFile();
+        }
+        catch (Exception e) {
+            String msg = getResources().getString(R.string.config_error);
+            Log.e(TAG, msg, e);
+            displayMessage(ApplicationState.State.INIT_FAIL, msg);
+        }
+
         if (configurations != null) {
             initSpinner(configurations);
 
@@ -98,35 +116,12 @@ public class BenchmarkSelector extends Activity {
                 BenchmarkSelector.allocationArray = new byte[1024 * 1024 * 100];
             }
         }
-        this.socketCommunicator.startServer(this.controller, this.configurations, this.runner);
+        this.socketCommunicator.startServer(this.controller, this.runner);
     }
 
     public void onDestroy() {
         socketCommunicator.stopServer();
         super.onDestroy();
-    }
-
-    private Map<String,ToolConfig> initConfig() {
-        File configFile = new File(Environment.getExternalStorageDirectory(), "nativebenchmark_setup.json");
-        String jsonContents = null;
-
-        try {
-            if (!configFile.exists()) {
-                InputStream templateStream = getResources().openRawResource(
-                    R.raw.setup);
-                OutputStream configFileStream = Utils.makeOutputStream(
-                    configFile, false);
-                Utils.copyStream(templateStream, configFileStream);
-            }
-            jsonContents = Utils.readFileToString(configFile);
-            return ToolConfig.readConfigurations(jsonContents);
-        }
-        catch (Exception e) {
-            String msg = getResources().getString(R.string.config_error);
-            Log.e(TAG, msg, e);
-            displayMessage(ApplicationState.State.INIT_FAIL, msg);
-            return null;
-        }
     }
 
     private void initSpinner(Map<String,ToolConfig> conf) {

@@ -166,6 +166,9 @@ public enum BenchmarkRunner {
 
             List<Benchmark> benchmarks = new ArrayList<Benchmark> ();
 
+            if (this.benchmarkSubstring == null) {
+                this.benchmarkSubstring = "";
+            }
             String substringToApply = this.benchmarkSubstring;
             if (!tool.getFilter().equals("")) {
                 substringToApply = tool.getFilter();
@@ -595,7 +598,8 @@ public enum BenchmarkRunner {
             bdata.put("custom", "1");
             return bdata;
         }
-        
+
+        // TODO doesn't work for c2j only...
         Class c = Class.forName("fi.helsinki.cs.tituomin.nativebenchmark.benchmark.J2CBenchmark" + String.format("%05d", seqNo));
         
         Method[] methods = c.getDeclaredMethods();
