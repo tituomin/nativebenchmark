@@ -61,7 +61,7 @@
   <target name="should_update_native.check" depends="check-modified-other">
       <condition property="should_update_native.condition">
           <or>
-              <istrue value="code.generated" />
+              <isset property="codegen.modified" />
               <isset property="natives.modified" />
           </or>
       </condition>
