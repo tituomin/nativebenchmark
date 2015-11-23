@@ -190,6 +190,12 @@ public enum BenchmarkRunner {
                         ((!b.isAllocating()) && this.benchmarkSet == BenchmarkSet.NON_ALLOC) ||
                         (b.isAllocating()  && this.benchmarkSet == BenchmarkSet.ALLOC));
                 }
+                if (b.isNonvirtual() &&
+                    b.from() != "C" &&
+                    b.to() != "J") {
+                    if (L.og) { Log.i(TAG, String.format("skipping nonvirtual %s", b.id())); }
+                    selected = false;
+                }
                 if (selected) {
                     benchmarks.add(b);
                 }
