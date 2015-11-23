@@ -189,10 +189,13 @@ def generate_benchmarks():
 
                             pairing = (from_lang, to_lang)
 
-                            if (target_modifier[1] != 'static' and
-                                virtualcall == False and pairing != ('C', 'J')):
-                                # Nonvirtual calls only possible in C -> J.
-                                continue
+                            if virtualcall == False:
+                                # Nonvirtual calls only apply C -> J instance methods
+                                # J2C is generated as a proxy
+                                # to get benchmark metadata
+                                if (target_modifier[1] == 'static' or
+                                    pairing in [('J', 'J'), ('C', 'C')]):
+                                        continue
 
                             # 1. Set up call targets.
 
