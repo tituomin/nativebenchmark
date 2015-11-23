@@ -605,8 +605,10 @@ public enum BenchmarkRunner {
             return bdata;
         }
 
-        // TODO doesn't work for c2j only...
-        Class c = Class.forName("fi.helsinki.cs.tituomin.nativebenchmark.benchmark.J2CBenchmark" + String.format("%05d", seqNo));
+        Class c = Class.forName(
+            String.format(
+                "fi.helsinki.cs.tituomin.nativebenchmark.benchmark.J2CBenchmark%05d",
+                 seqNo));
         
         Method[] methods = c.getDeclaredMethods();
         for (int i = 0; i < methods.length; i++) {
@@ -615,44 +617,51 @@ public enum BenchmarkRunner {
             int modifiers = m.getModifiers();
 
             if (Modifier.isNative(modifiers)) {
-
-                Class [] parameters = m.getParameterTypes();
-                List<Class> parameterList = new ArrayList<Class>(Arrays.asList(parameters));
-
-                Map<String,Integer> parameterTypes = new HashMap<String,Integer> ();
-                for (Class param : parameterList) {
-                    Integer previousValue = null;
-                    String param_typename = param.getSimpleName();
-                    previousValue = parameterTypes.get(param_typename);
-                    parameterTypes.put(
-                        param_typename,
-                        (previousValue == null ? 1 : ((int)previousValue) + 1));
-                }
-                for (String typename : parameterTypes.keySet()) {
-                    bdata.put("parameter_type_" + typename + "_count", parameterTypes.get(typename) + "");
-                }
-
-                Class returnType = m.getReturnType();
-
-                boolean hasRefTypes = false;
-                parameterList.add(returnType);
-                for (Class cl : parameterList) {
-                    if (Object.class.isAssignableFrom(cl)) {
-                        hasRefTypes = true;
-                        break;
-                    }
-                }
-
-                bdata.put("has_reference_types",  hasRefTypes ? "1" : "0");
-                bdata.put("parameter_type_count", parameterTypes.keySet().size() + "");
-                bdata.put("parameter_count",      parameters.length + "");
-                bdata.put("return_type",          returnType.getCanonicalName());
-                bdata.put("native_static",        Modifier.isStatic(modifiers) ? "1" : "0");
-                bdata.put("native_private",       Modifier.isPrivate(modifiers) ? "1" : "0");
-                bdata.put("native_protected",     Modifier.isProtected(modifiers) ? "1" : "0");
-                bdata.put("native_public",        Modifier.isPublic(modifiers) ? "1" : "0");
+                return inspectMethod(m, bdata);
             }
         }
+        return bdata;
+    }
+
+    private static BenchmarkResult inspectMethod(Method m, BenchmarkResult bdata) {
+
+        Class [] parameters = m.getParameterTypes();
+        List<Class> parameterList = new ArrayList<Class>(Arrays.asList(parameters));
+        int modifiers = m.getModifiers();
+
+        Map<String,Integer> parameterTypes = new HashMap<String,Integer> ();
+        for (Class param : parameterList) {
+            Integer previousValue = null;
+            String param_typename = param.getSimpleName();
+            previousValue = parameterTypes.get(param_typename);
+            parameterTypes.put(
+                               param_typename,
+                               (previousValue == null ? 1 : ((int)previousValue) + 1));
+        }
+        for (String typename : parameterTypes.keySet()) {
+            bdata.put("parameter_type_" + typename + "_count", parameterTypes.get(typename) + "");
+        }
+
+        Class returnType = m.getReturnType();
+
+        boolean hasRefTypes = false;
+        parameterList.add(returnType);
+        for (Class cl : parameterList) {
+            if (Object.class.isAssignableFrom(cl)) {
+                hasRefTypes = true;
+                break;
+            }
+        }
+
+        bdata.put("has_reference_types",  hasRefTypes ? "1" : "0");
+        bdata.put("parameter_type_count", parameterTypes.keySet().size() + "");
+        bdata.put("parameter_count",      parameters.length + "");
+        bdata.put("return_type",          returnType.getCanonicalName());
+        bdata.put("native_static",        Modifier.isStatic(modifiers) ? "1" : "0");
+        bdata.put("native_private",       Modifier.isPrivate(modifiers) ? "1" : "0");
+        bdata.put("native_protected",     Modifier.isProtected(modifiers) ? "1" : "0");
+        bdata.put("native_public",        Modifier.isPublic(modifiers) ? "1" : "0");
+
         return bdata;
     }
 }
