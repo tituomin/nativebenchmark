@@ -113,10 +113,12 @@ public class BenchmarkSelector extends Activity {
 
         if (configurations != null) {
             initSpinner(configurations);
-
-            // pre-enlarges the heap
-            if (BenchmarkSelector.allocationArray == null) {
-                BenchmarkSelector.allocationArray = new byte[1024 * 1024 * 100];
+            if (allocationArray == null) {
+                // pre-enlarges the heap
+                // commented out because
+                // space is not reclaimed
+                // even on gc
+                //allocationArray = new byte[1024 * 1024 * 100];
             }
         }
         this.socketCommunicator.startServer(this.controller, this.runner);
