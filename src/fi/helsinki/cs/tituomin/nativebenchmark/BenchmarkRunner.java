@@ -74,7 +74,6 @@ public enum BenchmarkRunner {
 
         measuringTools = new ArrayList<MeasuringTool> ();
         for (MeasuringTool tool : conf) {
-            Log.v(TAG, "-------has tool");
             measuringTools.add(tool);
         }
     }
