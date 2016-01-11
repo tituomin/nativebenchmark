@@ -256,10 +256,17 @@ public enum BenchmarkRunner {
                     interrupted = true;
                     break ROUNDLOOP;
                 }
-
-                int j = 0;
+                int j, count;
+                if (L.og) {
+                    j = 0;
+                    count = benchmarks.size();
+                }
                 for (Benchmark benchmark : benchmarks) {
-                    if (L.og) { Log.i(TAG, benchmark.getClass().getSimpleName()); };
+                    if (L.og) {
+                        Log.i(TAG, (count - j) + " left");
+                        Log.i(TAG, benchmark.getClass().getSimpleName());
+                        j++;
+                    };
                     try {
                         collectedData = runSeries(benchmark, mainUI, tool, round);
                     }
