@@ -386,7 +386,7 @@ def generate_benchmarks():
         initialisers= put(
             c_module.initialisers_t,
             mid_inits = ''.join(c_methodid_inits),
-            amount_of_methods = len(c_methodid_inits)))
+            amount_of_methods = class_counter))
 
     return { 'java'              : java,
              'java_counterparts' : java_counterparts_class,
