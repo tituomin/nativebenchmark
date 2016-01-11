@@ -48,7 +48,9 @@ public class BenchmarkController implements ApplicationState {
             case INTERRUPTED:
             case MEASURING_FINISHED:
                 LogAccess.end();
-                wakeLock.release();
+                if (wakeLock.isHeld()) {
+                    wakeLock.release();
+                }
                 try {
                     LogAccess.dumpLog(dataDir);
                 }
