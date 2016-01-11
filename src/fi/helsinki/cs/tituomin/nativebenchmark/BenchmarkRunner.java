@@ -363,7 +363,7 @@ public enum BenchmarkRunner {
                 }
             }
 
-            if (round > 0 && !tool.ignore()) {
+            if (!tool.ignore()) {
                 // there has been at least one succesful round
                 writeMeasurementMetadata(
                     new File(dataDir, "measurements.txt"),
@@ -379,7 +379,12 @@ public enum BenchmarkRunner {
                         File zip = new File(dataDir, "perfdata-" + measurementID + ".zip");
                         os = Utils.makeOutputStream(zip, false);
                         Log.v("BenchmarkRunner", "filenames " + filenames.size());
-                        filenames.add(new File(dataDir, "benchmarks-" + measurementID + ".csv").getAbsolutePath());
+                        File measurementMetadataFile = new File(
+                            dataDir, "benchmarks-" + measurementID + ".csv");
+                        if (measurementMetadataFile.exists()) {
+                            // TODO: actually make sure csv is written for incomplete runs
+                            filenames.add(measurementMetadataFile.getAbsolutePath());
+                        }
                         writeToZipFile(os, filenames, measurementID);
                         deleteFiles(filenames);
                     }
