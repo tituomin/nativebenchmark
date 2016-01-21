@@ -35,3 +35,5 @@ GRTAGS
 GTAGS
 
 /res/values/revision.xml
+
+script/nativebenchmark_setup.json
