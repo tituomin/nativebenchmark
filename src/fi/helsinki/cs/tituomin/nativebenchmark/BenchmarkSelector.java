@@ -103,7 +103,7 @@ public class BenchmarkSelector extends Activity {
                 OutputStream configFileStream = Utils.makeOutputStream(configFile, false);
                 Utils.copyStream(templateStream, configFileStream);
             }
-            configurations = ToolConfig.readConfigFile();
+            this.configuration = ToolConfig.readConfigFile();
         }
         catch (Exception e) {
             String msg = getResources().getString(R.string.config_error);
@@ -111,8 +111,8 @@ public class BenchmarkSelector extends Activity {
             displayMessage(ApplicationState.State.INIT_FAIL, msg);
         }
 
-        if (configurations != null) {
-            initSpinner(configurations);
+        if (this.configuration != null) {
+            initSpinner(this.configuration);
             if (allocationArray == null) {
                 // pre-enlarges the heap
                 // commented out because
@@ -295,7 +295,7 @@ public class BenchmarkSelector extends Activity {
 
         stateThread.start();
         allocationArray = null;
-        controller.startMeasuring(this.runner, configurations.get(selectedConfiguration));
+        controller.startMeasuring(this.runner, this.configuration.get(selectedConfiguration));
     }
 
     private void notifyFinished() {
@@ -387,7 +387,7 @@ public class BenchmarkSelector extends Activity {
 
     private static final String TAG = "BenchmarkSelector";
 
-    private Map<String,ToolConfig> configurations;
+    private Map<String,ToolConfig> configuration;
 
     static {
         System.loadLibrary("nativebenchmark");
