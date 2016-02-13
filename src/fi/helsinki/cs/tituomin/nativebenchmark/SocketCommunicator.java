@@ -36,12 +36,12 @@ public class SocketCommunicator
                         //attempt to accept a connection
                         client = server.accept();
 
-                        out = new ObjectOutputStream(client.getOutputStream());
+                        SocketCommunicator.this.out = new ObjectOutputStream(client.getOutputStream());
                         SocketCommunicator.nis = client.getInputStream();
                         try
                             {
-                                out.writeObject("\n" + sendMsg + "\n");
-                                Log.v(TAG, "client >" + sendMsg);
+                                SocketCommunicator.this.out.writeObject("\n" + helpMessage + "\n");
+                                Log.v(TAG, "client >" + helpMessage);
 
                                 byte[] bytes = new byte[1024];
                                 int numRead = 0;
@@ -148,8 +148,8 @@ public class SocketCommunicator
             if (SocketCommunicator.nis != null) {
                 SocketCommunicator.nis.close();
             }
-            if (out != null) {
-                out.close();
+            if (this.out != null) {
+                this.out.close();
             }
             if (server != null)
             {
