@@ -37,7 +37,7 @@ public abstract class MeasuringTool implements Runnable {
             long allocRepetitions,
             boolean warmup,
             boolean runAllBenchmarks
-         ) throws
+        ) throws
             IOException, InterruptedException
     {
         clearMeasurements();
