@@ -1,11 +1,13 @@
 package fi.helsinki.cs.tituomin.nativebenchmark;
 import android.util.Pair;
+import android.content.res.Resources;
 
 public interface ApplicationState {
     public void updateState(State state);
     public void updateState(State state, String message);
     public boolean userWantsToRetry(Exception exception);
     public DetailedState getState();
+    public Resources getResources();
 
     public static enum State {
         INITIALISED        ( R.string.app_name ),
@@ -26,13 +28,22 @@ public interface ApplicationState {
     public class DetailedState {
         public State state;
         public String message;
-        public DetailedState() {
+        private ApplicationState parent;
+        public DetailedState(ApplicationState parent) {
+            parent = parent;
             state = null;
             message = null;
         }
-        public DetailedState(DetailedState d) {
+        public DetailedState(ApplicationState parent, DetailedState d) {
+            parent = parent;
             state = d.state;
             message = d.message;
+        }
+        public String toString() {
+            return String.format(
+                "%s %s",
+                parent.getResources().getString(this.state.stringId),
+                this.message);
         }
     }
 }
