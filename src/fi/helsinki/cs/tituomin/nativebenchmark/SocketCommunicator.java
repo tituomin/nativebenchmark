@@ -41,13 +41,13 @@ public class SocketCommunicator implements ApplicationStateListener
                         SocketCommunicator.nis = client.getInputStream();
                         try
                             {
-                                SocketCommunicator.this.printWriter.println(helpMessage);
+                                SocketCommunicator.this.output(helpMessage);
                                 Log.v(TAG, "client >" + helpMessage);
 
                                 byte[] bytes = new byte[1024];
                                 int numRead = 0;
                                 while (numRead >= 0) {
-                                        printWriter.println("[Awaiting input]");
+                                        SocketCommunicator.this.output("[Awaiting input]");
                                         numRead = SocketCommunicator.nis.read(bytes, 0, 1024);
                                         if (numRead < 1) {
                                             executeCommand("quit");
@@ -88,6 +88,12 @@ public class SocketCommunicator implements ApplicationStateListener
             }
         }
     };
+
+    private class StateChanger implements Runnable {
+        public void run() {
+        }
+    }
+
     private void executeStart(String command) {
         String[] split = command.split(":");
         if (split.length < 2) {
@@ -115,12 +121,27 @@ public class SocketCommunicator implements ApplicationStateListener
             Log.e(TAG, "Could not find configuration for " + configKey);
         }
         else {
+            stateThread = new Thread(
+                new Runnable () {
+                    public void run() {
+                        while (!Thread.currentThread().isInterrupted()) {
+                            ApplicationState.DetailedState detailedState = controller.getState();
+                            if (detailedState.state == ApplicationState.State.MILESTONE) {
+                                stateUpdated(detailedState);
+                            }
+                            try { Thread.sleep(5000); }
+                            catch (InterruptedException e) { break; }}}});
+
+            stateThread.start();
+
             this.controller.startMeasuring(this.runner, config);
         }
     }
 
     private void output(String message) {
-        this.printWriter.println(message);
+        synchronized (this) {
+            this.printWriter.println(message);
+        }
     }
 
     public void executeCommand(String command) {
@@ -158,7 +179,7 @@ public class SocketCommunicator implements ApplicationStateListener
 
     {
         this.controller = controller;
-        this.controller.addListener(this, ApplicationState.State.MILESTONE);
+        //this.controller.addListener(this, ApplicationState.State.MILESTONE);
         this.runner = runner;
         //initialize server socket in a new separate thread
         this.serverThread = new Thread(InitializeConnection);
@@ -166,8 +187,7 @@ public class SocketCommunicator implements ApplicationStateListener
         String msg = "Attempting to connect";
         Log.v(TAG, msg);
     }
-
-    public void restartServer() {
+    public boolean stopServer() {
         try
         {
             // TODO
@@ -183,11 +203,18 @@ public class SocketCommunicator implements ApplicationStateListener
             if (server != null) {
                 server.close();
             }
-            this.startServer(this.controller, this.runner);
+            return true;
         }
         catch (IOException ec)
         {
             Log.e(SocketCommunicator.TAG, "Cannot close server socket" + ec);
+            return false;
+        }
+    }
+
+    public void restartServer() {
+        if (this.stopServer()) {
+            this.startServer(this.controller, this.runner);
         }
     }
 
@@ -207,6 +234,7 @@ public class SocketCommunicator implements ApplicationStateListener
     private Map<String, ToolConfig> configurations;
     private BenchmarkRunner runner;
     private Thread serverThread;
+    private Thread stateThread;
 
     private final String helpMessage = "\n" +
         "Measuring application ready.\n" +

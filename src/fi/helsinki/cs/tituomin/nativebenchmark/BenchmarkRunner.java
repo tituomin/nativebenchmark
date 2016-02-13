@@ -56,7 +56,7 @@ public enum BenchmarkRunner {
     private static final long WARMUP_REPS = 50000;
     private static BenchmarkParameter benchmarkParameter;
     private static List<MeasuringTool> measuringTools;
-    private static int benchmarkCount = 0;
+    private static int benchmarkCounter = 0;
 
     private static boolean interrupted = false;
 
@@ -230,7 +230,7 @@ public enum BenchmarkRunner {
 
         ROUNDLOOP:
             while (++round < max_rounds) {
-                benchmarkCount = 0;
+                benchmarkCounter = 0;
                 PrintWriter tempWriter = null;
                 File tempFile = new File(this.cacheDir, "benchmarks-temp.csv");
                 try {
@@ -257,11 +257,8 @@ public enum BenchmarkRunner {
                     interrupted = true;
                     break ROUNDLOOP;
                 }
-                int j, count;
-                if (L.og) {
-                    j = 0;
-                    count = benchmarks.size();
-                }
+                int count = benchmarks.size();
+                int j = 0;
                 for (Benchmark benchmark : benchmarks) {
                     if (L.og) {
                         Log.i(TAG, (count - j) + " left");
@@ -269,7 +266,7 @@ public enum BenchmarkRunner {
                         j++;
                     };
                     try {
-                        collectedData = runSeries(benchmark, mainUI, tool, round);
+                        collectedData = runSeries(benchmark, mainUI, tool, round, max_rounds, count);
                     }
                     catch (RunnerException e) {
                         logE("Exception was thrown", e.getCause());
@@ -503,7 +500,7 @@ public enum BenchmarkRunner {
     }
 
     private static List<BenchmarkResult> runSeries(
-        Benchmark benchmark, ApplicationState mainUI, MeasuringTool tool, int roundNo)
+        Benchmark benchmark, ApplicationState mainUI, MeasuringTool tool, int roundNo, int roundCount, int benchmarkCount)
         throws InterruptedException, RunnerException {
 
         List<BenchmarkResult> compiledMetadata = new ArrayList<BenchmarkResult> ();
@@ -547,7 +544,7 @@ public enum BenchmarkRunner {
 
             try {
                 tool.startMeasuring(benchmark);
-                benchmarkCount++;
+                benchmarkCounter++;
             }
             catch (IOException e) {
                 logE("Measuring caused IO exception", e);
@@ -561,16 +558,18 @@ public enum BenchmarkRunner {
             finally {
                 bPar.tearDown(); // (II) needs setUp (see I)
             }
-            if (tool.explicitGC() && benchmarkCount % 25 == 0) {
+            if (tool.explicitGC() && benchmarkCounter % 25 == 0) {
                 System.gc();
                 Thread.sleep(350);
             }
 
             String message = String.format(
-                "%s warmup %b round %d benchmark %d",
+                "%s%s round %d/%d benchmark %d/%d",
                 tool.getClass().getSimpleName(),
-                tool.isWarmupRound(),
-                roundNo,
+                tool.isWarmupRound() ? " (warmup)" : "",
+                roundNo + 1,
+                roundCount,
+                benchmarkCounter,
                 benchmarkCount
             );
             mainUI.updateState(ApplicationState.State.MILESTONE, message);
