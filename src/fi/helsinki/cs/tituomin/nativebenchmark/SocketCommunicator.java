@@ -82,37 +82,40 @@ public class SocketCommunicator
             }
         }
     };
+    private void executeStart(String command) {
+        String[] split = command.split(":");
+        if (split.length < 2) {
+            Log.e(TAG, "No configuration key provided.");
+            return;
+        }
+        String configKey = split[1];
+        // .setRepetitions           (repetitions)
+        // .setAllocatingRepetitions (Long.parseLong(textValue(R.id.alloc_reps)))
+        // .setBenchmarkSubstring    (textValue(R.id.benchmark_substring).toLowerCase())
+        // .setRunAllBenchmarks      (isChecked(R.id.checkbox_long))
+        // .setRunAtMaxSpeed         (isChecked(R.id.checkbox_max))
+        // .setBenchmarkSet          (isChecked(R.id.run_alloc) ?
+        //                            BenchmarkRunner.BenchmarkSet.ALLOC :
+        //                            BenchmarkRunner.BenchmarkSet.NON_ALLOC);
+        Map<String,ToolConfig> configurations = null;
+        ToolConfig config = null;
+        try {
+            configurations = ToolConfig.readConfigFile();
+            config = configurations.get(configKey);
+        } catch (Exception e) {
+            Log.e(TAG, "Error reading configuration file.", e);
+        }
+        if (config == null) {
+            Log.e(TAG, "Could not find configuration for " + configKey);
+        }
+        else {
+            this.controller.startMeasuring(this.runner, config);
+        }
+    }
 
     public void executeCommand(String command) {
         if (command.startsWith("start")) {
-            String[] split = command.split(":");
-            if (split.length < 2) {
-                Log.e(TAG, "No configuration key provided.");
-                return;
-            }
-            String configKey = split[1];
-                // .setRepetitions           (repetitions)
-                // .setAllocatingRepetitions (Long.parseLong(textValue(R.id.alloc_reps)))
-                // .setBenchmarkSubstring    (textValue(R.id.benchmark_substring).toLowerCase())
-                // .setRunAllBenchmarks      (isChecked(R.id.checkbox_long))
-                // .setRunAtMaxSpeed         (isChecked(R.id.checkbox_max))
-                // .setBenchmarkSet          (isChecked(R.id.run_alloc) ?
-                //                            BenchmarkRunner.BenchmarkSet.ALLOC :
-                //                            BenchmarkRunner.BenchmarkSet.NON_ALLOC);
-            Map<String,ToolConfig> configurations = null;
-            ToolConfig config = null;
-            try {
-                configurations = ToolConfig.readConfigFile();
-                config = configurations.get(configKey);
-            } catch (Exception e) {
-                Log.e(TAG, "Error reading configuration file.", e);
-            }
-            if (config == null) {
-                Log.e(TAG, "Could not find configuration for " + configKey);
-            }
-            else {
-                this.controller.startMeasuring(this.runner, config);
-            }
+            this.executeStart(command);
         }
         else if (command.startsWith("end")) {
             this.controller.interruptMeasuring();
