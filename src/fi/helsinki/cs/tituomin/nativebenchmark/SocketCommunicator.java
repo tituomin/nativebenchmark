@@ -6,7 +6,8 @@ import android.util.Log;
 import fi.helsinki.cs.tituomin.nativebenchmark.BenchmarkController;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.ObjectOutputStream;
+import java.io.OutputStream;
+import java.io.PrintWriter;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -35,17 +36,23 @@ public class SocketCommunicator implements ApplicationStateListener
                         //attempt to accept a connection
                         client = server.accept();
 
-                        SocketCommunicator.this.out = new ObjectOutputStream(client.getOutputStream());
+                        SocketCommunicator.this.out = client.getOutputStream();
+                        SocketCommunicator.this.printWriter = new PrintWriter(out, true);
                         SocketCommunicator.nis = client.getInputStream();
                         try
                             {
-                                SocketCommunicator.this.out.writeObject("\n" + helpMessage + "\n");
+                                SocketCommunicator.this.printWriter.println(helpMessage);
                                 Log.v(TAG, "client >" + helpMessage);
 
                                 byte[] bytes = new byte[1024];
                                 int numRead = 0;
-                                while ((numRead = SocketCommunicator.nis.read(bytes, 0, 1024)) >= 0)
-                                    {
+                                while (numRead >= 0) {
+                                        printWriter.println("[Awaiting input]");
+                                        numRead = SocketCommunicator.nis.read(bytes, 0, 1024);
+                                        if (numRead < 1) {
+                                            executeCommand("quit");
+                                            return;
+                                        }
                                         receivedCommand = new String(bytes, 0, numRead).trim();
                                         executeCommand(receivedCommand);
                                         Log.v(TAG, receivedCommand);
@@ -112,16 +119,37 @@ public class SocketCommunicator implements ApplicationStateListener
         }
     }
 
+    private void output(String message) {
+        this.printWriter.println(message);
+    }
+
     public void executeCommand(String command) {
-        if (command.startsWith("start")) {
+        boolean executed = false;
+        command = command.trim();
+        if (command.length() == 0) {
+            return;
+        }
+        else if (command.startsWith("start")) {
             this.executeStart(command);
+            executed = true;
         }
         else if (command.startsWith("end")) {
             this.controller.interruptMeasuring();
+            executed = true;
+        }
+        else if (command.startsWith("quit")) {
+            this.restartServer();
+            executed = true;
         }
         else {
+            this.output(String.format("Unkown command %s", command));
             Log.v(TAG, "" + command + " == unknown command.");
         }
+        if (!executed) {
+            return;
+        }
+        this.output(String.format(
+            "[Executed %s]", command));
     }
 
     public void startServer(
@@ -130,6 +158,7 @@ public class SocketCommunicator implements ApplicationStateListener
 
     {
         this.controller = controller;
+        this.controller.addListener(this, ApplicationState.State.MILESTONE);
         this.runner = runner;
         //initialize server socket in a new separate thread
         this.serverThread = new Thread(InitializeConnection);
@@ -138,11 +167,12 @@ public class SocketCommunicator implements ApplicationStateListener
         Log.v(TAG, msg);
     }
 
-    public void stopServer() {
+    public void restartServer() {
         try
         {
             // TODO
             // Close the opened resources on activity destroy
+            this.output("Stopping socket server.");
             serverThread.interrupt();
             if (SocketCommunicator.nis != null) {
                 SocketCommunicator.nis.close();
@@ -150,10 +180,10 @@ public class SocketCommunicator implements ApplicationStateListener
             if (this.out != null) {
                 this.out.close();
             }
-            if (server != null)
-            {
+            if (server != null) {
                 server.close();
             }
+            this.startServer(this.controller, this.runner);
         }
         catch (IOException ec)
         {
@@ -162,19 +192,15 @@ public class SocketCommunicator implements ApplicationStateListener
     }
 
     public void stateUpdated(ApplicationState.DetailedState state) {
-        try {
-            this.out.writeObject(state.toString());
-        }
-        catch (IOException ioException) {
-            Log.e(SocketCommunicator.TAG, "" + ioException);
-        }
+        this.output(state.toString());
     }
 
     public static final String TAG = "SocketCommunicator";
     public static final int TIMEOUT = 10;
     private ServerSocket server = null;
     private Socket client = null;
-    private ObjectOutputStream out;
+    private OutputStream out;
+    private PrintWriter printWriter;
     private String receivedCommand = null;
     public static InputStream nis = null;
     private BenchmarkController controller;
@@ -182,7 +208,7 @@ public class SocketCommunicator implements ApplicationStateListener
     private BenchmarkRunner runner;
     private Thread serverThread;
 
-    private final String helpMessage = "\n\n" +
+    private final String helpMessage = "\n" +
         "Measuring application ready.\n" +
         "Available commands:\n" +
         "  start :CONFIG_KEY\n" +
@@ -190,6 +216,6 @@ public class SocketCommunicator implements ApplicationStateListener
         "    loaded from nativebenchmark_setup.json file\n" +
         "    under the top level key CONFIG_KEY.\n" +
         "  end\n" +
-        "    Interrupts measuring.\n\n";
+        "    Interrupts measuring.\n";
 
 }
