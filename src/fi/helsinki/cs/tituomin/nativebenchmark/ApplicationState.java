@@ -30,20 +30,21 @@ public interface ApplicationState {
         public String message;
         private ApplicationState parent;
         public DetailedState(ApplicationState parent) {
-            parent = parent;
-            state = null;
-            message = null;
+            this.parent = parent;
+            this.state = null;
+            this.message = null;
         }
         public DetailedState(ApplicationState parent, DetailedState d) {
-            parent = parent;
-            state = d.state;
-            message = d.message;
+            this.parent = parent;
+            this.state = d.state;
+            this.message = d.message;
         }
         public String toString() {
+            Resources resources = parent.getResources();
+            String type = resources.getString(this.state.stringId);
             return String.format(
-                "%s %s",
-                parent.getResources().getString(this.state.stringId),
-                this.message);
+                "%s%s", type,
+                (this.message != null) ? " " + this.message : "");
         }
     }
 }
