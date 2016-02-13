@@ -69,8 +69,9 @@ public enum BenchmarkRunner {
 
     public void initTools(ToolConfig conf, long repetitions, long allocRepetitions) throws IOException, InterruptedException {
 
-        conf.setRepetitions(this.repetitions);
-        conf.setAllocRepetitions(this.allocatingRepetitions);
+        conf.setDefaultRepetitions(this.repetitions);
+        conf.setDefaultAllocRepetitions(this.allocatingRepetitions);
+        conf.setDefaultRunAllBenchmarks(this.runAllBenchmarks);
 
         measuringTools = new ArrayList<MeasuringTool> ();
         for (MeasuringTool tool : conf) {
@@ -175,7 +176,7 @@ public enum BenchmarkRunner {
 
             for (Benchmark b : allBenchmarks) {
                 boolean selected;
-                if (this.runAllBenchmarks) {
+                if (tool.runAllBenchmarks()) {
                     selected = true;
                 }
                 else if (!substringToApply.equals("")) {

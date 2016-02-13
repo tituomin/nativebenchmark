@@ -30,14 +30,24 @@ import java.util.Set;
 
 public abstract class MeasuringTool implements Runnable {
 
-    public MeasuringTool(int rounds, long defaultRepetitions, long allocRepetitions, boolean warmup) throws IOException, InterruptedException {
+    public MeasuringTool
+        (
+            int rounds,
+            long repetitions,
+            long allocRepetitions,
+            boolean warmup,
+            boolean runAllBenchmarks
+         ) throws
+            IOException, InterruptedException
+    {
         clearMeasurements();
         specifyOptions();
         this.rounds = rounds;
-        this.defaultRepetitions = defaultRepetitions;
+        this.repetitions = repetitions;
         this.allocRepetitions = allocRepetitions;
         this.warmup = warmup;
         this.explicitGC = !warmup;
+        this.runAllBenchmarks = runAllBenchmarks;
         init();
     }
 
@@ -85,7 +95,7 @@ public abstract class MeasuringTool implements Runnable {
         String benchmarkName = benchmark.getClass().getSimpleName();
         clearMeasurements();
         setDefaultOptions();
-        benchmark.setRepetitions(this.defaultRepetitions);
+        benchmark.setRepetitions(this.repetitions);
         RunningWrapper wrapper = wrap(benchmark);
         Date start = null, end = null;
 
@@ -125,6 +135,10 @@ public abstract class MeasuringTool implements Runnable {
 
     public boolean explicitGC() {
         return this.explicitGC;
+    }
+
+    public boolean runAllBenchmarks() {
+        return this.runAllBenchmarks;
     }
 
     public void setExplicitGC(boolean e) {
@@ -219,7 +233,7 @@ public abstract class MeasuringTool implements Runnable {
     private BenchmarkResult currentMeasurement;
     private List<BenchmarkResult> measurements;
 
-    protected long defaultRepetitions;
+    protected long repetitions;
 
     protected void putMeasurement(String key, String value) {
         currentMeasurement.put(key, value);
@@ -275,7 +289,7 @@ public abstract class MeasuringTool implements Runnable {
     public List<Pair<String,String>> configuration() {
         List<Pair<String,String>> pairs = new ArrayList<Pair<String,String>> ();
         pairs.add(new Pair<String,String>("tool", this.getClass().getSimpleName()));
-        pairs.add(new Pair<String,String>("repetitions", "" + this.defaultRepetitions));
+        pairs.add(new Pair<String,String>("repetitions", "" + this.repetitions));
         pairs.add(new Pair<String,String>("description", this.description));
         pairs.add(new Pair<String,String>("warmup", "" + this.warmup));
         if (options != null) {
@@ -299,6 +313,7 @@ public abstract class MeasuringTool implements Runnable {
     private String filterSubstring;
     protected boolean warmup;
     private boolean explicitGC;
+    private boolean runAllBenchmarks;
     private static boolean userInterrupted = false;
     private final static String TAG = "MeasuringTool";
     public static class UnsupportedOptionException extends RuntimeException {}

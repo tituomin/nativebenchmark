@@ -89,21 +89,27 @@ public class ToolConfig implements Iterable<MeasuringTool> {
 
     private MeasuringTool createTool(JSONObject specs) {
         
-        // todo
-        int defaultRounds = 1;
-        // todo
-
         MeasuringTool tool = null;
         try {
             long repetitions = specs.optLong(
                 "repetitions", contents.optLong(
-                    specs.optString("repetitions"), defaultRepetitions));
+                    specs.optString("repetitions"), this.defaultRepetitions));
+
+            // todo
+            int defaultRounds = 1;
+            // todo
 
             int rounds = specs.optInt(
                 "rounds", contents.optInt(
                     specs.optString("rounds"), defaultRounds));
 
+            long allocRepetitions = specs.optLong(
+                "alloc_repetitions", contents.optLong(
+                    specs.optString("alloc_rounds"), this.defaultAllocRepetitions));
+
             boolean warmup = specs.optBoolean("warmup", false);
+
+            boolean runAllBenchmarks = specs.optBoolean("run_all", this.defaultRunAllBenchmarks);
 
             Class<?> _class = Class.forName(TOOL_PACKAGE + "." + specs.getString("class"));
 
@@ -113,7 +119,9 @@ public class ToolConfig implements Iterable<MeasuringTool> {
             Log.v("ToolConfig", "Tool instantiation " + rounds + " " + repetitions + " " + warmup);
 
             try {
-                tool = (MeasuringTool)ctor.newInstance(rounds, repetitions, allocRepetitions, warmup);
+                tool = (MeasuringTool)ctor.newInstance(
+                    rounds, repetitions, allocRepetitions,
+                    warmup, runAllBenchmarks);
             }
             catch (InvocationTargetException e) {
                 Log.e("ToolConfig", "Constructor exception", e.getCause());
@@ -140,17 +148,22 @@ public class ToolConfig implements Iterable<MeasuringTool> {
         return tool;
     }
 
-    public ToolConfig setRepetitions(long r) {
+    public ToolConfig setDefaultRepetitions(long r) {
         defaultRepetitions = r;
         return this;
     }
-    public ToolConfig setAllocRepetitions(long r) {
-        allocRepetitions = r;
+    public ToolConfig setDefaultAllocRepetitions(long r) {
+        defaultAllocRepetitions = r;
+        return this;
+    }
+    public ToolConfig setDefaultRunAllBenchmarks(boolean r) {
+        defaultRunAllBenchmarks = r;
         return this;
     }
 
     private long defaultRepetitions;
-    private long allocRepetitions;
+    private long defaultAllocRepetitions;
+    private boolean defaultRunAllBenchmarks;
 
     private JSONObject contents;
     private static final String TOOL_PACKAGE = "fi.helsinki.cs.tituomin.nativebenchmark.measuringtool";
