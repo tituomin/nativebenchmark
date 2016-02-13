@@ -114,7 +114,7 @@ public class ToolConfig implements Iterable<MeasuringTool> {
             Class<?> _class = Class.forName(TOOL_PACKAGE + "." + specs.getString("class"));
 
             Constructor<?> ctor = _class.getConstructor(
-                Integer.TYPE, Long.TYPE, Long.TYPE, Boolean.TYPE);
+                Integer.TYPE, Long.TYPE, Long.TYPE, Boolean.TYPE, Boolean.TYPE);
 
             Log.v("ToolConfig", "Tool instantiation " + rounds + " " + repetitions + " " + warmup);
 

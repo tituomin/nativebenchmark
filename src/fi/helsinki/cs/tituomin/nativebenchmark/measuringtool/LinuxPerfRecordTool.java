@@ -17,8 +17,16 @@ public class LinuxPerfRecordTool extends CommandlineTool {
     //     super(i, reps, allocreps);
     // }
 
-    public LinuxPerfRecordTool(int rounds, long repetitions, long allocreps, boolean warmup) throws IOException, InterruptedException {
-        super(rounds, repetitions, allocreps, warmup);
+    public LinuxPerfRecordTool
+        (
+            int rounds,
+            long repetitions,
+            long allocreps,
+            boolean warmup,
+            boolean runAllBenchmarks) throws
+                IOException, InterruptedException
+    {
+        super(rounds, repetitions, allocreps, warmup, runAllBenchmarks);
     }
 
     protected List<OptionSpec> specifyAllowedOptions(List<OptionSpec> options) {

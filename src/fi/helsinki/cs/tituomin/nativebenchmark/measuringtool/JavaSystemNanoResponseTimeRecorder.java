@@ -11,8 +11,15 @@ import android.util.Log;
 
 public class JavaSystemNanoResponseTimeRecorder extends ResponseTimeRecorder {
 
-    public JavaSystemNanoResponseTimeRecorder(int i, long reps, long allocreps, boolean warmup) throws IOException, InterruptedException {
-        super(i, reps, allocreps, warmup);
+    public JavaSystemNanoResponseTimeRecorder(
+        int i,
+        long reps,
+        long allocreps,
+        boolean warmup,
+        boolean runAllBenchmarks
+    ) throws IOException, InterruptedException
+    {
+        super(i, reps, allocreps, warmup, runAllBenchmarks);
     }
 
     public void start(Runnable benchmark)
