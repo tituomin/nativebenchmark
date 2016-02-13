@@ -169,9 +169,19 @@ public class SocketCommunicator
     private ObjectOutputStream out;
     private String receivedCommand = null;
     public static InputStream nis = null;
-    private final String sendMsg = "Hello world";
     private BenchmarkController controller;
     private Map<String, ToolConfig> configurations;
     private BenchmarkRunner runner;
     private Thread serverThread;
+
+    private final String helpMessage = "\n\n" +
+        "Measuring application ready.\n" +
+        "Available commands:\n" +
+        "  start :CONFIG_KEY\n" +
+        "    Starts measuring with the configuration\n" +
+        "    loaded from nativebenchmark_setup.json file\n" +
+        "    under the top level key CONFIG_KEY.\n" +
+        "  end\n" +
+        "    Interrupts measuring.\n\n";
+
 }
