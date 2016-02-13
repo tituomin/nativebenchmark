@@ -5,6 +5,7 @@ import fi.helsinki.cs.tituomin.nativebenchmark.measuringtool.MeasuringTool;
 
 import android.app.ActivityManager;
 import android.content.Context;
+import android.content.res.Resources;
 import android.os.PowerManager;
 import android.util.Log;
 import fi.helsinki.cs.tituomin.nativebenchmark.L;
@@ -19,16 +20,22 @@ public class BenchmarkController implements ApplicationState {
     // todo: state changing things synchronized
 
     public BenchmarkController(Context aContext, File dataDir) {
-        this.detailedState = new ApplicationState.DetailedState();
+        this.detailedState = new ApplicationState.DetailedState(this);
         this.dataDir = dataDir;
+        this.listeners = new Listeners();
 
         PowerManager pm = (PowerManager) aContext.getSystemService(Context.POWER_SERVICE);
         wakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "Benchmarking");
         ActivityManager am = (ActivityManager) aContext.getSystemService(Context.ACTIVITY_SERVICE);
+        this.resources = aContext.getResources();
         int memoryClass = am.getLargeMemoryClass();
         Log.v("Selector", "Memory size " + Runtime.getRuntime().maxMemory());
         Log.v("onCreate", "memoryClass:" + Integer.toString(memoryClass));
 
+    }
+
+    public Resources getResources() {
+        return this.resources;
     }
 
     public void updateState(ApplicationState.State state) {
@@ -62,12 +69,15 @@ public class BenchmarkController implements ApplicationState {
             case INITIALISED:
             case INIT_FAIL:
             case MILESTONE:
+                if (this.listeners.milestoneListener != null) {
+                    this.listeners.milestoneListener.stateUpdated(this.detailedState);
+                }
             }
         }
     }
     public ApplicationState.DetailedState getState() {
         synchronized(this) {
-            return new ApplicationState.DetailedState(this.detailedState);
+            return new ApplicationState.DetailedState(this, this.detailedState);
         }
     }
     public boolean userWantsToRetry(Exception e) {
@@ -117,15 +127,24 @@ public class BenchmarkController implements ApplicationState {
         measuringThread.interrupt();
     }
 
-    // public void addListener(ApplicationState listener) {
-    //     this.listeners.add(listener);
-    // }
+    public void addListener(ApplicationStateListener listener, ApplicationState.State state) {
+        if (state == ApplicationState.State.MILESTONE) {
+            this.listeners.milestoneListener = listener;
+        }
+    }
 
-    // public void removeListeners() {
-    //     this.listeners = null;
-    //}
+    public void removeListeners() {
+        this.listeners = null;
+    }
 
-    // private List<ApplicationState> listeners;
+    private class Listeners {
+        public ApplicationStateListener milestoneListener;
+        public Listeners() {
+            milestoneListener = null;
+        }
+    }
+
+    private Listeners listeners;
     private ApplicationState.State state;
     private String message;
     private ApplicationState.DetailedState detailedState;
@@ -133,5 +152,6 @@ public class BenchmarkController implements ApplicationState {
     private File dataDir;
     private Thread measuringThread;
     private static final String TAG = "BenchmarkController";
+    private Resources resources;
 
 }

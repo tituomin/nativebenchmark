@@ -507,7 +507,6 @@ public enum BenchmarkRunner {
         throws InterruptedException, RunnerException {
 
         List<BenchmarkResult> compiledMetadata = new ArrayList<BenchmarkResult> ();
-        final ApplicationState.State state = ApplicationState.State.MILESTONE;
 
         if (Thread.interrupted()) {
             throw new InterruptedException();
@@ -527,7 +526,7 @@ public enum BenchmarkRunner {
 
         String parameterCountString = introspected.get("parameter_count");
         int parameterCount = (parameterCountString == null) ? -1 : Integer.parseInt(parameterCountString);
-            
+
         boolean dynamicParameters =
             benchmark.dynamicParameters() ||
             (hasRefTypes && (-1 < parameterCount && parameterCount < 2));
@@ -567,7 +566,14 @@ public enum BenchmarkRunner {
                 Thread.sleep(350);
             }
 
-            mainUI.updateState(state, tool.getClass().getSimpleName() + " warmup " + tool.isWarmupRound()  + " round " + roundNo  + " benchmark " + benchmarkCount);
+            String message = String.format(
+                "%s warmup %b round %d benchmark %d",
+                tool.getClass().getSimpleName(),
+                tool.isWarmupRound(),
+                roundNo,
+                benchmarkCount
+            );
+            mainUI.updateState(ApplicationState.State.MILESTONE, message);
 
             List<BenchmarkResult> measurements = tool.getMeasurements();
             for (BenchmarkResult measurement : measurements) {

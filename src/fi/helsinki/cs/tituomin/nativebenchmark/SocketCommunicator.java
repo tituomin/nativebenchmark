@@ -13,9 +13,8 @@ import java.net.Socket;
 import java.net.SocketTimeoutException;
 import java.util.Map;
 
-public class SocketCommunicator
+public class SocketCommunicator implements ApplicationStateListener
 {
-
     /**
      * Thread to initialize Socket connection
      */
@@ -159,6 +158,15 @@ public class SocketCommunicator
         catch (IOException ec)
         {
             Log.e(SocketCommunicator.TAG, "Cannot close server socket" + ec);
+        }
+    }
+
+    public void stateUpdated(ApplicationState.DetailedState state) {
+        try {
+            this.out.writeObject(state.toString());
+        }
+        catch (IOException ioException) {
+            Log.e(SocketCommunicator.TAG, "" + ioException);
         }
     }
 
