@@ -266,7 +266,7 @@ public enum BenchmarkRunner {
                         j++;
                     };
                     try {
-                        collectedData = runSeries(benchmark, mainUI, tool, round, max_rounds, count);
+                        collectedData = runSeries(benchmark, mainUI, tool, round, max_rounds, count, count - j);
                     }
                     catch (RunnerException e) {
                         logE("Exception was thrown", e.getCause());
@@ -500,7 +500,7 @@ public enum BenchmarkRunner {
     }
 
     private static List<BenchmarkResult> runSeries(
-        Benchmark benchmark, ApplicationState mainUI, MeasuringTool tool, int roundNo, int roundCount, int benchmarkCount)
+        Benchmark benchmark, ApplicationState mainUI, MeasuringTool tool, int roundNo, int roundCount, int benchmarkCount, int benchmarkIndex)
         throws InterruptedException, RunnerException {
 
         List<BenchmarkResult> compiledMetadata = new ArrayList<BenchmarkResult> ();
@@ -564,13 +564,15 @@ public enum BenchmarkRunner {
             }
 
             String message = String.format(
-                "%s%s round %d/%d benchmark %d/%d",
+                "%s%s round %d/%d benchmark %d/%d range %d/%d",
                 tool.getClass().getSimpleName(),
                 tool.isWarmupRound() ? " (warmup)" : "",
                 roundNo + 1,
                 roundCount,
-                benchmarkCounter,
-                benchmarkCount
+                benchmarkIndex,
+                benchmarkCount,
+                i + 1,
+                dynamicParameters ? BenchmarkParameter.RANGE : 1
             );
             mainUI.updateState(ApplicationState.State.MILESTONE, message);
 
