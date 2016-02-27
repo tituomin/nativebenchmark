@@ -103,9 +103,9 @@ jint __a, __b;
     _ctype ## _buf__IN = (_ctype *) jvalue_buf;
 
 #define PRIMITIVE_IN(_ctype)                                         \
-    VARIABLE_IN(_ctype);                                             \
-    POINTER_IN(_ctype);                                              \
-    BUFFER_IN(_ctype);
+    VARIABLE_IN(_ctype)                                              \
+    POINTER_IN(_ctype)                                               \
+    BUFFER_IN(_ctype)
 
 #define PRIMITIVE_OUT(_ctype)                                        \
     VARIABLE_OUT(_ctype);                                            \
@@ -113,7 +113,7 @@ jint __a, __b;
     BUFFER_OUT(_ctype);
 
 #define REFERENCE_IN(_ctype)                                         \
-    VARIABLE_IN(_ctype);                                             \
+    VARIABLE_IN(_ctype)                                              \
 
 #define MOCK_FIELD_ID(_ctype)                                        \
     jfieldID mock_ ## _ctype ## _field_id;                           \
@@ -128,56 +128,56 @@ jint __a, __b;
 // todo save memory for primitives also?
 // primitives
 
-PRIMITIVE_IN(jboolean);
-PRIMITIVE_IN(jbyte);
-CONST_POINTER_IN(char);
-PRIMITIVE_IN(jchar);
-CONST_POINTER_IN(jchar);
-PRIMITIVE_IN(jshort);
-PRIMITIVE_IN(jint);
-PRIMITIVE_IN(jlong);
-PRIMITIVE_IN(jfloat);
-PRIMITIVE_IN(jdouble);
-PRIMITIVE_IN(jsize);
+PRIMITIVE_IN(jboolean)
+PRIMITIVE_IN(jbyte)
+CONST_POINTER_IN(char)
+PRIMITIVE_IN(jchar)
+CONST_POINTER_IN(jchar)
+PRIMITIVE_IN(jshort)
+PRIMITIVE_IN(jint)
+PRIMITIVE_IN(jlong)
+PRIMITIVE_IN(jfloat)
+PRIMITIVE_IN(jdouble)
+PRIMITIVE_IN(jsize)
 
-POINTER_IN(void);
+POINTER_IN(void)
 
-VARIABLE_IN(jfieldID);
-VARIABLE_IN(jmethodID);
+VARIABLE_IN(jfieldID)
+VARIABLE_IN(jmethodID)
 
-PRIMITIVE_IN(char);
+PRIMITIVE_IN(char)
 
 // references
 
-REFERENCE_IN(jobject);
-REFERENCE_IN(jclass);
-REFERENCE_IN(jstring);
-REFERENCE_IN(jweak);
+REFERENCE_IN(jobject)
+REFERENCE_IN(jclass)
+REFERENCE_IN(jstring)
+REFERENCE_IN(jweak)
 
 // arrays
 
-REFERENCE_IN(jarray);
-REFERENCE_IN(jobjectArray);
-REFERENCE_IN(jbooleanArray);
-REFERENCE_IN(jbyteArray);
-REFERENCE_IN(jcharArray);
-REFERENCE_IN(jshortArray);
-REFERENCE_IN(jintArray);
-REFERENCE_IN(jlongArray);
-REFERENCE_IN(jfloatArray);
-REFERENCE_IN(jdoubleArray);
-REFERENCE_IN(jthrowable);
+REFERENCE_IN(jarray)
+REFERENCE_IN(jobjectArray)
+REFERENCE_IN(jbooleanArray)
+REFERENCE_IN(jbyteArray)
+REFERENCE_IN(jcharArray)
+REFERENCE_IN(jshortArray)
+REFERENCE_IN(jintArray)
+REFERENCE_IN(jlongArray)
+REFERENCE_IN(jfloatArray)
+REFERENCE_IN(jdoubleArray)
+REFERENCE_IN(jthrowable)
 
-VARIABLE_OUT(jboolean);
-VARIABLE_OUT(jbyte);
-VARIABLE_OUT(jchar);
-VARIABLE_OUT(jshort);
-VARIABLE_OUT(jint);
-VARIABLE_OUT(jlong);
-VARIABLE_OUT(jfloat);
-VARIABLE_OUT(jdouble);
-VARIABLE_OUT(jsize);
-VARIABLE_OUT(jobject);
+VARIABLE_OUT(jboolean)
+VARIABLE_OUT(jbyte)
+VARIABLE_OUT(jchar)
+VARIABLE_OUT(jshort)
+VARIABLE_OUT(jint)
+VARIABLE_OUT(jlong)
+VARIABLE_OUT(jfloat)
+VARIABLE_OUT(jdouble)
+VARIABLE_OUT(jsize)
+VARIABLE_OUT(jobject)
 
 // ---
 
@@ -186,16 +186,16 @@ VARIABLE_OUT(jobject);
 // todo todo todo
 //jclass jelement_class__OUT;
 
-MOCK_FIELD_ID(jboolean);
-MOCK_FIELD_ID(jbyte);
-MOCK_FIELD_ID(jchar);
-MOCK_FIELD_ID(jshort);
-MOCK_FIELD_ID(jint);
-MOCK_FIELD_ID(jlong);
-MOCK_FIELD_ID(jfloat);
-MOCK_FIELD_ID(jdouble);
-MOCK_FIELD_ID(jsize);
-MOCK_FIELD_ID(jobject);
+MOCK_FIELD_ID(jboolean)
+MOCK_FIELD_ID(jbyte)
+MOCK_FIELD_ID(jchar)
+MOCK_FIELD_ID(jshort)
+MOCK_FIELD_ID(jint)
+MOCK_FIELD_ID(jlong)
+MOCK_FIELD_ID(jfloat)
+MOCK_FIELD_ID(jdouble)
+MOCK_FIELD_ID(jsize)
+MOCK_FIELD_ID(jobject)
 
 const char* field_name__OUT;
 const char* static_field_name__OUT;
