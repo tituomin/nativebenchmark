@@ -604,6 +604,7 @@ public enum BenchmarkRunner {
             }
             if (iterator.hasNext()) {
                 i = iterator.next();
+                j++;
             }
             else {
                 break;
