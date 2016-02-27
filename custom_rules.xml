@@ -44,9 +44,17 @@
   <target name="generate_beautified_benchmark_sources" depends="generate_benchmark_sources">
       <exec executable="indent" logError="true" failonerror="true">
           <arg value="-kr" />
+          <arg value="--no-tabs" />
           <arg value="${jni_src.dir}/nativebenchmark.c" />
           <arg value="${jni_src.dir}/nativerunners.c" />
           <arg value="${jni_src.dir}/custom_benchmarks.c" />
+      </exec>
+      <exec executable="astyle" logError="true" failonerror="true">
+          <arg value="--quiet" />
+          <arg value="--delete-empty-lines" />
+          <arg value="-n" />
+          <arg value="${gen_src.dir}/fi/helsinki/cs/tituomin/nativebenchmark/*" />
+          <arg value="${gen_src.dir}/fi/helsinki/cs/tituomin/nativebenchmark/benchmark/*" />
       </exec>
   </target>
 
