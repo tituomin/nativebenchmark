@@ -170,7 +170,9 @@ public enum BenchmarkRunner {
                 this.benchmarkSubstring = "";
             }
             String substringToApply = this.benchmarkSubstring;
-            if (!tool.getFilter().equals("")) {
+
+            String filter = tool.getFilter();
+            if (filter != null && !filter.equals("")) {
                 substringToApply = tool.getFilter();
             }
 
