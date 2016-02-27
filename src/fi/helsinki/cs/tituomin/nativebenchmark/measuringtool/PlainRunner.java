@@ -16,7 +16,7 @@ import android.util.Log;
 public class PlainRunner extends MeasuringTool {
 
     public PlainRunner(int i, long reps, long allocreps) throws IOException, InterruptedException {
-        super(i, reps, allocreps, true);
+        super(i, reps, allocreps, true, false);
     }
 
     protected List<MeasuringOption> defaultOptions(List<MeasuringOption> options) {
