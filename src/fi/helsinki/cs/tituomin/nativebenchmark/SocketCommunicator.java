@@ -126,10 +126,14 @@ public class SocketCommunicator implements ApplicationStateListener
                     public void run() {
                         while (!Thread.currentThread().isInterrupted()) {
                             ApplicationState.DetailedState detailedState = controller.getState();
-                            if (detailedState.state == ApplicationState.State.MILESTONE ||
-                                detailedState.state == ApplicationState.State.MEASURING_FINISHED ||
-                                detailedState.state == ApplicationState.State.MEASURING_STARTED) {
+                            ApplicationState.State state = detailedState.state;
+                            if (state == ApplicationState.State.MILESTONE ||
+                                state == ApplicationState.State.MEASURING_FINISHED ||
+                                state == ApplicationState.State.MEASURING_STARTED) {
                                 stateUpdated(detailedState);
+                                if (state == ApplicationState.State.MEASURING_FINISHED) {
+                                    return;
+                                }
                             }
                             try {
                                 Thread.sleep(10000);
