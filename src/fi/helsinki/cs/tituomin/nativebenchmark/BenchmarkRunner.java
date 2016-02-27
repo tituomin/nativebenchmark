@@ -158,8 +158,10 @@ public enum BenchmarkRunner {
             handleException(e, mainUI);
             return;
         }
-
         for (MeasuringTool tool : measuringTools) {
+            if (tool == null) {
+                return;
+            }
             if (interrupted) {
                 return;
             }
