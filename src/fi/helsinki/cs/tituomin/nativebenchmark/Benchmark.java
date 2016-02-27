@@ -18,7 +18,6 @@ public abstract class Benchmark implements Runnable {
     public abstract boolean representative();
 
     public long repetitionsLeft;
-    public int persistentValue;
 
     public void run() {
         Process.setThreadPriority(-5);

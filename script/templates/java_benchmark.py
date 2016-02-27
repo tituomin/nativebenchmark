@@ -56,6 +56,8 @@ public class <% classname %> <% class_relations %> extends Benchmark {
         return <% is_nonvirtual %>;
     }
 
+    <% class_fields %>
+
     <% native_method %>
 
     <% run_method %>
@@ -87,6 +89,7 @@ java_run_method_inline_t = """
 
     public void runInternal() {
         <% init %>
+        <% type_init %>
         <% loop %>
     }
 

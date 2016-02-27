@@ -160,8 +160,11 @@ def add_field_and_array_benchmarks(benchmarks):
                 'id' : make_id('GetStatic{_type}Field', _type),
                 'representative': representative,
                 'direction' : 'jj',
+                'class_init' : 'public {} persistentValue;'.format(_type['java']),
+                'method_init' : '{} localPersistentValue = {};'.format(
+                    _type['java'], _type.get('java-literal') or 'objectValue'),
                 'code' :
-                    "{_javatype} val = mockObject.{_ctype}StaticField;".format(
+                    "localPersistentValue = mockObject.{_ctype}StaticField;".format(
                         _javatype = _type['java'],
                         _ctype = _type['c']
 
@@ -189,7 +192,6 @@ def add_field_and_array_benchmarks(benchmarks):
                         _literal = _type.get('java-literal') or 'objectValue'
 
                     ),
-                'finished' : 'persistentValue = localPersistentValue;'
                 })
 
         c.append({
@@ -203,9 +205,12 @@ def add_field_and_array_benchmarks(benchmarks):
         java.append({
                 'id' : make_id('Get{_type}Field', _type),
                 'representative': representative,
+                'class_init' : 'public {} persistentValue;'.format(_type['java']),
+                'method_init' : '{} localPersistentValue = {};'.format(
+                    _type['java'], _type.get('java-literal') or 'objectValue'),
                 'direction' : 'jj',
                 'code' :
-                    "{_javatype} val = mockObject.{_ctype}Field;".format(
+                    "localPersistentValue = mockObject.{_ctype}Field;".format(
                         _javatype = _type['java'],
                         _ctype = _type['c']
 
@@ -231,7 +236,6 @@ def add_field_and_array_benchmarks(benchmarks):
                         _literal = _type.get('java-literal') or 'objectValue'
 
                     ),
-                'finished' : 'persistentValue = localPersistentValue;'
                 })
 
     for _type in jni_types.primitive_types.values():
@@ -307,6 +311,8 @@ def add_field_and_array_benchmarks(benchmarks):
                 'vary' : 'size',
                 'direction' : 'jj',
                 'representative' : representative,
+                'class_init' : 'public int persistentValue;',
+                'method_init' : 'int localPersistentValue = 0;',
                 'id' : make_id('ReadComplete{_type}Array', _type),
                 'code' : put(
                     arrays.t_read,
@@ -336,6 +342,8 @@ def add_field_and_array_benchmarks(benchmarks):
                 'vary' : 'size',
                 'direction' : 'jj',
                 'representative' : representative,
+                'class_init' : 'public int persistentValue;',
+                'method_init' : 'int localPersistentValue = 0;',
                 'id' : make_id('WriteComplete{_type}Array', _type),
                 'code' : put(
                     arrays.t_write,
@@ -433,6 +441,7 @@ def write_custom_benchmarks(definition_files, c_custom_output_name, java_output_
                                  'import java.lang.ref.WeakReference;'
                                  ]),
                             classname = classname,
+                            class_fields = benchmark.get('class_init', ''),
                             description = benchmark.get('description' ''),
                             is_allocating = is_allocating,
                             from_language = from_lang,
@@ -443,9 +452,10 @@ def write_custom_benchmarks(definition_files, c_custom_output_name, java_output_
                             run_method = put(
                                 java_benchmark.java_run_method_inline_t,
                                 init = data['inits'],
+                                type_init = benchmark.get('method_init', ''),
                                 loop = put(
                                     loop_code.t_java,
-                                    finished = benchmark.get('finished'),
+                                    finished = benchmark.get('finished', ''),
                                     benchmark_body = benchmark['code']))))}
 
     out_c.flush()
