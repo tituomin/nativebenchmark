@@ -175,7 +175,7 @@ public enum BenchmarkRunner {
 
             String filter = tool.getFilter();
             if (filter != null && !filter.equals("")) {
-                substringToApply = tool.getFilter();
+                substringToApply = tool.getFilter().toLowerCase();
             }
 
             for (Benchmark b : allBenchmarks) {
