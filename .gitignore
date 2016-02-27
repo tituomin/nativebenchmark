@@ -37,3 +37,6 @@ GTAGS
 /res/values/revision.xml
 
 script/nativebenchmark_setup.json
+
+# Ignore GNU indent backups
+/jni/*.c~
