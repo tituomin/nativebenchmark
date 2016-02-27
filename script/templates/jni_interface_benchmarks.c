@@ -36,7 +36,7 @@ void function_wrapper() {
         jstringValue,
         jchar_ptr__IN);
 
-    // @ReadUtf vary=sizeobjectarrayelement direction=cj
+    // @ReadUtf alloc=true vary=sizeobjectarrayelement direction=cj
 
     ASSIGN_AND_CHECK(
         char_const_ptr__IN,
