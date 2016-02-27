@@ -22,14 +22,14 @@ def write_benchmark(benchmark, java_output_dir):
             os.makedirs(java_output_path)
         except OSError:
             pass
-        
+
         java_output = open(
             os.path.join(
                 java_output_path,
                 benchmark["filename"]), 'w')
 
         java_output.write(benchmark["code"])
-    
+
 
 def write_benchmarks(c_output, c_runners_output, java_output_dir):
     benchmarks = generate_benchmarks()
@@ -57,8 +57,8 @@ def write_benchmark_initialiser(classes):
 
     init_output = open(path, 'w')
     init_output.write(put(java_registry_init.t, register_benchmarks = "\n".join(benchmark_inits)))
-        
- 
+
+
 if __name__ == "__main__":
     try:
         argv.pop(0)
