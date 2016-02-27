@@ -85,7 +85,7 @@ def read_benchmarks(definition_files):
 
         while line != '':
             bm_props = parse_benchmark_header(line)
-            
+
             bm_code  = []
             line = read_until(f,
                 lambda x: ends_block(x) or is_benchmark_header(x),
@@ -97,7 +97,7 @@ def read_benchmarks(definition_files):
             if ends_block(line):
                 break
 
-    add_field_and_array_benchmarks(benchmarks)            
+    add_field_and_array_benchmarks(benchmarks)
     add_overhead_benchmarks(benchmarks)
     return benchmarks
 
@@ -164,7 +164,7 @@ def add_field_and_array_benchmarks(benchmarks):
                     "{_javatype} val = mockObject.{_ctype}StaticField;".format(
                         _javatype = _type['java'],
                         _ctype = _type['c']
-                    
+
                     ),
                 'finished' : 'persistentValue = localPersistentValue;'
                 })
@@ -183,11 +183,11 @@ def add_field_and_array_benchmarks(benchmarks):
                 'id' : make_id('SetStatic{_type}Field', _type),
                 'representative': representative,
                 'direction' : 'jj',
-                'code' : 
+                'code' :
                     "mockObject.{_ctype}StaticField = {_literal} ;".format(
                         _ctype = _type['c'],
                         _literal = _type.get('java-literal') or 'objectValue'
-                    
+
                     ),
                 'finished' : 'persistentValue = localPersistentValue;'
                 })
@@ -204,11 +204,11 @@ def add_field_and_array_benchmarks(benchmarks):
                 'id' : make_id('Get{_type}Field', _type),
                 'representative': representative,
                 'direction' : 'jj',
-                'code' : 
+                'code' :
                     "{_javatype} val = mockObject.{_ctype}Field;".format(
                         _javatype = _type['java'],
                         _ctype = _type['c']
-                    
+
                     ),
                 'finished' : 'persistentValue = localPersistentValue;'
                 })
@@ -225,11 +225,11 @@ def add_field_and_array_benchmarks(benchmarks):
                 'id' : make_id('Set{_type}Field', _type),
                 'representative': representative,
                 'direction' : 'jj',
-                'code' : 
+                'code' :
                     "mockObject.{_ctype}Field = {_literal} ;".format(
                         _ctype = _type['c'],
                         _literal = _type.get('java-literal') or 'objectValue'
-                    
+
                     ),
                 'finished' : 'persistentValue = localPersistentValue;'
                 })
@@ -267,7 +267,7 @@ def add_field_and_array_benchmarks(benchmarks):
                 'code' : macro_call(
                     'GET_PRIMITIVE_ARRAY_REGION({_type}, {java_type_name});',
                     _type)})
-        
+
         c.append({
                 'vary' : 'size',
                 'representative' : representative,
@@ -348,7 +348,7 @@ def add_field_and_array_benchmarks(benchmarks):
                 })
 
 
-            
+
 def write_custom_benchmarks(definition_files, c_custom_output_name, java_output_dir):
     packagename = ('fi', 'helsinki', 'cs', 'tituomin', 'nativebenchmark', 'benchmark')
 
@@ -367,7 +367,7 @@ def write_custom_benchmarks(definition_files, c_custom_output_name, java_output_
             if from_lang != lang:
                 logging.error("Invalid language spec.")
                 exit(1)
-                
+
             classname = '{0}2{1}'.format(from_lang, to_lang) + benchmark['id']
             if 'vary' in benchmark:
                 dyn_par = 'true'
@@ -385,7 +385,7 @@ def write_custom_benchmarks(definition_files, c_custom_output_name, java_output_
                 representative = "true"
             else:
                 representative = "false"
-            
+
             if from_lang == 'C':
                 out_c.write(put(
                         c_nativemethod.t_run_method,
