@@ -268,7 +268,7 @@ public enum BenchmarkRunner {
                         j++;
                     };
                     try {
-                        collectedData = runSeries(benchmark, mainUI, tool, round, max_rounds, count, count - j);
+                        collectedData = runSeries(benchmark, mainUI, tool, round, max_rounds, count, j);
                     }
                     catch (RunnerException e) {
                         logE("Exception was thrown", e.getCause());
