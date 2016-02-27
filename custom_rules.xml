@@ -2,7 +2,7 @@
 <project>
 
   <target name="-post-compile" depends="build-ndk" />
-  <target name="-pre-compile" depends="generate_benchmark_sources" />
+  <target name="-pre-compile" depends="generate_beautified_benchmark_sources" />
   <target name="-pre-build" depends="update_revision" />
 
   <target name="clean" depends="android_rules.clean">
@@ -10,6 +10,11 @@
       <arg value="clean"/>
     </exec>
     <delete file="${jni_src.dir}/${jni_header}" />
+    <delete file="${jni_src.dir}/nativebenchmark.c" />
+    <delete file="${jni_src.dir}/nativerunners.c" />
+    <delete file="${jni_src.dir}/custom_benchmarks.c" />
+    <delete file="${jni_src.dir}/natives.h" />
+    <delete file="${jni_src.dir}/native_benchmarks.h" />
     <delete dir="${gen_src.dir}/fi/helsinki/cs/tituomin/nativebenchmark/benchmark" />
     <delete file="cache.properties"/>
   </target>
@@ -34,6 +39,15 @@
       refid="other-natives"
       property="natives.modified"
       setonempty="false"/>
+  </target>
+
+  <target name="generate_beautified_benchmark_sources" depends="generate_benchmark_sources">
+      <exec executable="indent" logError="true" failonerror="true">
+          <arg value="-kr" />
+          <arg value="${jni_src.dir}/nativebenchmark.c" />
+          <arg value="${jni_src.dir}/nativerunners.c" />
+          <arg value="${jni_src.dir}/custom_benchmarks.c" />
+      </exec>
   </target>
 
   <target name="generate_benchmark_sources" if="codegen.modified" >
