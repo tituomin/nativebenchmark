@@ -532,8 +532,10 @@ public enum BenchmarkRunner {
 
         Iterator<Integer> iterator = bPar.iterator();
         Integer i;
+        int j = 0;
         if (iterator.hasNext()) {
             i = iterator.next();
+            j++;
         }
         else {
             i = null;
@@ -573,7 +575,7 @@ public enum BenchmarkRunner {
                 roundCount,
                 benchmarkIndex,
                 benchmarkCount,
-                i + 1,
+                j,
                 dynamicParameters ? BenchmarkParameter.RANGE : 1
             );
             mainUI.updateState(ApplicationState.State.MILESTONE, message);
