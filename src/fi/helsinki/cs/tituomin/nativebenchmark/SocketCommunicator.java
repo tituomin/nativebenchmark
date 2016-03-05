@@ -119,33 +119,35 @@ public class SocketCommunicator implements ApplicationStateListener
         }
         if (config == null) {
             Log.e(TAG, "Could not find configuration for " + configKey);
+            return;
         }
-        else {
-            stateThread = new Thread(
-                new Runnable () {
-                    public void run() {
-                        while (!Thread.currentThread().isInterrupted()) {
-                            ApplicationState.DetailedState detailedState = controller.getState();
-                            ApplicationState.State state = detailedState.state;
-                            if (state == ApplicationState.State.MILESTONE ||
-                                state == ApplicationState.State.MEASURING_FINISHED ||
-                                state == ApplicationState.State.MEASURING_STARTED) {
-                                stateUpdated(detailedState);
-                                if (state == ApplicationState.State.MEASURING_FINISHED) {
-                                    return;
-                                }
+        stateThread = new Thread(
+            new Runnable () {
+                public void run() {
+                    while (!Thread.currentThread().isInterrupted()) {
+                        ApplicationState.DetailedState detailedState = controller.getState();
+                        ApplicationState.State state = detailedState.state;
+                        if (state == ApplicationState.State.MILESTONE ||
+                            state == ApplicationState.State.MEASURING_FINISHED ||
+                            state == ApplicationState.State.MEASURING_STARTED) {
+                            stateUpdated(detailedState);
+                            if (state == ApplicationState.State.MEASURING_FINISHED) {
+                                return;
                             }
-                            try {
-                                Thread.sleep(10000);
-                            }
-                            catch (InterruptedException e) {
-                                break;
-                            }}}});
+                        }
+                        try {
+                            Thread.sleep(10000);
+                        }
+                        catch (InterruptedException e) {
+                            break;
+                        }
+                    }
+                }
+            }
+        );
 
-            stateThread.start();
-
-            this.controller.startMeasuring(this.runner, config);
-        }
+        stateThread.start();
+        this.controller.startMeasuring(this.runner, config);
     }
 
     private void output(String message) {
