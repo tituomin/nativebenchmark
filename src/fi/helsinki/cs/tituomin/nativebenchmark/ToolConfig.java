@@ -41,11 +41,11 @@ public class ToolConfig implements Iterable<MeasuringTool> {
     }
 
     public ToolConfig(JSONObject job) {
-        this.contents = job;
+        this.globalOptions = job;
     }
 
     public String toString() {
-        return this.contents.toString();
+        return this.globalOptions.toString();
     }
 
     public Iterator<MeasuringTool> iterator() {
@@ -64,7 +64,7 @@ public class ToolConfig implements Iterable<MeasuringTool> {
 
         public ToolIterator () throws JSONException {
             currentToolIndex = -1;
-            toolArray = contents.getJSONArray("tools");
+            toolArray = globalOptions.getJSONArray("tools");
         }
         public boolean hasNext() {
             return currentToolIndex + 1 < toolArray.length();
@@ -87,31 +87,31 @@ public class ToolConfig implements Iterable<MeasuringTool> {
         }
     }
 
-    private MeasuringTool createTool(JSONObject specs) {
+    private MeasuringTool createTool(JSONObject toolOptions) {
         
         MeasuringTool tool = null;
         try {
-            long repetitions = specs.optLong(
-                "repetitions", contents.optLong(
-                    specs.optString("repetitions"), this.defaultRepetitions));
+            long repetitions = toolOptions.optLong(
+                "repetitions", globalOptions.optLong(
+                    toolOptions.optString("repetitions"), this.defaultRepetitions));
 
             // todo
             int defaultRounds = 1;
             // todo
 
-            int rounds = specs.optInt(
-                "rounds", contents.optInt(
-                    specs.optString("rounds"), defaultRounds));
+            int rounds = toolOptions.optInt(
+                "rounds", globalOptions.optInt(
+                    toolOptions.optString("rounds"), defaultRounds));
 
-            long allocRepetitions = specs.optLong(
-                "alloc_repetitions", contents.optLong(
-                    specs.optString("alloc_rounds"), this.defaultAllocRepetitions));
+            long allocRepetitions = toolOptions.optLong(
+                "alloc_repetitions", globalOptions.optLong(
+                    toolOptions.optString("alloc_rounds"), this.defaultAllocRepetitions));
 
-            boolean warmup = specs.optBoolean("warmup", false);
+            boolean warmup = toolOptions.optBoolean("warmup", false);
 
-            boolean runAllBenchmarks = specs.optBoolean("run_all", this.defaultRunAllBenchmarks);
+            boolean runAllBenchmarks = toolOptions.optBoolean("run_all", this.defaultRunAllBenchmarks);
 
-            Class<?> _class = Class.forName(TOOL_PACKAGE + "." + specs.getString("class"));
+            Class<?> _class = Class.forName(TOOL_PACKAGE + "." + toolOptions.getString("class"));
 
             Constructor<?> ctor = _class.getConstructor(
                 Integer.TYPE, Long.TYPE, Long.TYPE, Boolean.TYPE, Boolean.TYPE);
@@ -126,11 +126,11 @@ public class ToolConfig implements Iterable<MeasuringTool> {
             catch (InvocationTargetException e) {
                 Log.e("ToolConfig", "Constructor exception", e.getCause());
             }
-            tool.setDescription(specs.optString("description", ""));
-            tool.setFilter(specs.optString("filter", ""));
-            tool.setExplicitGC(specs.optBoolean("gc", !warmup));
+            tool.setDescription(toolOptions.optString("description", ""));
+            tool.setFilter(toolOptions.optString("filter", ""));
+            tool.setExplicitGC(toolOptions.optBoolean("gc", !warmup));
 
-            JSONObject options = specs.optJSONObject ("options");
+            JSONObject options = toolOptions.optJSONObject ("options");
             if (options != null) {
                 Iterator keys = options.keys();
                 while (keys.hasNext()) {
@@ -165,7 +165,7 @@ public class ToolConfig implements Iterable<MeasuringTool> {
     private long defaultAllocRepetitions;
     private boolean defaultRunAllBenchmarks;
 
-    private JSONObject contents;
+    private JSONObject globalOptions;
     private static final String TOOL_PACKAGE = "fi.helsinki.cs.tituomin.nativebenchmark.measuringtool";
     private static final String TAG = "nativebenchmark.ToolConfig";
 
