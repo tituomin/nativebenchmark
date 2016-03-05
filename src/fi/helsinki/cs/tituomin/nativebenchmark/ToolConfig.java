@@ -88,7 +88,7 @@ public class ToolConfig implements Iterable<MeasuringTool> {
     }
 
     private MeasuringTool createTool(JSONObject toolOptions) {
-        
+
         MeasuringTool tool = null;
         try {
             long repetitions = toolOptions.optLong(
