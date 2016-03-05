@@ -100,14 +100,15 @@ public class BenchmarkController implements ApplicationState {
     }
 
     public void startMeasuring(BenchmarkRunner runner, ToolConfig configuration) {
-        runner.setBenchmarkSet(BenchmarkRunner.BenchmarkSet.NON_ALLOC); // TODO config via json
+        BenchmarkRunner.BenchmarkSet set = configuration.getBenchmarkSet();
+        runner.setBenchmarkSet(set);
         measuringThread = new Thread(new BenchRunnable(runner, configuration));
         this.updateState(ApplicationState.State.MEASURING_STARTED);
         measuringThread.start();
 
         // Settings parameter types saved for posterity.
         // ---------------------------------------------
-        // 
+        //
         // CharSequence appCheksum = resources.getText(R.string.app_checksum);
         // CharSequence appRevision = resources.getText(R.string.app_revision);
         // File cacheDir = this.getCacheDir();

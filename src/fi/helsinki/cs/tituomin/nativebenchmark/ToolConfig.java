@@ -42,6 +42,7 @@ public class ToolConfig implements Iterable<MeasuringTool> {
 
     public ToolConfig(JSONObject job) {
         this.globalOptions = job;
+        this.defaultAllocRepetitions = 400;
     }
 
     public String toString() {
@@ -105,11 +106,13 @@ public class ToolConfig implements Iterable<MeasuringTool> {
 
             long allocRepetitions = toolOptions.optLong(
                 "alloc_repetitions", globalOptions.optLong(
-                    toolOptions.optString("alloc_rounds"), this.defaultAllocRepetitions));
+                    toolOptions.optString("alloc_repetitions"),
+                    this.defaultAllocRepetitions));
 
             boolean warmup = toolOptions.optBoolean("warmup", false);
 
-            boolean runAllBenchmarks = toolOptions.optBoolean("run_all", this.defaultRunAllBenchmarks);
+            boolean runAllBenchmarks = toolOptions.optBoolean(
+                "run_all", this.defaultRunAllBenchmarks);
 
             Class<?> _class = Class.forName(TOOL_PACKAGE + "." + toolOptions.getString("class"));
 
@@ -139,7 +142,6 @@ public class ToolConfig implements Iterable<MeasuringTool> {
                 }
             }
 
-            
         }
         catch (Exception e) {
             Log.e("ToolConfig", "Error instantiating tool", e);
@@ -159,6 +161,14 @@ public class ToolConfig implements Iterable<MeasuringTool> {
     public ToolConfig setDefaultRunAllBenchmarks(boolean r) {
         defaultRunAllBenchmarks = r;
         return this;
+    }
+
+    public BenchmarkRunner.BenchmarkSet getBenchmarkSet() {
+        String key = globalOptions.optString("benchmark_set", "non_alloc");
+        if (key.equals("alloc")) {
+            return BenchmarkRunner.BenchmarkSet.ALLOC;
+        }
+        return BenchmarkRunner.BenchmarkSet.NON_ALLOC;
     }
 
     private long defaultRepetitions;

@@ -67,11 +67,17 @@ public enum BenchmarkRunner {
         return benchmarkParameter;
     }
 
+    private BenchmarkRunner() {
+        this.allocatingRepetitions = -1;
+    }
+
     public void initTools(ToolConfig conf, long repetitions, long allocRepetitions) throws IOException, InterruptedException {
 
         conf.setDefaultRepetitions(this.repetitions);
-        conf.setDefaultAllocRepetitions(this.allocatingRepetitions);
         conf.setDefaultRunAllBenchmarks(this.runAllBenchmarks);
+        if (this.allocatingRepetitions > 0) {
+            conf.setDefaultAllocRepetitions(this.allocatingRepetitions);
+        }
 
         measuringTools = new ArrayList<MeasuringTool> ();
         for (MeasuringTool tool : conf) {
@@ -88,7 +94,10 @@ public enum BenchmarkRunner {
     private boolean runAtMaxSpeed;
     private String benchmarkSubstring;
 
-    public enum BenchmarkSet { ALLOC, NON_ALLOC };
+    public enum BenchmarkSet {
+        ALLOC,
+        NON_ALLOC
+    };
     private BenchmarkSet benchmarkSet;
 
     public BenchmarkRunner setRepetitions(long x) {
