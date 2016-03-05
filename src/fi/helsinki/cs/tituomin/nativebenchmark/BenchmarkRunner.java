@@ -543,7 +543,7 @@ public enum BenchmarkRunner {
 
         Iterator<Integer> iterator = bPar.iterator();
         Integer i;
-        int j = 0;
+        int j = -1;
         if (iterator.hasNext()) {
             i = iterator.next();
             j++;
