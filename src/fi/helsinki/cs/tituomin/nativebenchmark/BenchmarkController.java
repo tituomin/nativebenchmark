@@ -48,24 +48,23 @@ public class BenchmarkController implements ApplicationState {
 
             switch (state) {
             case MEASURING_STARTED:
-                LogAccess.start();
+                try {
+                    LogAccess.start(dataDir);
+                }
+                catch (IOException e) {
+                    this.detailedState.state = ApplicationState.State.ERROR;
+                    this.detailedState.message = "Could not initialize log file.";
+                    Log.e(TAG, this.detailedState.message);
+                }
                 wakeLock.acquire();
                 break;
             case ERROR:
             case INTERRUPTED:
             case MEASURING_FINISHED:
-                LogAccess.end();
                 if (wakeLock.isHeld()) {
                     wakeLock.release();
                 }
-                try {
-                    LogAccess.dumpLog(dataDir);
-                }
-                catch (IOException e) {
-                    this.detailedState.state = ApplicationState.State.ERROR;
-                    this.detailedState.message = "Could not save log file.";
-                    Log.e(TAG, this.detailedState.message);
-                }
+                LogAccess.end();
             case INITIALISED:
             case INIT_FAIL:
             case MILESTONE:
