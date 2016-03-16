@@ -118,7 +118,7 @@ public class BenchmarkSelector extends Activity {
                 // commented out because
                 // space is not reclaimed
                 // even on gc
-                //allocationArray = new byte[1024 * 1024 * 100];
+                allocationArray = new byte[1024 * 1024 * 100];
             }
         }
         this.socketCommunicator.startServer(this.controller, this.runner);
