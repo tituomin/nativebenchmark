@@ -86,6 +86,7 @@ public abstract class CommandlineTool extends MeasuringTool {
         }
 
         initCommand();
+        BenchmarkRegistry.resetInterruptFlag();
         Thread benchmarkThread = new Thread(benchmark);
         Random r = new Random();
         int delay = r.nextInt(20);

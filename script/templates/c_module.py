@@ -113,6 +113,12 @@ Java_fi_helsinki_cs_tituomin_nativebenchmark_BenchmarkRegistry_interruptNative
     interrupted = 1;
 }
 
+JNIEXPORT void JNICALL
+Java_fi_helsinki_cs_tituomin_nativebenchmark_BenchmarkRegistry_resetInterruptFlag
+(JNIEnv *env, jclass cls) {
+    interrupted = 0;
+}
+
 """
 
 mid_init_t = """
