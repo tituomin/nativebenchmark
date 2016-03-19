@@ -1,0 +1,288 @@
+{
+  "default": {
+    "warmup_rounds": 50000,
+    "warmup_repetitions": 50000,
+
+    "tools": [
+      {
+        "description": "Warmup for measuring code",
+        "class": "JavaSystemNanoResponseTimeRecorder",
+        "rounds": "warmup_rounds",
+        "repetitions": 1,
+        "warmup": true,
+        "filter": "00026"
+      },
+      {
+        "description": "Warmup for benchmarks",
+        "class": "JavaSystemNanoResponseTimeRecorder",
+        "repetitions": "warmup_repetitions",
+        "rounds": 1,
+        "warmup": true
+      },
+      {
+        "description": "Response time",
+        "class": "JavaSystemNanoResponseTimeRecorder",
+        "rounds": 1,
+        "repetitions": 100000,
+        "warmup": false
+      },
+      {
+        "description": "Profile",
+        "class": "LinuxPerfRecordTool",
+        "warmup": false,
+        "rounds": 1,
+        "options": {
+          "measure_length": "10"
+        }
+      }
+    ]
+  },
+  "alloc": {
+    "benchmark_set": "alloc",
+    "tools": [
+      {
+        "description": "Response time",
+        "class": "JavaSystemNanoResponseTimeRecorder",
+        "rounds": 1,
+        "repetitions": 1,
+        "warmup": false
+      }
+    ]
+  },
+  "only_perf": {
+    "warmup_rounds": 50000,
+    "warmup_repetitions": 50000,
+
+    "tools": [
+      {
+        "description": "Warmup for measuring code",
+        "class": "JavaSystemNanoResponseTimeRecorder",
+        "rounds": "warmup_rounds",
+        "repetitions": 1,
+        "warmup": true,
+        "filter": "00026"
+      },
+      {
+        "description": "Warmup for benchmarks",
+        "class": "JavaSystemNanoResponseTimeRecorder",
+        "repetitions": "warmup_repetitions",
+        "rounds": 1,
+        "warmup": true
+      },
+      {
+        "description": "Profile",
+        "class": "LinuxPerfRecordTool",
+        "warmup": false,
+        "rounds": 1,
+        "options": {
+          "measure_length": "10"
+        }
+      }
+    ]
+  },
+
+  "quick": {
+    "warmup_rounds": 1,
+    "warmup_repetitions": 1,
+
+    "tools": [
+      {
+        "description": "Warmup for measuring code",
+        "class": "JavaSystemNanoResponseTimeRecorder",
+        "rounds": "warmup_rounds",
+        "repetitions": 1,
+        "warmup": true,
+        "filter": "00026"
+      },
+      {
+        "description": "Warmup for benchmarks",
+        "class": "JavaSystemNanoResponseTimeRecorder",
+        "repetitions": "warmup_repetitions",
+        "rounds": 1,
+        "warmup": true
+      },
+      {
+        "description": "Response time",
+        "class": "JavaSystemNanoResponseTimeRecorder",
+        "rounds": 1,
+        "repetitions": 1,
+        "warmup": false
+      },
+      {
+        "description": "Profile",
+        "class": "LinuxPerfRecordTool",
+        "warmup": false,
+        "rounds": 1,
+        "options": {
+          "measure_length": "0.1"
+        }
+      }
+    ]
+  },
+
+  "noperf": {
+    "warmup_rounds": 50000,
+    "warmup_repetitions": 50000,
+
+    "tools": [
+      {
+        "description": "Warmup for measuring code",
+        "class": "JavaSystemNanoResponseTimeRecorder",
+        "rounds": "warmup_rounds",
+        "repetitions": 1,
+        "warmup": true,
+        "filter": "00026"
+      },
+      {
+        "description": "Warmup for benchmarks",
+        "class": "JavaSystemNanoResponseTimeRecorder",
+        "repetitions": "warmup_repetitions",
+        "rounds": 1,
+        "warmup": true
+      },
+      {
+        "description": "Response time",
+        "class": "JavaSystemNanoResponseTimeRecorder",
+        "rounds": 1,
+        "repetitions": 1000000,
+        "warmup": false
+      }
+    ]
+  },
+
+  "interest_backup": {
+    "warmup_rounds": 50000,
+    "warmup_repetitions": 50000,
+    "tools": [
+      {
+        "description": "Warmup for benchmarks",
+        "class": "JavaSystemNanoResponseTimeRecorder",
+        "repetitions": "warmup_repetitions",
+        "rounds": 1,
+        "filter": "Benchmark00426",
+        "warmup": true
+      },
+      {
+        "description": "Profile",
+        "class": "LinuxPerfRecordTool",
+        "warmup": false,
+        "rounds": 1,
+        "filter": "Benchmark00426",
+        "options": {
+          "measure_length": "20"
+        }
+      }
+    ]
+  },
+
+  "interest": {
+    "warmup_rounds": 50000,
+    "warmup_repetitions": 50000,
+    "tools": [
+      {
+        "description": "Profile",
+        "class": "LinuxPerfRecordTool",
+        "warmup": false,
+        "rounds": 1,
+        "filter": "Benchmark00426",
+        "options": {
+          "measure_length": "20"
+        }
+      }
+    ]
+  },
+
+  "debug": {
+    "warmup_rounds": 50000,
+    "warmup_repetitions": 50000,
+
+    "tools": [
+      {
+        "description": "Response time",
+        "class": "JavaSystemNanoResponseTimeRecorder",
+        "rounds": 1,
+        "repetitions": 1,
+        "warmup": false
+      }
+    ]
+  },
+
+  "debug2": {
+    "warmup_rounds": 50000,
+    "warmup_repetitions": 50000,
+
+    "tools": [
+      {
+        "description": "Profile",
+        "class": "LinuxPerfRecordTool",
+        "warmup": false,
+        "rounds": 1,
+        "options": {
+          "measure_length": "10"
+        }
+      }
+    ]
+  },
+
+  "default_full": {
+    "warmup_rounds": 50000,
+    "warmup_repetitions": 50000,
+
+    "tools": [
+      {
+        "description": "Response time",
+        "class": "JavaSystemNanoResponseTimeRecorder",
+        "repetitions": 1,
+        "rounds": 1,
+        "warmup": false
+      }
+    ]
+  },
+
+  "warmup_measuring": {
+    "tools": [
+      {
+        "description": "Warmup for benchmarks",
+        "class": "JavaSystemNanoResponseTimeRecorder",
+        "rounds": 1,
+        "repetitions": 50000,
+        "filter": "00026",
+        "warmup": false,
+        "gc": false
+      },
+      {
+        "description": "Warmup for measuring code",
+        "class": "JavaSystemNanoResponseTimeRecorder",
+        "rounds": 50000,
+        "repetitions": 1,
+        "warmup": false,
+        "gc": false,
+        "filter": "00026"
+      }
+    ]
+  },
+
+  "warmup_measuring_gc": {
+    "tools": [
+      {
+        "description": "Warmup for benchmarks",
+        "class": "JavaSystemNanoResponseTimeRecorder",
+        "rounds": 1,
+        "repetitions": 50000,
+        "warmup": false,
+        "filter": "00026",
+        "gc": true
+      },
+      {
+        "description": "Warmup for measuring code",
+        "class": "JavaSystemNanoResponseTimeRecorder",
+        "rounds": 50000,
+        "repetitions": 1,
+        "warmup": false,
+        "gc": true,
+        "filter": "00026"
+      }
+    ]
+  }
+
+}
