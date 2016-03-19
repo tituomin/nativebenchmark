@@ -5,7 +5,7 @@ FOUND_RE='^Measuring started|^Measuring finished|^Interrupting|[eE]rror'
 function send_push_email () {
     while read line; do
         if echo $line | egrep -q "$FOUND_RE"; then
-            echo "This email was sent from $HOSTNAME at $(date). Do not reply." | mail -s "$line" $NOTIFICATION_EMAIL
+            echo "$(date) - This email was sent from $HOSTNAME. Do not reply." | mail -s "$line" $NOTIFICATION_EMAIL
         fi
     done
 }
