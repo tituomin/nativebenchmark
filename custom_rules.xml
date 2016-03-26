@@ -99,6 +99,7 @@
     <exec executable="git" outputproperty="app.revision" logError="true" failonerror="true" >
       <arg value="describe"/>
       <arg value="--tags"/>
+      <arg value="--dirty"/>
     </exec>
 
     <exec executable="git" logError="false" failonerror="false" resultproperty="app.dirty">
