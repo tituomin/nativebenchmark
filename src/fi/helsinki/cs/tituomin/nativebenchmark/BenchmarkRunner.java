@@ -159,7 +159,10 @@ public enum BenchmarkRunner {
         List<Benchmark> allBenchmarks = BenchmarkRegistry.getBenchmarks();
 
         // todo enable
-        // Collections.shuffle(benchmarks);
+        long seed = System.currentTimeMillis();
+        Log.i(TAG, String.format("Random seed %d", seed));
+        java.util.Random random = new java.util.Random(seed);
+        Collections.shuffle(allBenchmarks, random);
         try {
             Init.initEnvironment(true); // run warmup at max speed
         }
