@@ -23,7 +23,7 @@
         "description": "Response time",
         "class": "JavaSystemNanoResponseTimeRecorder",
         "rounds": 1,
-        "repetitions": 100000,
+        "repetitions": 1000000,
         "warmup": false
       },
       {
