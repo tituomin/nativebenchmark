@@ -97,8 +97,7 @@
 
   <target name="update_revision">
     <exec executable="git" outputproperty="app.revision" logError="true" failonerror="true" >
-      <arg value="rev-parse"/>
-      <arg value="HEAD"/>
+      <arg value="describe"/>
     </exec>
 
     <exec executable="git" logError="false" failonerror="false" resultproperty="app.dirty">
