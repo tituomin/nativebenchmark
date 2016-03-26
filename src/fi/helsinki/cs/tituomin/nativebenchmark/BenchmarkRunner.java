@@ -215,7 +215,9 @@ public enum BenchmarkRunner {
             }
             int numOfBenchmarks = benchmarks.size();
 
-            Log.i(TAG, tool.getClass().getSimpleName());
+            if (L.og) {
+                Log.i(TAG, tool.getClass().getSimpleName());
+            }
 
             if (!tool.ignore()) {
                 // set the slower CPU frequency etc. after the warmup

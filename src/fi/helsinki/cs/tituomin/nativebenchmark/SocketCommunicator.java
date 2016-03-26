@@ -42,7 +42,6 @@ public class SocketCommunicator implements ApplicationStateListener
                         try
                             {
                                 SocketCommunicator.this.output(helpMessage);
-                                Log.v(TAG, "client >" + helpMessage);
 
                                 byte[] bytes = new byte[1024];
                                 int numRead = 0;
@@ -55,7 +54,6 @@ public class SocketCommunicator implements ApplicationStateListener
                                         }
                                         receivedCommand = new String(bytes, 0, numRead).trim();
                                         executeCommand(receivedCommand);
-                                        Log.v(TAG, receivedCommand);
                                     }
                             }
                         catch (IOException ioException)
