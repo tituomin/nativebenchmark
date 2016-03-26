@@ -29,9 +29,11 @@ public class LogAccess {
     }
 
     public static void end() {
-        mark(END, currentRunId);
-        logcatProcess.destroy();
-        logcatProcess = null;
+        if (logcatProcess != null) {
+            mark(END, currentRunId);
+            logcatProcess.destroy();
+            logcatProcess = null;
+        }
     }
 
     private static void mark(String type, String id) {

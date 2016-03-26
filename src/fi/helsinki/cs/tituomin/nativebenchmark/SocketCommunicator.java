@@ -118,7 +118,10 @@ public class SocketCommunicator implements ApplicationStateListener
             Log.e(TAG, "Error reading configuration file.", e);
         }
         if (config == null) {
-            Log.e(TAG, "Could not find configuration for " + configKey);
+            ApplicationState.DetailedState ds = new ApplicationState.DetailedState(controller);
+            ds.state = ApplicationState.State.ERROR;
+            ds.message = "Could not find configuration for " + configKey;
+            stateUpdated(ds);
             return;
         }
         stateThread = new Thread(
@@ -127,13 +130,10 @@ public class SocketCommunicator implements ApplicationStateListener
                     while (!Thread.currentThread().isInterrupted()) {
                         ApplicationState.DetailedState detailedState = controller.getState();
                         ApplicationState.State state = detailedState.state;
-                        if (state == ApplicationState.State.MILESTONE ||
-                            state == ApplicationState.State.MEASURING_FINISHED ||
-                            state == ApplicationState.State.MEASURING_STARTED) {
-                            stateUpdated(detailedState);
-                            if (state == ApplicationState.State.MEASURING_FINISHED) {
-                                return;
-                            }
+                        stateUpdated(detailedState);
+                        if (state == ApplicationState.State.MEASURING_FINISHED ||
+                            state == ApplicationState.State.ERROR) {
+                            return;
                         }
                         try {
                             Thread.sleep(10000);

@@ -99,10 +99,20 @@ public class BenchmarkController implements ApplicationState {
     }
 
     public void startMeasuring(BenchmarkRunner runner, ToolConfig configuration) {
+        String message = null;
+        if (this.resources.getString(R.string.app_dirty).equals("1")) {
+            message = this.resources.getString(R.string.warning_changed);
+        }
+
         BenchmarkRunner.BenchmarkSet set = configuration.getBenchmarkSet();
         runner.setBenchmarkSet(set);
         measuringThread = new Thread(new BenchRunnable(runner, configuration));
-        this.updateState(ApplicationState.State.MEASURING_STARTED);
+        if (message != null) {
+            this.updateState(ApplicationState.State.MEASURING_STARTED, message);
+        }
+        else {
+            this.updateState(ApplicationState.State.MEASURING_STARTED);
+        }
         measuringThread.start();
 
         // Settings parameter types saved for posterity.
