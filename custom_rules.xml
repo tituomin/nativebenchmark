@@ -4,6 +4,7 @@
   <target name="-post-compile" depends="build-ndk" />
   <target name="-pre-compile" depends="generate_beautified_benchmark_sources" />
   <target name="-pre-build" depends="update_revision" />
+  <target name="-post-build" depends="warn-of-dirty-state" />
 
   <target name="clean" depends="android_rules.clean">
     <exec executable="${ndk.dir}/ndk-build" failonerror="true">
@@ -93,6 +94,18 @@
           depends="jni_headers_benchmark,jni_headers_other,should_update_native.check"
           if="should_update_native.condition">
       <exec executable="${ndk.dir}/ndk-build" failonerror="true"/>
+  </target>
+
+  <target name="-check-dirty-state" depends="update_revision">
+      <condition property="dirty-state-true">
+          <not>
+              <equals arg1="${app.dirty}" arg2="0" />
+          </not>
+      </condition>
+  </target>
+
+  <target name="warn-of-dirty-state" depends="-check-dirty-state" if="dirty-state-true">
+      <echo>---=== WARNING :: Working tree contains uncommitted changes :: WARNING ===---</echo>
   </target>
 
   <target name="update_revision">
