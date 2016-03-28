@@ -41,6 +41,9 @@ public interface ApplicationState {
         }
         public String toString() {
             Resources resources = parent.getResources();
+            if (this.state == null) {
+                return "<unknown state>";
+            }
             String type = resources.getString(this.state.stringId);
             return String.format(
                 "%s%s", type,
