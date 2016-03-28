@@ -356,6 +356,131 @@ def add_field_and_array_benchmarks(benchmarks):
                 })
 
 
+        # NIO variations of array/buffer reading/writing
+        if _type['java'] == 'boolean':
+            # Not available for booleans
+            continue
+
+        if _type['java'] == 'byte':
+            uppercase_typename = ''
+        else:
+            uppercase_typename = _type['java'].title()
+
+        # Read with hardcoded type method
+        java.append({
+            'vary': 'size',
+            'direction': 'jj',
+            'representative': 'true',
+            'class_init': 'public int persistentValue;',
+            'method_init': 'int localPersistentValue = 0;',
+            'id': make_id('ReadComplete{_type}NioByteBuffer', _type),
+            'code': put(
+                arrays.t_read_nio,
+                declare_variables = java_declarations,
+                declare_idx = 'int idx;',
+                variable_in = '%sIn' % _type['java'],
+                array_variable = 'directByteBufferValue',
+                type_name = uppercase_typename,
+                element_literal = _type['java-literal']),
+            'finished': 'persistentValue = localPersistentValue;'
+        })
+        # Write with hardcoded type method
+        java.append({
+            'vary': 'size',
+            'direction': 'jj',
+            'representative': 'true',
+            'class_init': 'public int persistentValue;',
+            'method_init': 'int localPersistentValue = 0;',
+            'id': make_id('WriteComplete{_type}NioByteBuffer', _type),
+            'code': put(
+                arrays.t_write_nio,
+                declare_variables = '',
+                declare_idx = 'int idx;',
+                array_variable = 'directByteBufferValue',
+                type_name = uppercase_typename,
+                element_literal = _type['java-literal']),
+            'finished': 'persistentValue = localPersistentValue;'
+        })
+
+        declaration = java_declarations + "\n"
+        if _type['java'] == 'byte':
+            array_variable = 'directByteBufferValue'
+        else:
+            # Views are only relevent for non-byte types.
+            declaration += 'java.nio.{0}Buffer bufferView = directByteBufferValue.as{0}Buffer();'.format(uppercase_typename)
+            array_variable = 'bufferView'
+
+        # Bulk read through a typecast view buffer
+        java.append({
+            'vary': 'size',
+            'direction': 'jj',
+            'representative': 'true',
+            'class_init': 'public int persistentValue;',
+            'method_init': 'int localPersistentValue = 0;',
+            'id': make_id('ReadBulk{_type}NioByteBufferView', _type),
+            'code': put(
+                arrays.t_bulk_read,
+                declare_variables = declaration,
+                array_variable = array_variable,
+                array_in = '%sArr' % _type['java']),
+            'finished': 'persistentValue = localPersistentValue;'
+        })
+
+        # Bulk write through a typecast view buffer
+        java.append({
+            'vary': 'size',
+            'direction': 'jj',
+            'representative': 'true',
+            'class_init': 'public int persistentValue;',
+            'method_init': 'int localPersistentValue = 0;',
+            'id': make_id('WriteBulk{_type}NioByteBufferView', _type),
+            'code': put(
+                arrays.t_bulk_write,
+                declare_variables = declaration,
+                array_variable = array_variable,
+                array_in = '%sArr' % _type['java']),
+            'finished': 'persistentValue = localPersistentValue;'
+        })
+
+        if _type['java'] == 'byte':
+            continue
+
+        # Read through a typecast view buffer
+        java.append({
+            'vary': 'size',
+            'direction': 'jj',
+            'representative': 'true',
+            'class_init': 'public int persistentValue;',
+            'method_init': 'int localPersistentValue = 0;',
+            'id': make_id('ReadComplete{_type}NioByteBufferView', _type),
+            'code': put(
+                arrays.t_read_nio_as_view,
+                declare_variables = declaration,
+                declare_idx = 'int idx;',
+                variable_in = '%sIn' % _type['java'],
+                array_variable = 'bufferView',
+                type_name = uppercase_typename,
+                element_literal = _type['java-literal']),
+            'finished': 'persistentValue = localPersistentValue;'
+        })
+        # Write through a typecast view buffer
+        java.append({
+            'vary': 'size',
+            'direction': 'jj',
+            'representative': 'true',
+            'class_init': 'public int persistentValue;',
+            'method_init': 'int localPersistentValue = 0;',
+            'id': make_id('WriteComplete{_type}NioByteBufferView', _type),
+            'code': put(
+                arrays.t_write_nio_as_view,
+                declare_variables = declaration,
+                declare_idx = 'int idx;',
+                array_variable = 'bufferView',
+                element_literal = _type['java-literal']),
+            'finished': 'persistentValue = localPersistentValue;'
+        })
+
+
 
 def write_custom_benchmarks(definition_files, c_custom_output_name, java_output_dir):
     packagename = ('fi', 'helsinki', 'cs', 'tituomin', 'nativebenchmark', 'benchmark')

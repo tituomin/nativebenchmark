@@ -29,6 +29,9 @@ public class BenchmarkParameter implements Iterable<Integer> {
     public static final int RANGE = 8;
     public static final int MAXSIZE = DEFAULTSIZE * RANGE;
 
+    // The byte buffer has to hold longs and doubles too.
+    public static final int NIO_MAXSIZE = DEFAULTSIZE * RANGE * 8;
+
     public static MockObject mockObjectInstance = new MockObject();
     public MockObject retrieveMockObject() {
         return mockObjectInstance;
@@ -266,7 +269,7 @@ public class BenchmarkParameter implements Iterable<Integer> {
     private static final short[][] SHORT_ARRAYS       = new short[RANGE + 1][];
     private static final Object[][] OBJECT_ARRAYS     = new Object[RANGE + 1][];
 
-    private static final ByteBuffer BYTEBUFFER        = ByteBuffer.allocateDirect(MAXSIZE);
+    private static final ByteBuffer BYTEBUFFER        = ByteBuffer.allocateDirect(NIO_MAXSIZE);
 
 }
 
