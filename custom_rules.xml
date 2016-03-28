@@ -43,14 +43,14 @@
   </target>
 
   <target name="generate_beautified_benchmark_sources" depends="generate_benchmark_sources">
-      <exec executable="indent" logError="true" failonerror="true">
+      <exec executable="indent" logError="true" failonerror="false">
           <arg value="-kr" />
           <arg value="--no-tabs" />
           <arg value="${jni_src.dir}/nativebenchmark.c" />
           <arg value="${jni_src.dir}/nativerunners.c" />
           <arg value="${jni_src.dir}/custom_benchmarks.c" />
       </exec>
-      <exec executable="astyle" logError="true" failonerror="true">
+      <exec executable="astyle" logError="true" failonerror="false">
           <arg value="--quiet" />
           <arg value="--delete-empty-lines" />
           <arg value="-n" />
