@@ -78,7 +78,7 @@ public class CustomBenchmarks {
 
         byteBufferIn = ByteBuffer.allocateDirect(current_size);
 
-        // @WeakGlobalRef direction=jj
+        // @WeakGlobalRef direction=jj alloc=true
 
         weakReferenceIn = new WeakReference(objectValue);
         weakReferenceIn = null;
