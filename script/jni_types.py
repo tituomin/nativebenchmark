@@ -18,7 +18,8 @@ primitive_type_definitions = [
         'c'            : 'jboolean',
         'c-literal'    : '1',
         'java-literal' : 'true',
-        'jvm-desc'     : 'Z'
+        'jvm-desc'     : 'Z',
+        'byte_count'   : '1'
         },
 
     {
@@ -26,8 +27,9 @@ primitive_type_definitions = [
         'java'         : 'byte',
         'c'            : 'jbyte',
         'c-literal'    : "'a'",
-        'java-literal' : '100',
-        'jvm-desc'     : 'B'
+        'java-literal' : '(byte)100',
+        'jvm-desc'     : 'B',
+        'byte_count'   : '1'
         # todo: same value?
         },
 
@@ -37,7 +39,8 @@ primitive_type_definitions = [
         'c'            : 'jchar',
         'c-literal'    : '12',
         'java-literal' : "'\u0012'",
-        'jvm-desc'     : 'C'
+        'jvm-desc'     : 'C',
+        'byte_count'   : '2'
         },
 
     {
@@ -45,8 +48,9 @@ primitive_type_definitions = [
         'java'         : 'short',
         'c'            : 'jshort',
         'c-literal'    : '101',
-        'java-literal' : '101',
-        'jvm-desc'     : 'S'
+        'java-literal' : '(short)101',
+        'jvm-desc'     : 'S',
+        'byte_count'   : '2'
         },
 
     {
@@ -56,7 +60,8 @@ primitive_type_definitions = [
         'c-literal'    : '102',
         'java-literal' : '102',
         'jvm-desc'     : 'I',
-        'representative' : True
+        'representative' : True,
+        'byte_count'   : '4'
         },
 
     {
@@ -66,7 +71,8 @@ primitive_type_definitions = [
         'c-literal'    : '103',
         'java-literal' : '103',
         'jvm-desc'     : 'J',
-        'representative' : True
+        'representative' : True,
+        'byte_count'   : '8'
         },
 
     {
@@ -76,7 +82,8 @@ primitive_type_definitions = [
         'c-literal'    : '104.1',
         'java-literal' : '104.1f',
         'jvm-desc'     : 'F',
-        'representative' : True
+        'representative' : True,
+        'byte_count'   : '4'
         },
 
     {
@@ -86,7 +93,8 @@ primitive_type_definitions = [
         'c-literal'    : '105.1',
         'java-literal' : '105.1',
         'jvm-desc'     : 'D',
-        'representative' : True
+        'representative' : True,
+        'byte_count'   : '8'
         },
 ]
 
