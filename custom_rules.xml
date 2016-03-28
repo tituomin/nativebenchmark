@@ -59,7 +59,15 @@
       </exec>
   </target>
 
-  <target name="generate_benchmark_sources" if="codegen.modified" >
+  <target name="clear_generated_benchmarks" if="codegen.modified">
+      <!-- The number of benchmark classes might differ and
+           old ones might be removed. It's safest to clear
+           the gen dir completely.
+      -->
+      <delete dir="${gen_src.dir}/fi/helsinki/cs/tituomin/nativebenchmark/benchmark" />
+  </target>
+
+  <target name="generate_benchmark_sources" if="codegen.modified" depends="clear_generated_benchmarks">
     <mkdir dir="${gen_src.dir}/fi/helsinki/cs/tituomin/nativebenchmark/benchmark"/>
     <exec executable="python" outputproperty="jni_classes_benchmarks" logError="true" failonerror="true">
           <arg value="${codegen_script.dir}/make_benchmarks.py" />
