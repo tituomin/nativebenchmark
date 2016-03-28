@@ -14,8 +14,12 @@ public enum JavaCounterparts {
     INSTANCE;
 
     <% return_value_declarations %>
+    public int persistentValue;
+    public static int staticpersistentValue = 0;
 
-    private JavaCounterparts() { }
+    private JavaCounterparts() {
+        persistentValue = 0;
+    }
 
     public static void initParams(BenchmarkParameter benchmarkParameter) {
         <% return_value_inits %>
@@ -33,6 +37,7 @@ public enum JavaCounterparts {
 counterpart_t = """
 
 <% privacy %> <% static %> <% return_type %> <% methodname %> (<% parameters %>) {
+    <% static %>persistentValue = (<% static %>persistentValue + 1) % 10;
     return <% return_expression %>;
 }
 
