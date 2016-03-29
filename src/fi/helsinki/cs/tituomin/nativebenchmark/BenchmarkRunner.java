@@ -281,8 +281,8 @@ public enum BenchmarkRunner {
                     if (L.og) {
                         Log.i(TAG, (count - j) + " left");
                         Log.i(TAG, benchmark.getClass().getSimpleName());
-                        j++;
                     };
+                    j++;
                     try {
                         collectedData = runSeries(benchmark, mainUI, tool, round, max_rounds, count, j);
                     }
