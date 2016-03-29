@@ -23,7 +23,7 @@
         "description": "Response time",
         "class": "JavaSystemNanoResponseTimeRecorder",
         "rounds": 1,
-        "repetitions": 1000000,
+        "repetitions": 10000,
         "warmup": false
       },
       {
@@ -243,7 +243,7 @@
         "class": "JavaSystemNanoResponseTimeRecorder",
         "filter": "NioByteBuffer",
         "rounds": 1,
-        "repetitions": 1,
+        "repetitions": 10000,
         "warmup": false
       }
     ]
@@ -259,6 +259,25 @@
         "class": "LinuxPerfRecordTool",
         "warmup": false,
         "rounds": 1,
+        "filter": "NioByteBuffer",
+        "options": {
+          "measure_length": "0.1"
+        }
+      }
+    ]
+  },
+
+  "debug3": {
+    "warmup_rounds": 50000,
+    "warmup_repetitions": 50000,
+
+    "tools": [
+      {
+        "description": "Profile",
+        "class": "LinuxPerfRecordTool",
+        "warmup": false,
+        "rounds": 1,
+        "filter": "00027",
         "options": {
           "measure_length": "10"
         }
