@@ -12,7 +12,9 @@ function send_push_email () {
 
 set -e
 
+echo "Pushing nativebenchmark_setup.json to device."
 adb push nativebenchmark_setup.json /sdcard/
+echo
 adb shell am start -n fi.helsinki.cs.tituomin.nativebenchmark/.BenchmarkSelector
 adb forward tcp:38300 tcp:38300
 sleep 1
