@@ -30,6 +30,7 @@ public abstract class CommandlineTool extends MeasuringTool {
 
     public CommandlineTool(int rounds, long repetitions, long allocreps, boolean warmup, boolean x) throws IOException, InterruptedException {
         super(rounds, REPETITIONS, allocreps, false, x);
+        this.filenames = new ArrayList<String> ();
     }
 
     protected abstract String command();
@@ -145,7 +146,7 @@ public abstract class CommandlineTool extends MeasuringTool {
     private long startTime;
     private String command;
 
-    private static List<String> filenames = new ArrayList<String> ();
+    private List<String> filenames;
     private static final DateFormat dateFormat = DateFormat.getDateTimeInstance();
 
 }
