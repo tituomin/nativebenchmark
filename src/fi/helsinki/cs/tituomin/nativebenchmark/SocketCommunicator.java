@@ -73,7 +73,7 @@ public class SocketCommunicator implements ApplicationStateListener
 
                 if (client != null)
                     {
-                        receivedCommand = "Connection was succesful!";
+                        receivedCommand = "Connection was successful!";
                         try {
                             server.close();
                         } catch (IOException e) {
