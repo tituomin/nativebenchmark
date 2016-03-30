@@ -188,8 +188,8 @@ public enum BenchmarkRunner {
             String filter = tool.getFilter();
             if (filter != null && !filter.equals("")) {
                 substringToApply = tool.getFilter().toLowerCase();
-                this.benchmarkSubstring = substringToApply;
             }
+            this.benchmarkSubstring = substringToApply;
 
             for (Benchmark b : allBenchmarks) {
                 boolean selected;
