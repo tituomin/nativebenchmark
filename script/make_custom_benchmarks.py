@@ -370,7 +370,7 @@ def add_field_and_array_benchmarks(benchmarks):
         java.append({
             'vary': 'size',
             'direction': 'jj',
-            'representative': 'true',
+            'representative': True,
             'class_init': 'public int persistentValue;',
             'method_init': 'int localPersistentValue = 0;',
             'id': make_id('ReadComplete{_type}NioByteBuffer', _type),
@@ -388,7 +388,7 @@ def add_field_and_array_benchmarks(benchmarks):
         java.append({
             'vary': 'size',
             'direction': 'jj',
-            'representative': 'true',
+            'representative': True,
             'class_init': 'public int persistentValue;',
             'method_init': 'int localPersistentValue = 0;',
             'id': make_id('WriteComplete{_type}NioByteBuffer', _type),
@@ -414,7 +414,7 @@ def add_field_and_array_benchmarks(benchmarks):
         java.append({
             'vary': 'size',
             'direction': 'jj',
-            'representative': 'true',
+            'representative': True,
             'class_init': 'public int persistentValue;',
             'method_init': 'int localPersistentValue = 0;',
             'id': make_id('ReadBulk{_type}NioByteBufferView', _type),
@@ -430,7 +430,7 @@ def add_field_and_array_benchmarks(benchmarks):
         java.append({
             'vary': 'size',
             'direction': 'jj',
-            'representative': 'true',
+            'representative': True,
             'class_init': 'public int persistentValue;',
             'method_init': 'int localPersistentValue = 0;',
             'id': make_id('WriteBulk{_type}NioByteBufferView', _type),
@@ -449,7 +449,7 @@ def add_field_and_array_benchmarks(benchmarks):
         java.append({
             'vary': 'size',
             'direction': 'jj',
-            'representative': 'true',
+            'representative': True,
             'class_init': 'public int persistentValue;',
             'method_init': 'int localPersistentValue = 0;',
             'id': make_id('ReadComplete{_type}NioByteBufferView', _type),
@@ -467,7 +467,7 @@ def add_field_and_array_benchmarks(benchmarks):
         java.append({
             'vary': 'size',
             'direction': 'jj',
-            'representative': 'true',
+            'representative': True,
             'class_init': 'public int persistentValue;',
             'method_init': 'int localPersistentValue = 0;',
             'id': make_id('WriteComplete{_type}NioByteBufferView', _type),
