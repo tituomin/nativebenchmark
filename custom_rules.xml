@@ -4,7 +4,7 @@
   <target name="-post-compile" depends="build-ndk" />
   <target name="-pre-compile" depends="generate_beautified_benchmark_sources" />
   <target name="-pre-build" depends="update_revision" />
-  <target name="-post-build" depends="warn-of-dirty-state" />
+  <target name="-post-build" depends="warn-of-dirty-state,copy-native-lib-symbols" />
 
   <target name="clean" depends="android_rules.clean">
     <exec executable="${ndk.dir}/ndk-build" failonerror="true">
@@ -114,6 +114,10 @@
 
   <target name="warn-of-dirty-state" depends="-check-dirty-state" if="dirty-state-true">
       <echo>---=== WARNING :: Working tree contains uncommitted changes :: WARNING ===---</echo>
+  </target>
+
+  <target name="copy-native-lib-symbols">
+    <copy file="obj/local/armeabi/libnativebenchmark.so" tofile="/home/tituomin/droid-symbols/data/data/fi.helsinki.cs.tituomin.nativebenchmark/lib/libnativebenchmark.so" overwrite="true" />
   </target>
 
   <target name="update_revision">
