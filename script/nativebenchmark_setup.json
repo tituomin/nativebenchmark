@@ -63,7 +63,7 @@
         "class": "JavaSystemNanoResponseTimeRecorder",
         "rounds": 1,
         "filter": "NioByteBuffer",
-        "repetitions": 1000000,
+        "repetitions": 10000,
         "warmup": false
       },
       {
@@ -305,20 +305,11 @@
       {
         "description": "Warmup for benchmarks",
         "class": "JavaSystemNanoResponseTimeRecorder",
-        "rounds": 1,
-        "repetitions": 50000,
-        "filter": "00026",
+        "rounds": 10000,
+        "repetitions": 5,
+        "filter": "J2JWarmupOverhead00200",
         "warmup": false,
         "gc": false
-      },
-      {
-        "description": "Warmup for measuring code",
-        "class": "JavaSystemNanoResponseTimeRecorder",
-        "rounds": 50000,
-        "repetitions": 1,
-        "warmup": false,
-        "gc": false,
-        "filter": "00026"
       }
     ]
   },

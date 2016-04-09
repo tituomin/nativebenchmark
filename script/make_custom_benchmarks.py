@@ -105,32 +105,35 @@ OVERHEAD_STEP = 2
 OVERHEAD_STEPS = 11 # incl. zero
 OVERHEAD_CODE_STATEMENT = "__a = (((__a * __a * __a) / __b) + __b) / __a;\n"
 
+def add_overhead_benchmark(benchmarks, i, prefix, alloc):
+    overhead_code = []
+    for j in range(0, i):
+        overhead_code.append(OVERHEAD_CODE_STATEMENT)
+
+    benchmark = {
+        'code'        : ''.join(overhead_code),
+        'id'          : prefix + 'Overhead' + str(i).zfill(5),
+        'description' : i
+        }
+
+    if alloc:
+        benchmark['alloc'] = True
+
+    c_b = benchmark.copy()
+    double_benchmark = benchmark.copy()
+    # double the amount of work for java (uses optimizations unlike c)
+    double_benchmark['code'] = ''.join(overhead_code + overhead_code)
+    j_b = double_benchmark
+    c_b['direction']  = 'cj'
+    j_b['direction']  = 'jj'
+    benchmarks['C']['benchmarks'].append(c_b)
+    benchmarks['J']['benchmarks'].append(j_b)
+
 def add_overhead_benchmarks(benchmarks):
     for i in range(0, OVERHEAD_STEPS * OVERHEAD_STEP, OVERHEAD_STEP):
-        overhead_code = []
-        for j in range(0, i):
-            overhead_code.append(OVERHEAD_CODE_STATEMENT)
-
         for prefix, alloc in [('Alloc', True), ('Normal', False)]:
-            benchmark = {
-                'code'        : ''.join(overhead_code),
-                'id'          : prefix + 'Overhead' + str(i).zfill(5),
-                'description' : i
-                }
-
-            if alloc:
-                benchmark['alloc'] = True
-
-            c_b = benchmark.copy()
-            double_benchmark = benchmark.copy()
-            # double the amount of work for java (uses optimizations unlike c)
-            double_benchmark['code'] = ''.join(overhead_code + overhead_code)
-            j_b = double_benchmark
-            c_b['direction']  = 'cj'
-            j_b['direction']  = 'jj'
-            benchmarks['C']['benchmarks'].append(c_b)
-            benchmarks['J']['benchmarks'].append(j_b)
-
+            add_overhead_benchmark(benchmarks, i, prefix, alloc)
+    add_overhead_benchmark(benchmarks, 200, 'Warmup', False)
 
 def macro_call(template, _type):
     return template.format(
