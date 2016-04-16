@@ -21,7 +21,7 @@ function potentially_shutdown () {
     if [ "$SHUTDOWN_ON_END" = true ]; then
         while read line; do
             if echo $line | egrep -q "$FINISHED_RE"; then
-                poweroff
+                sudo poweroff
             fi
         done
     fi
