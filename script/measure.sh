@@ -1,6 +1,13 @@
 #!/bin/bash
 
-FOUND_RE='^Measuring started|^Measuring finished|^Interrupting|[eE]rror'
+FINISHED_RE='^Measuring finished|^Interrupting|[eE]rror'
+FOUND_RE="^Measuring started|$FINISHED_RE"
+
+if [[ $1 == "shutdown" ]]; then
+   echo "Got shutdown request."
+   SHUTDOWN_ON_END=true
+fi
+
 
 function send_push_email () {
     while read line; do
@@ -8,6 +15,16 @@ function send_push_email () {
             echo "$(date) - This email was sent from $HOSTNAME. Do not reply." | mail -s "$line" $NOTIFICATION_EMAIL
         fi
     done
+}
+
+function potentially_shutdown () {
+    if [ "$SHUTDOWN_ON_END" = true ]; then
+        while read line; do
+            if echo $line | egrep -q "$FINISHED_RE"; then
+                poweroff
+            fi
+        done
+    fi
 }
 
 set -e
@@ -18,7 +35,7 @@ echo
 adb shell am start -n fi.helsinki.cs.tituomin.nativebenchmark/.BenchmarkSelector
 adb forward tcp:38300 tcp:38300
 sleep 1
-nc localhost 38300 | tee >(send_push_email)
+nc localhost 38300 | tee >(send_push_email) >(potentially_shutdown)
 
 #start :default_full
 #end
