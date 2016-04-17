@@ -70,6 +70,7 @@
         "description": "Profile",
         "class": "LinuxPerfRecordTool",
         "warmup": false,
+        "alloc_repetitions": 300,
         "rounds": 1,
         "options": {
           "measure_length": "10"
