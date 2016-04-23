@@ -24,6 +24,8 @@ function potentially_shutdown () {
                 sudo poweroff
             fi
         done
+    else
+        cat >/dev/null
     fi
 }
 
