@@ -130,7 +130,7 @@ def add_overhead_benchmark(benchmarks, i, prefix, alloc):
     benchmarks['J']['benchmarks'].append(j_b)
 
 def add_overhead_benchmarks(benchmarks):
-    for i in range(0, OVERHEAD_STEPS * OVERHEAD_STEP, OVERHEAD_STEP):
+    for i in range(1, OVERHEAD_STEPS * OVERHEAD_STEP, OVERHEAD_STEP):
         for prefix, alloc in [('Alloc', True), ('Normal', False)]:
             add_overhead_benchmark(benchmarks, i, prefix, alloc)
     add_overhead_benchmark(benchmarks, 200, 'Warmup', False)
