@@ -12,28 +12,25 @@ t_read = partial(
     t_loop,
     body = """
     <% variable_in %> = <% array_variable %>[idx];
-    if (<% variable_in %> == <% element_literal %>) {
-        localPersistentValue = 1;
-    }
-    else {
-        localPersistentValue = 0;
-    } """)
+    """)
 
 t_write = partial(
     t_loop,
     body = """
     <% array_variable %>[idx] = <% element_literal %>; """)
 
+t_init_nio = """
+    <% type_declarations %>
+    int localPersistentValue = 0;
+    current_size /= 64;
+
+"""
+
 t_read_nio = partial(
     t_loop,
     body = """
     <% variable_in %> = <% array_variable %>.get<% type_name %>(idx);
-    if (<% variable_in %> == <% element_literal %>) {
-        localPersistentValue = 1;
-    }
-    else {
-        localPersistentValue = 0;
-    } """)
+    """)
 
 t_write_nio = partial(
     t_loop,
@@ -45,12 +42,7 @@ t_read_nio_as_view = partial(
     t_loop,
     body = """
     <% variable_in %> = <% array_variable %>.get(idx);
-    if (<% variable_in %> == <% element_literal %>) {
-        localPersistentValue = 1;
-    }
-    else {
-        localPersistentValue = 0;
-    } """)
+    """)
 
 t_write_nio_as_view = partial(
     t_loop,

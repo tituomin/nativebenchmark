@@ -375,11 +375,12 @@ def add_field_and_array_benchmarks(benchmarks):
             'direction': 'jj',
             'representative': True,
             'class_init': 'public int persistentValue;',
-            'method_init': 'int localPersistentValue = 0;',
+            'method_init': put(
+                arrays.t_init_nio,
+                type_declarations=java_declarations),
             'id': make_id('ReadComplete{_type}NioByteBuffer', _type),
             'code': put(
                 arrays.t_read_nio,
-                declare_variables = java_declarations,
                 declare_idx = 'int idx;',
                 variable_in = '%sIn' % _type['java'],
                 array_variable = 'directByteBufferValue',
@@ -393,7 +394,9 @@ def add_field_and_array_benchmarks(benchmarks):
             'direction': 'jj',
             'representative': True,
             'class_init': 'public int persistentValue;',
-            'method_init': 'int localPersistentValue = 0;',
+            'method_init': put(
+                arrays.t_init_nio,
+                type_declarations=java_declarations),
             'id': make_id('WriteComplete{_type}NioByteBuffer', _type),
             'code': put(
                 arrays.t_write_nio,
@@ -419,11 +422,12 @@ def add_field_and_array_benchmarks(benchmarks):
             'direction': 'jj',
             'representative': True,
             'class_init': 'public int persistentValue;',
-            'method_init': 'int localPersistentValue = 0;',
+            'method_init': put(
+                arrays.t_init_nio,
+                type_declarations=declaration),
             'id': make_id('ReadBulk{_type}NioByteBufferView', _type),
             'code': put(
                 arrays.t_bulk_read,
-                declare_variables = declaration,
                 array_variable = array_variable,
                 array_in = '%sArr' % _type['java']),
             'finished': 'persistentValue = localPersistentValue;'
@@ -435,11 +439,10 @@ def add_field_and_array_benchmarks(benchmarks):
             'direction': 'jj',
             'representative': True,
             'class_init': 'public int persistentValue;',
-            'method_init': 'int localPersistentValue = 0;',
+            'method_init': put(arrays.t_init_nio, type_declarations=declaration),
             'id': make_id('WriteBulk{_type}NioByteBufferView', _type),
             'code': put(
                 arrays.t_bulk_write,
-                declare_variables = declaration,
                 array_variable = array_variable,
                 array_in = '%sArr' % _type['java']),
             'finished': 'persistentValue = localPersistentValue;'
@@ -454,11 +457,10 @@ def add_field_and_array_benchmarks(benchmarks):
             'direction': 'jj',
             'representative': True,
             'class_init': 'public int persistentValue;',
-            'method_init': 'int localPersistentValue = 0;',
+            'method_init': put(arrays.t_init_nio, type_declarations=declaration),
             'id': make_id('ReadComplete{_type}NioByteBufferView', _type),
             'code': put(
                 arrays.t_read_nio_as_view,
-                declare_variables = declaration,
                 declare_idx = 'int idx;',
                 variable_in = '%sIn' % _type['java'],
                 array_variable = 'bufferView',
@@ -472,11 +474,10 @@ def add_field_and_array_benchmarks(benchmarks):
             'direction': 'jj',
             'representative': True,
             'class_init': 'public int persistentValue;',
-            'method_init': 'int localPersistentValue = 0;',
+            'method_init': put(arrays.t_init_nio, type_declarations=declaration),
             'id': make_id('WriteComplete{_type}NioByteBufferView', _type),
             'code': put(
                 arrays.t_write_nio_as_view,
-                declare_variables = declaration,
                 declare_idx = 'int idx;',
                 array_variable = 'bufferView',
                 element_literal = _type['java-literal']),
