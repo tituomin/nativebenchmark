@@ -52,10 +52,12 @@ t_write_nio_as_view = partial(
 
 t_bulk_read = """
 <% declare_variables %>
+<% array_variable %>.clear();
 <% array_variable %>.get(<% array_in %>, 0, current_size);
 """
 
 t_bulk_write = """
 <% declare_variables %>
+<% array_variable %>.clear();
 <% array_variable %>.put(<% array_in %>, 0, current_size);
 """
