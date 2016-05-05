@@ -116,8 +116,9 @@
       <echo>---=== WARNING :: Working tree contains uncommitted changes :: WARNING ===---</echo>
   </target>
 
-  <target name="copy-native-lib-symbols">
+  <target name="copy-native-lib-symbols" depends="update_revision">
     <copy file="obj/local/armeabi/libnativebenchmark.so" tofile="/home/tituomin/droid-symbols/data/data/fi.helsinki.cs.tituomin.nativebenchmark/lib/libnativebenchmark.so" overwrite="true" />
+    <copy file="obj/local/armeabi/libnativebenchmark.so" tofile="/home/tituomin/droid-symbols/data/data/fi.helsinki.cs.tituomin.nativebenchmark/lib/libnativebenchmark.${app.revision}.so" overwrite="false" />
   </target>
 
   <target name="update_revision">
