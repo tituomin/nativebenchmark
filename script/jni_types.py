@@ -29,7 +29,8 @@ primitive_type_definitions = [
         'c-literal'    : "'a'",
         'java-literal' : '(byte)100',
         'jvm-desc'     : 'B',
-        'byte_count'   : '1'
+        'byte_count'   : '1',
+        'representative' : True,
         # todo: same value?
         },
 
