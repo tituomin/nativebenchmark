@@ -46,7 +46,7 @@ void function_wrapper() {
 
     (*env)->ReleaseStringUTFChars(env,
         jstringValue,
-        (char *)jbyte_ptr__IN);
+        char_const_ptr__IN);
 
     // @ReadUnicodeCritical vary=size direction=cj
 
